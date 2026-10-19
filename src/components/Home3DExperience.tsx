@@ -122,7 +122,7 @@ export function WorkflowDepth3D(){
        const depth=(i-active+phases.length)%phases.length;
        const PhaseIcon=phase.Icon;
        return <button type="button" key={phase.name} className={'pf3-depth-plate '+(i===active?'active':'')} aria-pressed={i===active}
-        style={{'--pf3-depth':depth,'--pf3-accent':i===active?'#b9f8ff':'#a5a8ec'} as CSSProperties}
+        style={{'--pf3-offset-x':(depth*16)+'px','--pf3-offset-y':(-depth*24)+'px','--pf3-offset-z':(110-depth*20)+'px','--pf3-opacity':String(1-depth*.105),'--pf3-accent':i===active?'#b9f8ff':'#a5a8ec'} as CSSProperties}
         onClick={()=>setActive(i)} tabIndex={depth>3?-1:0}>
         <span><PhaseIcon size={20}/><strong>{phase.name}</strong></span>
         <small>0{i+1} / {phase.label}</small>
