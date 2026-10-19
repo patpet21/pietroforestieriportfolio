@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
-import {ArrowDown,ArrowLeft,ArrowRight,ArrowUp,Camera,CameraOff,Check,ChevronDown,ChevronUp,Eye,Hand,Keyboard,MousePointer2,Scan,ShieldCheck,Space,Volume2,X} from 'lucide-react';
+import {ArrowDown,ArrowUp,CameraOff,ChevronDown,ChevronUp,Hand,Keyboard,MousePointer2,Scan,X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 
 type Landmark={x:number;y:number;z:number};
@@ -78,7 +78,7 @@ export default function HoloNavigator(){
    if(editable(event.target as Element))focusRef.current=event.target as HTMLInputElement|HTMLTextAreaElement;
   };
   document.addEventListener('focusin',onFocus);
-  const onKey=(event:globalThis.KeyboardEvent)=>{
+  const onKey=(event:KeyboardEvent)=>{
    if(event.key==='Escape'){
     if(keyboardRef.current){setKeyboard(false);return;}
     stopRef.current();
@@ -103,7 +103,7 @@ export default function HoloNavigator(){
   Object.getOwnPropertyDescriptor(proto,'value')?.set?.call(field,next);
   field.dispatchEvent(new Event('input',{bubbles:true}));
   field.focus({preventScroll:true});
-  field.setSelectionRange(pos,pos);
+  try{field.setSelectionRange(pos,pos);}catch{/* email/number fields do not support text selection */}
  },[]);
  const activate=useCallback((target:Target)=>{
   if(target.closest('.holo-control'))return;
@@ -184,7 +184,7 @@ export default function HoloNavigator(){
      const px=x*window.innerWidth,py=y*window.innerHeight;
      const hit=document.elementFromPoint(px,py) as HTMLElement|null;
      let candidate:HTMLElement|null=hit?.closest(VALID) as HTMLElement|null;
-     if(candidate?.closest('.holo-control'))candidate=null;
+     if(candidate?.closest('.holo-control')&&!candidate.closest('[data-holo-key]'))candidate=null;
      // Only UI controls and links are activatable; never click random page content.
      if(candidate!==targetRef.current){
       targetRef.current?.classList.remove('holo-focused-target');
@@ -214,14 +214,13 @@ export default function HoloNavigator(){
    setError(name==='NotAllowedError'?'Camera permission denied. You can continue using the site normally.':name==='NotFoundError'?'No webcam was detected.':e instanceof Error?e.message:'Unable to start camera.');
   }
  };
- const switchMode=(next:Mode)=>{modeRef.current=next;setMode(next);clearTarget();};
+ const switchMode=(next:Mode)=>{modeRef.current=next;setMode(next);if(next==='scroll'){keyboardRef.current=false;setKeyboard(false);}clearTarget();};
  const switchKeyboard=(next:boolean)=>{keyboardRef.current=next;setKeyboard(next);clearTarget();if(next)modeRef.current='point';if(next)setMode('point');};
- const reset=()=>{setSensitivity(1);sensitivityRef.current=1;smoothRef.current={x:.5,y:.5};};
  return <>
   <div className="holo-launch holo-control">
    {status==='off'||status==='error'?<button type="button" className="holo-open" onClick={start}><Scan size={19}/> <span>HOLO CONTROL</span><i/></button>:minimized?<div className="holo-minimized"><span><i/> {status==='ready'?'HOLO ACTIVE':'CONNECTING…'}</span><button onClick={()=>setMinimized(false)} aria-label="Expand Holo Control"><ChevronUp size={16}/></button><button onClick={stop} aria-label="Stop webcam"><X size={16}/></button></div>:null}
   </div>
-  {(status==='ready'||status==='loading')&&!minimized&&<aside className="holo-console holo-control" aria-label="Holographic gesture navigation controller">
+  <aside className={'holo-console holo-control '+((status==='off'||status==='error')?'holo-hidden':minimized?'holo-hidden':'')} aria-label="Holographic gesture navigation controller">
    <div className="holo-console-head"><div><i/><strong>HOLO / NAVIGATOR</strong><small>ONE-HAND CONTROL · V1</small></div><button onClick={()=>setMinimized(true)} aria-label="Minimize Holo controls"><ChevronDown size={19}/></button><button onClick={stop} aria-label="Stop camera"><X size={20}/></button></div>
    <div className="holo-preview"><video ref={videoRef} muted playsInline autoPlay className={status==='ready'?'visible':''}/><span>{status==='loading'?'LOADING HAND MODEL…':cursor?'HAND TRACKED':'SHOW YOUR HAND'}</span><b>{backend||'CAMERA'}</b></div>
    <div className="holo-console-modes" role="group" aria-label="Gesture navigation mode"><button aria-pressed={mode==='point'} className={mode==='point'?'active':''} onClick={()=>switchMode('point')}><MousePointer2 size={14}/> POINT / CLICK</button><button aria-pressed={mode==='scroll'} className={mode==='scroll'?'active':''} onClick={()=>switchMode('scroll')}><ArrowDown size={14}/> SCROLL</button></div>
@@ -232,9 +231,8 @@ export default function HoloNavigator(){
    <div className="holo-state"><span>TARGET</span><strong>{targetName}</strong></div>
    <button className="holo-power" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    <p>Webcam starts on demand. Video is processed on your device. The MediaPipe model downloads from third parties, and the SDK may transmit usage metrics.</p>
-  </aside>}
+  </aside>
   {status==='error'&&<div className="holo-error holo-control" role="alert">{error}<button onClick={()=>setError('')} aria-label="Dismiss error"><X size={14}/></button></div>}
-  {(status==='ready'||status==='loading')&&minimized&&<video className="holo-background-video" ref={videoRef} muted playsInline autoPlay/>}
   {status==='ready'&&cursor&&<div className={'holo-hand-pointer '+(cursor.pinch?'pinch':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/><span>{mode==='scroll'?'SCROLL':keyboard?'TYPE':'HOLD'}</span></div>}
   {status==='ready'&&mode==='scroll'&&!keyboard&&<div className="holo-scroll-beacons" aria-hidden="true"><div><ArrowUp size={18}/> LIFT HAND TO SCROLL UP</div><div><ArrowDown size={18}/> LOWER HAND TO SCROLL DOWN</div></div>}
   {status==='ready'&&keyboard&&<div className="holo-air-console holo-control" aria-label="Holographic typing keyboard">
