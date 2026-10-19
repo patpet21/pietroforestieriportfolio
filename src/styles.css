@@ -2406,3 +2406,6 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  .gsl-holo-invite span{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){.holo-open:before{animation:none}.holo-air-row button,.holo-hand-pointer{transition:none}}
+
+/* Keep camera/video element mounted and decoding while controller is collapsed. */
+.holo-console.holo-hidden{display:flex!important;visibility:hidden!important;pointer-events:none!important;transform:translateX(-120vw)}
