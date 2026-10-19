@@ -70,6 +70,18 @@ export default function ProjectShowcase(){
          aria-label={'Select '+p.title}>{inside}</button>}
      </div>;
    })}
+   <div className="pf-stage-edge-controls" aria-label="Browse projects">
+    <button type="button" className="pf-stage-edge-arrow" aria-label="Previous project"
+      title="Previous project" onPointerDown={e=>e.stopPropagation()}
+      onPointerUp={e=>e.stopPropagation()} onClick={()=>rotate(-1)}>
+      <ChevronLeft size={29} strokeWidth={2.8}/><span className="pf-stage-edge-text">PREV</span>
+    </button>
+    <button type="button" className="pf-stage-edge-arrow" aria-label="Next project"
+      title="Next project" onPointerDown={e=>e.stopPropagation()}
+      onPointerUp={e=>e.stopPropagation()} onClick={()=>rotate(1)}>
+      <ChevronRight size={29} strokeWidth={2.8}/><span className="pf-stage-edge-text">NEXT</span>
+    </button>
+   </div>
   </div>
   <div className="pf-stage-footer">
    <div className="pf-stage-navigation"><button type="button" onClick={()=>rotate(-1)} aria-label="Previous project"><ChevronLeft size={22}/></button>
