@@ -1273,3 +1273,374 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  .pf-story-content{animation:none!important}
  .pf-story-nav button,.pf-next-card,.pf-next-card img,.pf-story-progress>span,.ccase-zoom-target img{transition:none!important}
 }
+
+
+/* PF / HOME IMMERSIVE 3D EXPERIENCE V9 — original CSS-3D interaction system
+   True 3D 6-face object + 6-plane perspective workflow architecture.
+   No extra packages, motion-aware and pointer/keyboard accessible. */
+/* Hero text and the interactive 3D system share one intentional composition. */
+@media(min-width:1021px){
+ .hero .hero-inner{isolation:isolate}
+ .hero .hero-inner>h1{
+  width:57%;max-width:690px;
+  font-size:clamp(63px,6.7vw,106px);
+  position:relative;z-index:4;
+ }
+ .hero .hero-bottom{
+  width:56%;max-width:680px;
+  flex-direction:column;align-items:flex-start;gap:10px;
+  position:relative;z-index:4;
+ }
+ .hero .hero-bottom p{max-width:520px;margin:0}
+ .hero .hero-inner .scroll{z-index:4}
+}
+.pf3-hero-engine{
+ position:absolute;top:141px;right:0;
+ width:min(45%,550px);
+ height:584px;
+ display:flex;flex-direction:column;
+ padding:18px 19px 16px;
+ border:1px solid #a7dafa56;
+ border-radius:23px;
+ background:linear-gradient(145deg,#101d30db,#101327c7 57%,#080d1ad9);
+ box-shadow:0 25px 100px #02040c91,0 0 90px #6298ef16;
+ backdrop-filter:blur(12px);
+ z-index:4;isolation:isolate;
+ overflow:hidden;
+}
+.pf3-hero-engine:before{
+ content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background-image:linear-gradient(#8cddff0c 1px,transparent 1px),linear-gradient(90deg,#8cddff0c 1px,transparent 1px);
+ background-size:27px 27px;
+ mask-image:linear-gradient(180deg,#000 0%,#0005 65%,transparent 95%);
+}
+.pf3-hero-topline,.pf3-hero-helper{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ font:800 9px/1.4 Manrope,sans-serif;letter-spacing:1.4px;color:#a2c5e0;
+}
+.pf3-hero-topline span:first-child{color:#cdeaff;display:inline-flex;align-items:center;gap:8px}
+.pf3-hero-topline i,.pf3-workflow-kicker i{
+ display:inline-block;width:6px;height:6px;flex:none;border-radius:50%;
+ background:#b8ff65;box-shadow:0 0 12px #b8ff65;
+}
+.pf3-cube-perspective{
+ height:313px;flex:none;position:relative;
+ perspective:950px;transform-style:preserve-3d;
+ display:grid;place-items:center;
+}
+.pf3-cube-glow{
+ position:absolute;inset:9%;border-radius:50%;pointer-events:none;
+ background:radial-gradient(circle,#8e8bff36 0,#55baff12 34%,transparent 69%);
+ filter:blur(27px);
+}
+.pf3-orbit{position:absolute;pointer-events:none;left:50%;top:50%;border-radius:50%;transform-style:preserve-3d}
+.pf3-orbit-a{
+ width:380px;height:185px;margin-left:-190px;margin-top:-93px;
+ border:1px solid #a1ebff6f;transform:rotate(-30deg) rotateX(64deg);
+ box-shadow:0 0 24px #8ddcff14,inset 0 0 19px #93d6ff16;
+}
+.pf3-orbit-b{
+ width:315px;height:315px;margin-left:-158px;margin-top:-158px;
+ border:1px dashed #eabff966;transform:rotate(-27deg) rotateY(70deg) rotateX(20deg);
+}
+.pf3-orbit-c{
+ width:385px;height:132px;margin-left:-193px;margin-top:-66px;
+ border:1px solid #e9c38b55;transform:rotate(31deg) rotateX(66deg);
+}
+.pf3-cube-drag{
+ position:absolute;inset:0;
+ display:grid;place-items:center;
+ transform-style:preserve-3d;
+ cursor:grab;touch-action:none;
+ outline:none;
+}
+.pf3-cube-drag:active{cursor:grabbing}
+.pf3-cube-drag:focus-visible{outline:2px solid #bfeaff;outline-offset:-6px;border-radius:13px}
+.pf3-auto-spin{
+ --pf3-size:177px;
+ --pf3-half:88.5px;
+ width:100%;height:100%;
+ display:grid;place-items:center;
+ transform-style:preserve-3d;
+ animation:pf3-spin 32s linear infinite;
+}
+.pf3-auto-spin.pf3-paused{animation-play-state:paused}
+@keyframes pf3-spin{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
+.pf3-geometry{
+ position:relative;
+ width:var(--pf3-size);height:var(--pf3-size);
+ transform-style:preserve-3d;
+ transition:transform .14s ease-out;
+}
+.pf3-face{
+ position:absolute;inset:0;box-sizing:border-box;
+ backface-visibility:hidden;
+ border:1px solid #c5ecffd9;
+ border-radius:15px;
+ background:linear-gradient(145deg,#1c5173ed,#141d43f2 51%,#11162ef5);
+ box-shadow:inset 0 0 38px #78e0ff18,0 0 36px #82cfff2a;
+ transform-style:preserve-3d;
+ overflow:hidden;
+}
+.pf3-face:nth-child(even){
+ border-color:#d9b9ffcf;
+ background:linear-gradient(145deg,#3c2c6ce8,#182b49ed 60%,#12182eeb);
+}
+.pf3-face-0{transform:translateZ(var(--pf3-half))}
+.pf3-face-1{transform:rotateY(180deg) translateZ(var(--pf3-half))}
+.pf3-face-2{transform:rotateY(90deg) translateZ(var(--pf3-half))}
+.pf3-face-3{transform:rotateY(-90deg) translateZ(var(--pf3-half))}
+.pf3-face-4{transform:rotateX(90deg) translateZ(var(--pf3-half))}
+.pf3-face-5{transform:rotateX(-90deg) translateZ(var(--pf3-half))}
+.pf3-face-frame{
+ position:relative;
+ width:100%;height:100%;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;
+ color:#e9f9ff;isolation:isolate;
+}
+.pf3-face-frame:after{content:'';position:absolute;inset:7px;border:1px solid #dbf5ff31;border-radius:10px;pointer-events:none}
+.pf3-face-frame>svg{color:#a9f3ff;filter:drop-shadow(0 0 11px #73dfff91)}
+.pf3-face-frame strong{font:800 16px Manrope,sans-serif;letter-spacing:-.4px}
+.pf3-face-frame small{font-size:8px;letter-spacing:1.4px;color:#b8d2e4;font-weight:800}
+.pf3-face-id{position:absolute;left:13px;top:13px;font-size:8px;letter-spacing:1px;font-weight:800;color:#d5e9fa96}
+.pf3-face-grid{
+ position:absolute;inset:0;z-index:-1;opacity:.7;
+ background:linear-gradient(90deg,transparent 49.5%,#a6e9ff1c 50%,transparent 50.5%),linear-gradient(transparent 49.5%,#a6e9ff1c 50%,transparent 50.5%);
+ background-size:28px 28px;
+}
+.pf3-cube-core{
+ position:absolute;left:50%;top:50%;width:70px;height:70px;
+ margin:-35px;transform:translateZ(0);border-radius:50%;
+ background:radial-gradient(circle,#d9f7ff 0,#7cd4f8a8 15%,#907af14f 60%,transparent 70%);
+ filter:blur(10px);pointer-events:none;
+}
+.pf3-float-label{
+ position:absolute;display:inline-flex;gap:8px;align-items:center;
+ font-size:8px;letter-spacing:1.6px;font-weight:800;color:#b7d5f0;
+ pointer-events:none;
+}
+.pf3-float-a{top:22px;left:12px}
+.pf3-float-b{bottom:22px;right:9px}
+.pf3-float-label i{display:inline-block;width:27px;height:1px;background:#a5dbff7b}
+.pf3-story-panel{
+ min-height:85px;
+ display:flex;flex-direction:column;align-items:flex-start;
+ gap:5px;
+ padding:12px 15px;
+ border:1px solid #b6d1f04a;
+ border-radius:10px;
+ background:#070f20a8;
+}
+.pf3-story-panel>span{font-size:9px;letter-spacing:1.35px;font-weight:800;color:#a3edff}
+.pf3-story-panel strong{font:750 17px/1.2 Manrope,sans-serif;letter-spacing:-.45px;color:#f5f9ff}
+.pf3-story-panel p{font-size:11px;line-height:1.45;margin:0;color:#aebbd0}
+.pf3-hero-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.pf3-hero-controls>div{display:flex;gap:4px;min-width:0}
+.pf3-hero-controls button{font:800 9px/1.2 Manrope,sans-serif;letter-spacing:.35px;cursor:pointer}
+.pf3-hero-controls>div button{
+ border:1px solid #adcde551;border-radius:6px;padding:9px 10px;
+ background:#182639b2;color:#c7d7e8;
+ transition:background .23s,border-color .23s;
+}
+.pf3-hero-controls>div button:hover{background:#2e425d}
+.pf3-hero-controls>div button.active{border-color:#a5edff;background:#9bdcfa24;color:#b9efff}
+.pf3-hero-controls button:focus-visible{outline:2px solid #a4efff;outline-offset:3px}
+.pf3-reset{
+ display:inline-flex;gap:6px;align-items:center;border:0;background:transparent;
+ color:#a7b8d0;white-space:nowrap;padding:8px 3px;
+}
+.pf3-hero-helper{
+ justify-content:start;margin-top:12px;font-size:8px;letter-spacing:.7px;color:#93aec7;
+}
+.pf3-hero-helper svg{flex:none}
+
+/* Six selectable depth-layers: a new 3D workflow visual, not another carousel. */
+.pf3-workflow-section{
+ padding:73px 0 70px;
+ background:radial-gradient(ellipse at 33% 50%,#1e2943 0,#11192b 48%,#0c111e 88%);
+ border-block:1px solid #b7dcfb28;
+ overflow:hidden;
+}
+.pf3-workflow-head{
+ display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:24px;
+}
+.pf3-workflow-head .eyebrow{color:#9fbcda}
+.pf3-workflow-head h2{
+ font:750 clamp(34px,4.4vw,64px)/1.13 Manrope,sans-serif;
+ letter-spacing:-.065em;margin:17px 0 0;color:#f6f9ff;
+}
+.pf3-workflow-head h2 em{font-style:normal;color:#a5e6ff}
+.pf3-workflow-head>p{
+ max-width:390px;font-size:13px;line-height:1.7;color:#a6b8cd;margin:0 0 5px;
+}
+.pf3-workflow-layout{
+ display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+ align-items:stretch;gap:28px;
+}
+.pf3-depth-space{
+ position:relative;min-height:430px;overflow:hidden;
+ border-radius:18px;border:1px solid #b1d1ff3d;
+ background:radial-gradient(ellipse at 48% 60%,#20335066,#0b1428 70%),repeating-linear-gradient(0deg,#adceeb0a 0px,#adceeb0a 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,#adceeb0a 0px,#adceeb0a 1px,transparent 1px,transparent 32px);
+ perspective:900px;transform-style:preserve-3d;
+}
+.pf3-depth-ambient{
+ position:absolute;left:22%;right:20%;top:20%;bottom:11%;
+ border-radius:50%;background:radial-gradient(ellipse,#83c0fc34,transparent 70%);
+ filter:blur(41px);pointer-events:none;
+}
+.pf3-depth-object{
+ position:absolute;left:50%;top:45%;width:300px;height:192px;
+ transform:translate(-50%,-50%) rotateX(28deg) rotateY(-18deg) rotateZ(-14deg);
+ transform-style:preserve-3d;pointer-events:none;
+}
+.pf3-depth-plate{
+ pointer-events:auto;cursor:pointer;position:absolute;
+ left:50%;top:50%;width:275px;height:145px;
+ transform:translate(-50%,-50%) translate3d(calc(var(--pf3-depth)*16px),calc(var(--pf3-depth)*-24px),calc(110px - var(--pf3-depth)*20px));
+ transform-style:preserve-3d;
+ border:1px solid #bdb7ff9f;border-radius:12px;
+ background:linear-gradient(130deg,#253456ef,#121b34f6 70%);
+ color:#e7f4ff;text-align:left;
+ display:flex;flex-direction:column;justify-content:space-between;
+ padding:17px 20px;
+ box-shadow:8px 14px 24px #0408169c,inset 0 0 25px #7baeff11;
+ transition:transform .62s cubic-bezier(.2,.7,.2,1),border-color .32s,background .32s,opacity .4s;
+ opacity:calc(1 - var(--pf3-depth)*.105);
+}
+.pf3-depth-plate.active{
+ border:1.8px solid #c1f4ff;
+ background:linear-gradient(130deg,#284765f5,#172b48fc 70%);
+ box-shadow:7px 19px 40px #010710c9,inset 0 0 35px #81dfff27,0 0 32px #77dfff3d;
+ opacity:1;
+}
+.pf3-depth-plate:focus-visible{outline:3px solid #f4d39a;outline-offset:3px}
+.pf3-depth-plate>span{display:flex;align-items:center;gap:11px}
+.pf3-depth-plate svg{color:#aaedff}
+.pf3-depth-plate strong{font:750 24px/1.1 Manrope,sans-serif;letter-spacing:-.8px}
+.pf3-depth-plate>small{font-size:9px;line-height:1.4;color:#abc6dd;font-weight:800;letter-spacing:.85px}
+.pf3-depth-plate>i{display:block;width:100%;height:2px;background:linear-gradient(90deg,#a2eaff,transparent);box-shadow:0 0 12px #8bdcff86}
+.pf3-depth-floor{
+ position:absolute;bottom:30px;left:22%;width:62%;height:40px;
+ border-radius:50%;background:#040d1c;filter:blur(19px);pointer-events:none;
+}
+.pf3-depth-watermark{position:absolute;bottom:14px;left:15px;letter-spacing:1.6px;font-size:8px;color:#83abc9;font-weight:800}
+.pf3-workflow-detail{
+ border:1px solid #b1cde84d;border-radius:18px;
+ background:linear-gradient(140deg,#1a2940,#0e1b2c 74%);
+ min-height:430px;padding:27px 30px;
+ display:flex;flex-direction:column;align-items:start;
+}
+.pf3-workflow-kicker{
+ display:inline-flex;align-items:center;gap:8px;
+ font-size:9px;letter-spacing:1.2px;font-weight:800;color:#a8c8e0;
+}
+.pf3-workflow-symbol{display:flex;align-items:center;gap:17px;color:#adeaff;margin-top:28px}
+.pf3-workflow-symbol svg{width:58px;height:58px;padding:14px;background:#82d4fe1b;border-radius:13px;border:1px solid #a4e4ff7b}
+.pf3-workflow-symbol span{font-size:10px;letter-spacing:1.2px;color:#aabbd0;font-weight:800}
+.pf3-workflow-detail h3{
+ font:760 clamp(38px,4.1vw,58px)/1.13 Manrope,sans-serif;
+ letter-spacing:-.07em;color:#f4f8ff;margin:14px 0 5px;
+}
+.pf3-workflow-detail h3 span{color:#99e6ff}
+.pf3-workflow-detail>small{font-size:9px;letter-spacing:1.5px;font-weight:800;color:#a3dffe}
+.pf3-workflow-detail>p{
+ font-size:14px;line-height:1.6;color:#bdd0e2;margin:17px 0 auto;max-width:440px;
+}
+.pf3-workflow-select{display:flex;gap:6px;margin:21px 0 11px}
+.pf3-workflow-select button{
+ width:39px;height:32px;border:1px solid #b7d9ef4c;border-radius:6px;
+ background:#ffffff08;color:#a4c4dc;font-size:10px;font-weight:800;
+}
+.pf3-workflow-select button.active{background:#b7eaff;color:#102233;border-color:#b7eaff}
+.pf3-workflow-select button:hover:not(.active){background:#ffffff24}
+.pf3-workflow-select button:focus-visible{outline:2px solid #a6eaff;outline-offset:3px}
+.pf3-workflow-arrows{display:flex;align-items:center;gap:8px;margin-bottom:19px}
+.pf3-workflow-arrows button{
+ width:36px;height:35px;display:grid;place-items:center;
+ border-radius:7px;border:1px solid #c9def56a;background:#ffffff0b;color:#e5f2ff;
+}
+.pf3-workflow-arrows button:hover{background:#a7deff2a}
+.pf3-workflow-arrows>span{font-size:8px;letter-spacing:1.1px;color:#91b7d5;margin-left:6px;font-weight:800}
+.pf3-workflow-link{
+ margin-top:auto;display:inline-flex;align-items:center;gap:12px;
+ border-bottom:1px solid #b6e6fb;color:#d4f3ff;
+ padding:11px 0;font-size:10px;font-weight:850;letter-spacing:.6px;
+}
+@media(max-width:1220px) and (min-width:1021px){
+ .hero .hero-inner>h1{font-size:clamp(60px,6.4vw,86px);width:54%}
+ .pf3-hero-engine{top:145px;width:45%;height:560px;padding:15px}
+ .pf3-cube-perspective{height:295px}
+ .pf3-story-panel{min-height:80px}
+ .pf3-hero-topline{font-size:8px}
+ .pf3-workflow-layout{gap:20px}
+}
+@media(max-width:1020px){
+ .hero{height:auto!important;min-height:0!important}
+ .hero-inner{height:auto!important;min-height:0!important;padding-top:128px!important;padding-bottom:75px!important}
+ .hero .hero-inner>h1{width:100%;max-width:790px;font-size:clamp(55px,9.3vw,96px);margin:31px 0 23px}
+ .hero .hero-bottom{width:100%;max-width:710px;z-index:5;order:3;flex-direction:column;align-items:start;gap:12px}
+ .hero .hero-bottom p{max-width:620px}
+ .pf3-hero-engine{
+  position:relative;top:auto;right:auto;
+  order:2;width:min(100%,670px);height:auto;
+  margin:0 0 23px;padding:16px 18px;
+ }
+ .pf3-cube-perspective{height:300px}
+ .pf3-story-panel{min-height:78px}
+ .pf3-hero-helper{font-size:8px}
+ .hero .hero-inner .scroll{position:relative!important;order:4;margin-top:24px}
+ .pf3-workflow-layout{grid-template-columns:1fr;gap:14px}
+ .pf3-depth-space{min-height:370px}
+ .pf3-workflow-detail{min-height:345px}
+ .pf3-workflow-head{align-items:start}
+}
+@media(max-width:740px){
+ .hero-inner{padding-top:113px!important;padding-bottom:52px!important}
+ .hero .hero-inner>h1{font-size:clamp(50px,10vw,77px);margin:25px 0 22px}
+ .pf3-hero-engine{width:100%;margin-bottom:20px;border-radius:16px;padding:13px}
+ .pf3-hero-topline{font-size:7px;letter-spacing:.8px}
+ .pf3-cube-perspective{height:257px}
+ .pf3-auto-spin{--pf3-size:145px;--pf3-half:72.5px}
+ .pf3-face{border-radius:11px}
+ .pf3-face-frame{gap:8px}
+ .pf3-face-frame strong{font-size:12px}
+ .pf3-face-frame>svg{width:23px;height:23px}
+ .pf3-face-frame small{font-size:7px}
+ .pf3-face-id{font-size:7px;top:9px;left:9px}
+ .pf3-orbit-a{width:304px;height:148px;margin-left:-152px;margin-top:-74px}
+ .pf3-orbit-b{width:270px;height:270px;margin-left:-135px;margin-top:-135px}
+ .pf3-orbit-c{width:320px;height:110px;margin-left:-160px;margin-top:-55px}
+ .pf3-float-label{font-size:7px;letter-spacing:.8px}
+ .pf3-story-panel{min-height:78px}
+ .pf3-story-panel strong{font-size:16px}
+ .pf3-story-panel p{font-size:10px}
+ .pf3-hero-controls{align-items:start}
+ .pf3-hero-controls>div button{font-size:8px;padding:9px 7px}
+ .pf3-reset{font-size:8px!important}
+ .pf3-hero-helper{font-size:7px;letter-spacing:.3px}
+ .pf3-workflow-section{padding:48px 0 51px}
+ .pf3-workflow-head{flex-direction:column;gap:10px;margin-bottom:19px}
+ .pf3-workflow-head h2{font-size:clamp(34px,8.6vw,51px)}
+ .pf3-workflow-head>p{font-size:12px}
+ .pf3-depth-space{min-height:330px}
+ .pf3-depth-object{transform:translate(-50%,-50%) rotateX(31deg) rotateY(-15deg) rotateZ(-14deg) scale(.81)}
+ .pf3-workflow-detail{padding:22px;min-height:310px}
+ .pf3-workflow-symbol{margin-top:19px}
+ .pf3-workflow-detail>p{margin-top:11px;font-size:13px}
+ .pf3-workflow-select{margin-top:14px}
+}
+@media(max-width:390px){
+ .pf3-hero-engine{padding:10px}
+ .pf3-cube-perspective{height:232px}
+ .pf3-auto-spin{--pf3-size:130px;--pf3-half:65px}
+ .pf3-face-frame strong{font-size:11px}
+ .pf3-orbit-a{width:275px;margin-left:-138px}
+ .pf3-orbit-b{width:245px;height:245px;margin-left:-123px;margin-top:-123px}
+ .pf3-orbit-c{width:280px;margin-left:-140px}
+ .pf3-hero-controls>div button{font-size:7px;padding:8px 6px}
+ .pf3-depth-object{transform:translate(-50%,-50%) rotateX(31deg) rotateY(-15deg) rotateZ(-14deg) scale(.71)}
+}
+@media(prefers-reduced-motion:reduce){
+ .pf3-auto-spin{animation:none!important}
+ .pf3-geometry,.pf3-depth-plate{transition:none!important}
+}
