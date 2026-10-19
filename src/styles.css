@@ -2409,3 +2409,223 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 
 /* Keep camera/video element mounted and decoding while controller is collapsed. */
 .holo-console.holo-hidden{display:flex!important;visibility:hidden!important;pointer-events:none!important;transform:translateX(-120vw)}
+
+
+/* CAMERA KEYBOARD V14: camera and air keys share a single physical visual plane.
+   The mirrored video is letterboxed/cropped with object-fit:cover; tracking projects
+   camera landmarks through the same cover geometry in GestureLab.tsx. */
+.gsl-stage-keyboard{
+  position:relative;
+  min-height:630px;
+  border-color:#9dddf8a3;
+  background:radial-gradient(ellipse at 52% 31%,#276083,#0d203a 70%);
+  box-shadow:0 0 55px #54d4ff20,inset 0 0 55px #78c7ff16;
+}
+.gsl-stage-webcam{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center center;
+  transform:scaleX(-1);
+  opacity:0;
+  z-index:1;
+  pointer-events:none;
+  transition:opacity .3s ease;
+}
+.gsl-stage-keyboard .gsl-stage-webcam.on{
+  opacity:.87;
+  filter:contrast(1.06) saturate(.77);
+}
+.gsl-stage-keyboard:after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  border-radius:11px;
+  background:linear-gradient(
+    to bottom,
+    #030b18b0 0%,
+    #030b1855 27%,
+    #061b2f36 43%,
+    #0616246b 77%,
+    #04111ecb 100%
+  );
+}
+.gsl-stage-keyboard .gsl-keyboard-panel{
+  position:relative;
+  z-index:4;
+  min-height:630px;
+  padding:20px 27px 21px;
+  align-items:center;
+  justify-content:space-between;
+  gap:13px;
+}
+.gsl-stage-keyboard .gsl-typed{
+  max-width:790px;
+  border-color:#a6ebffb3;
+  background:linear-gradient(145deg,#031020e8,#0b2340be);
+  backdrop-filter:blur(14px);
+  box-shadow:0 0 33px #71d3fb24,inset 0 0 24px #97deff10;
+  padding:14px 18px 9px;
+}
+.gsl-stage-keyboard .gsl-typed textarea{
+  color:#f3fcff;
+  max-height:125px;
+  font-size:clamp(17px,1.95vw,27px);
+  text-shadow:0 2px 15px #000c;
+}
+.gsl-stage-keyboard .gsl-typed small{color:#a1d9f3}
+.gsl-stage-keyboard .gsl-keyboard-hud{
+  max-width:790px;
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 55px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  width:100%;
+  padding:3px 0;
+  text-shadow:0 2px 9px #001325;
+}
+.gsl-stage-keyboard .gsl-keyboard-hud span:first-child{font-size:10px;line-height:1.35;color:#b2f1ff;font-weight:900}
+.gsl-stage-keyboard .gsl-keyboard-hud span:last-child{text-align:right;color:#b4faff;font-weight:900;font-size:10px}
+.gsl-target-glyph{
+  display:grid;
+  place-items:center;
+  justify-self:center;
+  width:45px;
+  height:45px;
+  border-radius:13px;
+  border:1px solid #c0f8ffcf;
+  background:#184361ba;
+  backdrop-filter:blur(12px);
+  color:#deffff;
+  font:900 25px Manrope,sans-serif;
+  box-shadow:0 0 24px #99eafa58;
+}
+.gsl-stage-keyboard .gsl-keys{
+  width:100%;
+  max-width:790px;
+  margin:0 auto;
+  background:linear-gradient(180deg,#1d4c6980,#0920399e);
+  padding:16px 14px 19px;
+  border:1px solid #9fe7ff9e;
+  border-radius:15px;
+  box-shadow:0 24px 60px #0009,0 0 36px #63d7ff26,inset 0 0 28px #c4f8ff0f;
+  backdrop-filter:blur(9px);
+  transform:perspective(920px) rotateX(5deg);
+  transform-origin:center 72%;
+}
+.gsl-stage-keyboard .gsl-key-row{gap:8px}
+.gsl-stage-keyboard .gsl-key-row button{
+  min-height:54px;
+  border:1px solid #abedffb8;
+  background:linear-gradient(145deg,#236887c4,#0c2c49c4);
+  backdrop-filter:blur(10px);
+  box-shadow:0 5px 0 #092036f0,0 0 15px #72d9f930;
+  color:#f3ffff;
+  font:850 clamp(13px,1.2vw,17px) Manrope,sans-serif;
+  text-shadow:0 1px 9px #031020e0;
+  border-radius:9px;
+}
+.gsl-stage-keyboard .gsl-key-row button.gsl-key-target{
+  background:linear-gradient(145deg,#d7feff,#73dfff);
+  color:#082333;
+  box-shadow:0 0 0 2px #f4ffff,0 0 40px #92ecffb8;
+  text-shadow:none;
+  transform:translateY(-3px);
+}
+.gsl-stage-keyboard .gsl-key-functions button{
+  font-size:11px;
+  min-height:47px;
+  letter-spacing:.5px;
+}
+.gsl-stage-keyboard .gsl-stage-caption{
+  width:100%;
+  max-width:790px;
+  padding:7px 11px;
+  margin:0;
+  border:1px solid #abddef4a;
+  border-radius:7px;
+  background:#082039b9;
+  color:#d1f3ff;
+  text-shadow:0 2px 7px #000;
+  line-height:1.6;
+}
+.gsl-vision-placeholder{
+  position:absolute;
+  z-index:1;
+  inset:0;
+  pointer-events:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:15px;
+  color:#bfefff;
+  background:radial-gradient(circle at 50% 40%,#265b7950,transparent 65%);
+  text-align:center;
+}
+.gsl-vision-placeholder svg{color:#a7ecff;filter:drop-shadow(0 0 18px #75e8ff)}
+.gsl-vision-placeholder span{font-size:11px;letter-spacing:1.1px;font-weight:800;max-width:290px}
+.gsl-stage-keyboard .gsl-hand-cursor{
+  z-index:50;
+  width:44px;
+  height:44px;
+  border-color:#edffff;
+  border-width:2px;
+  box-shadow:0 0 0 6px #76dbff34,0 0 38px #80e7ffc9;
+  background:radial-gradient(circle,#58bbdf14,#17405a61);
+}
+.gsl-stage-keyboard .gsl-hand-cursor.gsl-dwell-cursor{
+  background:conic-gradient(#b4ffce var(--gsl-dwell-deg),#7bdfff39 0);
+}
+.gsl-stage-keyboard .gsl-hand-cursor>span{width:6px;height:6px;box-shadow:0 0 14px #b7faff}
+.gsl-camera-link{
+  min-height:101px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:radial-gradient(ellipse at 0% 50%,#23617e44,transparent 72%),linear-gradient(140deg,#122b42,#132339);
+  border:1px solid #a1dbf68a;
+  border-radius:11px;
+  padding:16px 13px;
+}
+.gsl-camera-link>svg{width:38px;height:38px;flex-shrink:0;color:#acebff;padding:8px;border:1px solid #a6e9ff6b;border-radius:11px;box-shadow:0 0 16px #5ecdf329}
+.gsl-camera-link>div{display:flex;flex-direction:column;gap:8px}
+.gsl-camera-link strong{color:#e0f7ff;font-size:10px;letter-spacing:.6px;line-height:1.35}
+.gsl-camera-link span{color:#abc8da;font-size:11px;line-height:1.5}
+.gsl-camera-panel{padding:15px}
+.gsl-stage-top b{color:#bbf1ff}
+@media(max-width:1180px){
+  .gsl-stage-keyboard,.gsl-stage-keyboard .gsl-keyboard-panel{min-height:600px}
+  .gsl-stage-keyboard .gsl-keyboard-panel{padding:17px 15px}
+  .gsl-stage-keyboard .gsl-keys{padding:13px 10px 17px}
+  .gsl-stage-keyboard .gsl-key-row{gap:5px}
+  .gsl-stage-keyboard .gsl-key-row button{min-height:48px}
+  .gsl-stage-keyboard .gsl-key-functions button{min-height:44px}
+}
+@media(max-width:850px){
+  .gsl-stage-keyboard,.gsl-stage-keyboard .gsl-keyboard-panel{min-height:580px}
+  .gsl-stage-keyboard .gsl-key-row button{min-height:51px}
+}
+@media(max-width:620px){
+  .gsl-stage-keyboard,.gsl-stage-keyboard .gsl-keyboard-panel{min-height:545px}
+  .gsl-stage-keyboard .gsl-keyboard-panel{padding:10px 8px;gap:8px}
+  .gsl-stage-keyboard .gsl-typed{padding:9px}
+  .gsl-stage-keyboard .gsl-typed textarea{font-size:18px;max-height:105px}
+  .gsl-stage-keyboard .gsl-keyboard-hud{grid-template-columns:minmax(0,1fr) 35px minmax(0,1fr);gap:6px}
+  .gsl-stage-keyboard .gsl-keyboard-hud span:first-child,.gsl-stage-keyboard .gsl-keyboard-hud span:last-child{font-size:8px}
+  .gsl-target-glyph{width:33px;height:33px;font-size:19px;border-radius:9px}
+  .gsl-stage-keyboard .gsl-keys{padding:9px 5px 12px;gap:7px;border-radius:8px}
+  .gsl-stage-keyboard .gsl-key-row{gap:3px}
+  .gsl-stage-keyboard .gsl-key-row button{min-height:43px;font-size:11px;border-radius:5px}
+  .gsl-stage-keyboard .gsl-key-functions button{font-size:8px;min-height:37px;letter-spacing:0}
+  .gsl-stage-keyboard .gsl-stage-caption{font-size:8px;line-height:1.45;padding:6px}
+  .gsl-stage-keyboard .gsl-hand-cursor{width:35px;height:35px}
+}
+@media(prefers-reduced-motion:reduce){
+  .gsl-stage-webcam,.gsl-stage-keyboard .gsl-key-row button{transition:none}
+}
