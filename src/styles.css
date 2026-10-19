@@ -669,3 +669,19 @@ footer{background:#090b18}
 @media(prefers-reduced-motion:reduce){
   .pf-stage-edge-arrow{transition:none!important}
 }
+
+
+/* HOME ORDER V5 — Intro hero → work carousel → remaining sections */
+.hero + .pf-showcase-section {
+  padding-top:54px!important;
+  padding-bottom:49px!important;
+}
+.hero + .pf-showcase-section .section-head {margin-bottom:8px}
+.hero + .pf-showcase-section .section-head h2 {font-size:clamp(45px,5.8vw,82px)}
+.hero + .pf-showcase-section .pf-stage-viewport {margin-top:0}
+@media(max-width:740px) {
+  .hero + .pf-showcase-section {padding-top:41px!important;padding-bottom:42px!important}
+  .hero + .pf-showcase-section .section-head h2{font-size:clamp(39px,9.4vw,60px)}
+  .hero + .pf-showcase-section .section-head p{font-size:11px;line-height:1.5}
+}
+/* Clearer wording: this is the second section, not another hero. */
