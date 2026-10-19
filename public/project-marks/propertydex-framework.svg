@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="propertydex-framework custom project emblem">
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1b2736"/><stop offset="1" stop-color="#0b111f"/></linearGradient><linearGradient id="accent" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#e4c7a6"/><stop offset="1" stop-color="#e9f5ff"/></linearGradient></defs>
+<rect x="2" y="2" width="116" height="116" rx="26" fill="url(#bg)" stroke="#e4c7a6" stroke-opacity=".7" stroke-width="2"/>
+<circle cx="60" cy="60" r="46" fill="#e4c7a6" fill-opacity=".055"/>
+<rect x="22" y="26" width="28" height="23" rx="4" stroke="url(#accent)" stroke-width="4" fill="none"/><rect x="71" y="26" width="28" height="23" rx="4" stroke="#fff0d8" stroke-width="4" fill="none"/><rect x="46" y="75" width="28" height="23" rx="4" stroke="url(#accent)" stroke-width="4" fill="none"/><path d="M50 37h21M36 49v14h24v12M85 49v14H60" stroke="#e4c7a6" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="lead-rescue custom project emblem">
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1b2736"/><stop offset="1" stop-color="#0b111f"/></linearGradient><linearGradient id="accent" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffa9db"/><stop offset="1" stop-color="#e9f5ff"/></linearGradient></defs>
+<rect x="2" y="2" width="116" height="116" rx="26" fill="url(#bg)" stroke="#ffa9db" stroke-opacity=".7" stroke-width="2"/>
+<circle cx="60" cy="60" r="46" fill="#ffa9db" fill-opacity=".055"/>
+<rect x="24" y="27" width="72" height="65" rx="13" fill="none" stroke="url(#accent)" stroke-width="5"/><path d="M39 47h25M39 59h17" stroke="#ffdbf0" stroke-width="5" stroke-linecap="round"/><path d="m69 68 11-12 11 12" stroke="#ffc0e5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M80 57v24" stroke="#ffc0e5" stroke-width="5" stroke-linecap="round"/>
+</svg>

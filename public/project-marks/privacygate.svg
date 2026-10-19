@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="privacygate custom project emblem">
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1b2736"/><stop offset="1" stop-color="#0b111f"/></linearGradient><linearGradient id="accent" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#b8ff65"/><stop offset="1" stop-color="#e9f5ff"/></linearGradient></defs>
+<rect x="2" y="2" width="116" height="116" rx="26" fill="url(#bg)" stroke="#b8ff65" stroke-opacity=".7" stroke-width="2"/>
+<circle cx="60" cy="60" r="46" fill="#b8ff65" fill-opacity=".055"/>
+<path d="M60 21 90 34v25c0 22-13 36-30 43C43 95 30 81 30 59V34Z" fill="none" stroke="url(#accent)" stroke-width="5" stroke-linejoin="round"/><path d="m45 60 10 10 22-24" fill="none" stroke="#e6ffc1" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

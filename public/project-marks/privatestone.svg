@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="privatestone custom project emblem">
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1b2736"/><stop offset="1" stop-color="#0b111f"/></linearGradient><linearGradient id="accent" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#bda5ff"/><stop offset="1" stop-color="#e9f5ff"/></linearGradient></defs>
+<rect x="2" y="2" width="116" height="116" rx="26" fill="url(#bg)" stroke="#bda5ff" stroke-opacity=".7" stroke-width="2"/>
+<circle cx="60" cy="60" r="46" fill="#bda5ff" fill-opacity=".055"/>
+<path d="M23 90V51l22-12 20 12v39M64 90V32l19-12 15 11v59" fill="none" stroke="url(#accent)" stroke-width="5" stroke-linejoin="round"/><path d="M35 60h9m-9 13h9m32-31h9m-9 14h9m-9 14h9" stroke="#efe4ff" stroke-width="5" stroke-linecap="round"/><path d="M17 93h89" stroke="#bda5ff" stroke-width="4" stroke-linecap="round"/>
+</svg>
