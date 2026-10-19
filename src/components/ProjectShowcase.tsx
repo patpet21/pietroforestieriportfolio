@@ -89,7 +89,7 @@ export default function ProjectShowcase(){
     <button type="button" onClick={()=>rotate(1)} aria-label="Next project"><ChevronRight size={22}/></button></div>
    <div className="pf-stage-current" aria-live="polite"><b>{String(active+1).padStart(2,'0')} <small>/ {String(count).padStart(2,'0')}</small></b>
     <strong>{slides[active].title}</strong></div>
-   <span className="pf-stage-instruction">DRAG TO EXPLORE · SELECT A PROJECT</span>
+   <span className="pf-stage-instruction">USE THE ARROWS · DRAG OR SWIPE</span>
   </div>
   <div className="pf-stage-dots" aria-label="Choose a project">
    {slides.map((p,i)=><button type="button" key={p.id} className={i===active?'active':''} onClick={()=>setActive(i)}
