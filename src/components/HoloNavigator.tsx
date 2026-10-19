@@ -244,7 +244,7 @@ export default function HoloNavigator(){
    <div className="holo-air-head"><div><Keyboard size={18}/><strong>AIR TYPE / HOLOGRAPHIC KEYBOARD</strong></div><button onClick={()=>switchKeyboard(false)}><X size={17}/> CLOSE</button></div>
    <div className="holo-air-input">{focusRef.current&&document.contains(focusRef.current)?<span>WRITING INTO: {focusRef.current.getAttribute('placeholder')||focusRef.current.getAttribute('name')||'SELECTED FIELD'}</span>:<span>DEMO PAD · CLICK A TEXT FIELD TO TYPE ON THE PAGE</span>}<output>{focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-48):note.slice(-48)}</output></div>
    <div className="holo-air-keys">{ROWS.map((row,i)=><div className="holo-air-row" key={i}>{row.split('').map(letter=><button type="button" key={letter} data-holo-key={letter} className={hoverKey===letter?'selected':''} onClick={()=>insertText(letter)}>{letter}</button>)}</div>)}<div className="holo-air-row holo-air-utils"><button data-holo-key="BACK" className={hoverKey==='BACK'?'selected':''} onClick={()=>insertText('BACK')}>BACKSPACE</button><button data-holo-key="SPACE" className={hoverKey==='SPACE'?'selected':''} onClick={()=>insertText('SPACE')}>SPACE</button><button data-holo-key="CLEAR" className={hoverKey==='CLEAR'?'selected':''} onClick={()=>insertText('CLEAR')}>CLEAR</button></div></div>
-   <div className="holo-air-foot">POINT TO A KEY · HOLD STILL UNTIL THE RING COMPLETES · NO PINCH REQUIRED</div>
+   <div className="holo-air-foot">ONE INDEX FINGER · HOLD UNTIL THE RING FILLS · MOVE AWAY AND BACK TO REPEAT</div>
   </div>}
  </>;
 }
