@@ -275,7 +275,7 @@ export default function GestureLab(){
      <div className="gsl-camera-panel"><div className="gsl-camera-heading"><span><Video size={18}/> CAMERA INPUT</span><small>{status==='ready'?(tracking?'TRACKING':'READY'):status.toUpperCase()}</small></div>
       <div className="gsl-video-shell"><video ref={videoRef} playsInline muted autoPlay className={status==='ready'?'on':''}/>{status!=='ready'&&<div className="gsl-no-video"><CameraOff size={30}/><strong>Camera off</strong><span>Enable the webcam to track your hand. Manual controls work anytime.</span></div>}</div>
       {error&&<p role="alert" className="gsl-camera-error">{error}</p>}
-      <button type="button" className={'gsl-camera-btn '+(status==='ready'?'gsl-camera-stop':'')} onClick={status==='ready'?stop:start} disabled={status==='loading'}>{status==='ready'?<><CameraOff size={18}/> STOP CAMERA</>:status==='loading'?<><Camera size={18}/> LOADING MODEL…</>:<><Camera size={18}/> ENABLE CAMERA</>}</button>
+      <button type="button" className={'gsl-camera-btn '+(status==='ready'?'gsl-camera-stop':'')} onClick={status==='ready'||status==='loading'?stop:start}>{status==='ready'?<><CameraOff size={18}/> STOP CAMERA</>:status==='loading'?<><CameraOff size={18}/> CANCEL CAMERA SETUP</>:<><Camera size={18}/> ENABLE CAMERA</>}</button>
       <div className="gsl-camera-meta"><span>{status==='ready'?'MODEL READY'+(gpuStatus?' · '+gpuStatus:''):'MEDIAPIPE / LOCAL INFERENCE'}</span><span>{tracking?'● HAND DETECTED':'○ NO HAND DATA'}</span></div>
      </div>
      <div className="gsl-guide"><div><Sparkles size={18}/><strong>HOW TO INTERACT</strong></div>
