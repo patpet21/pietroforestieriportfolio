@@ -33,7 +33,7 @@ export default function GestureLab(){
  const [error,setError]=useState('');
  const [tracking,setTracking]=useState(false);
  const [cursor,setCursor]=useState<Cursor|null>(null);
- const [typing,setTyping]=useState('HELLO AI PM LAB');
+ const [typing,setTyping]=useState('');
  const [hint,setHint]=useState('Start the camera or use your mouse to try the demo.');
  const [cubeAngles,setCubeAngles]=useState({x:-21,y:31});
  const [cubeExpanded,setCubeExpanded]=useState(false);
@@ -372,16 +372,16 @@ export default function GestureLab(){
      <div className="gsl-stage-footer"><span><MousePointer2 size={15}/> {hint}</span><span>PROTOTYPE · NOT A PRODUCTION AUTOMATION</span></div>
     </div>
     <aside className="gsl-side">
-     <div className="gsl-camera-panel"><div className="gsl-camera-heading"><span><Video size={18}/> CAMERA INPUT</span><small>{status==='ready'?(tracking?'TRACKING':'READY'):status.toUpperCase()}</small></div>
+     <div className="gsl-camera-panel"><div className="gsl-camera-heading"><span><Video size={18}/> {mode==='keyboard'?'CAMERA + KEYBOARD':'CAMERA INPUT'}</span><small>{status==='ready'?(tracking?'TRACKING':'READY'):status.toUpperCase()}</small></div>
       <div className="gsl-camera-link"><Camera size={22}/><div><strong>{status==='ready'?'CAMERA INSIDE THE KEYBOARD':status==='loading'?'PREPARING CAMERA OVERLAY':'WEBCAM + KEYBOARD TOGETHER'}</strong><span>{status==='ready'?'Watch the big left panel: your fingertip, highlighted key and typed text appear in one view.':'Activate the camera and the live preview will appear behind the large holographic keyboard.'}</span></div></div>
       {error&&<p role="alert" className="gsl-camera-error">{error}</p>}
       <button type="button" className={'gsl-camera-btn '+(status==='ready'?'gsl-camera-stop':'')} onClick={status==='ready'||status==='loading'?stop:start}>{status==='ready'?<><CameraOff size={18}/> STOP CAMERA</>:status==='loading'?<><CameraOff size={18}/> CANCEL CAMERA SETUP</>:<><Camera size={18}/> ENABLE CAMERA</>}</button>
       <div className="gsl-camera-meta"><span>{status==='ready'?'MODEL READY'+(gpuStatus?' · '+gpuStatus:''):'MEDIAPIPE / LOCAL INFERENCE'}</span><span>{tracking?'● HAND DETECTED':'○ NO HAND DATA'}</span></div>
-      {status==='ready'&&<div className="gsl-pinch-feedback"><div><span>THUMB + INDEX / CLOSURE</span><strong>{tracking?(cursor?.pinching?'PINCH DETECTED':pinchMeter+'%'):'WAITING FOR HAND'}</strong></div><div className="gsl-pinch-track"><i style={{width:pinchMeter+'%'}}/></div></div>}
+      {status==='ready'&&(mode!=='keyboard'||inputMethod==='pinch')&&<div className="gsl-pinch-feedback"><div><span>THUMB + INDEX / CLOSURE</span><strong>{tracking?(cursor?.pinching?'PINCH DETECTED':pinchMeter+'%'):'WAITING FOR HAND'}</strong></div><div className="gsl-pinch-track"><i style={{width:pinchMeter+'%'}}/></div></div>}
      </div>
      <div className="gsl-guide"><div><Sparkles size={18}/><strong>HOW TO INTERACT</strong></div>
       {mode==='keyboard'&&<div className="gsl-input-modes"><span>HOW TO TYPE</span><div><button type="button" className={inputMethod==='pinch'?'active':''} aria-pressed={inputMethod==='pinch'} onClick={()=>{setInputMethod('pinch');inputMethodRef.current='pinch';}}>PINCH</button><button type="button" className={inputMethod==='dwell'?'active':''} aria-pressed={inputMethod==='dwell'} onClick={()=>{setInputMethod('dwell');inputMethodRef.current='dwell';dwellRef.current={key:'',since:0,locked:false};}}>HOLD 1 SEC</button></div></div>}
-      <div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>
+      {(mode!=='keyboard'||inputMethod==='pinch')&&<div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>}
       {mode==='cube'&&<label className="gsl-rotation-speed">ROTATION RESPONSE <strong>{rotationSpeed.toFixed(1)}×</strong><input type="range" min=".65" max="2.5" step=".15" value={rotationSpeed} onChange={e=>setRotationSpeed(Number(e.target.value))}/></label>}
       {mode==='keyboard'?<p>Look at the large camera view, not the small controls. Place your index fingertip over a translucent key in the live image and hold for one second. The glowing ring and highlighted key show when it is ready; no pinch needed.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
       <div className="gsl-guide-tags"><span>NO CAMERA REQUIRED FOR MANUAL MODE</span><span>{mode==='workflow'?connections.length+' DEPENDENCIES':'GESTURE + POINTER'}</span></div>
