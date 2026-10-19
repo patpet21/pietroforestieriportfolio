@@ -1644,3 +1644,415 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  .pf3-auto-spin{animation:none!important}
  .pf3-geometry,.pf3-depth-plate{transition:none!important}
 }
+
+
+/* PF V10 / SCROLL WBS AUTOMATION + COLLISION-FREE HERO — 2026-10-19
+   Sticky scroll controls physical 3D card positions: WBS → explosion → workflow → PM dashboard.
+   Cube is in a grid column, never absolutely positioned above copy. */
+.hero.pf10-home-hero{
+ height:auto!important;
+ min-height:780px!important;
+}
+.hero .hero-inner.pf10-hero-grid{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+ gap:clamp(30px,4.2vw,72px);
+ align-items:center;
+ height:auto!important;
+ min-height:780px!important;
+ padding-top:135px!important;
+ padding-bottom:95px!important;
+ position:relative;
+}
+.hero .pf10-hero-copy{
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ min-width:0;
+ position:relative;
+ z-index:5;
+}
+.hero .pf10-hero-copy>.eyebrow{align-self:start;max-width:100%;line-height:1.7}
+.hero .pf10-hero-copy h1{
+ width:100%!important;
+ max-width:100%!important;
+ font-size:clamp(54px,6.2vw,93px)!important;
+ letter-spacing:-.093em;
+ line-height:1.06;
+ margin:36px 0 26px!important;
+ text-wrap:nowrap;
+ overflow:visible;
+}
+.hero .pf10-hero-copy .hero-bottom{
+ width:100%!important;max-width:100%!important;
+ display:flex;flex-direction:column;align-items:flex-start;
+ gap:18px;position:relative;z-index:4;
+}
+.hero .pf10-hero-copy .hero-bottom p{
+ max-width:510px;
+ font-size:clamp(13px,1.18vw,16px);line-height:1.72;
+ margin:0;
+}
+.hero .pf10-hero-copy .actions{display:flex;gap:10px;flex-wrap:wrap}
+.hero .pf10-hero-copy .btn{
+ min-height:48px;
+ padding:13px 15px;
+ font-size:9px;
+ gap:10px;
+ white-space:nowrap;
+}
+.hero .pf10-hero-copy .scroll{
+ position:relative!important;
+ left:auto!important;
+ bottom:auto!important;
+ top:auto!important;
+ right:auto!important;
+ margin-top:30px;
+ align-self:start;
+ display:inline-flex;align-items:center;gap:9px;
+}
+.hero .pf10-hero-grid>.pf3-hero-engine{
+ position:relative!important;
+ top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;
+ width:100%!important;
+ max-width:545px!important;
+ margin:0!important;
+ height:565px;
+ min-width:0;
+ justify-self:end;
+ align-self:center;
+ z-index:3;
+}
+/* Clearly separate the object from the text even at intermediate laptop widths. */
+@media(min-width:1021px) and (max-width:1199px){
+ .hero .hero-inner.pf10-hero-grid{gap:22px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .hero .pf10-hero-copy h1{font-size:clamp(52px,5.85vw,75px)!important}
+ .hero .pf10-hero-grid>.pf3-hero-engine{height:550px}
+ .hero .pf10-hero-grid .pf3-cube-perspective{height:292px}
+}
+@media(max-width:1020px){
+ .hero.pf10-home-hero{height:auto!important;min-height:0!important}
+ .hero .hero-inner.pf10-hero-grid{
+  grid-template-columns:minmax(0,1fr);
+  min-height:0!important;
+  padding-top:118px!important;
+  padding-bottom:65px!important;
+  gap:28px;
+ }
+ .hero .pf10-hero-copy h1{font-size:clamp(51px,9vw,86px)!important;margin:27px 0 22px!important}
+ .hero .pf10-hero-grid>.pf3-hero-engine{
+  position:relative!important;
+  order:2;
+  width:min(100%,660px)!important;
+  max-width:660px!important;
+  justify-self:start;
+  height:auto;
+  margin:0!important;
+ }
+ .hero .pf10-hero-copy{order:1}
+ .hero .pf10-hero-copy .scroll{margin-top:22px}
+}
+@media(max-width:740px){
+ .hero .hero-inner.pf10-hero-grid{padding-top:101px!important;padding-bottom:45px!important;gap:20px}
+ .hero .pf10-hero-copy h1{font-size:clamp(46px,11vw,76px)!important;margin:22px 0 20px!important}
+ .hero .pf10-hero-copy .hero-bottom{gap:12px}
+ .hero .pf10-hero-copy .btn{font-size:8px;padding:11px 13px;min-height:44px}
+ .hero .pf10-hero-copy .scroll{margin-top:19px}
+ .hero .pf10-hero-grid>.pf3-hero-engine{padding:13px!important}
+}
+@media(max-width:370px){
+ .hero .pf10-hero-copy h1{font-size:44px!important}
+}
+/* WBS simulation scroll track and self-contained fixed-height visual stage. */
+.pf10-scroll-section{
+ height:340svh;
+ position:relative;
+ background:#080f19;
+ isolation:isolate;
+}
+.pf10-scroll-sticky{
+ position:sticky;
+ top:0;
+ width:100%;
+ height:100svh;
+ min-height:0;
+ background:
+  radial-gradient(ellipse at 27% 52%,#1a3450b0 0%,#101a2bba 41%,#080f19 85%),
+  #080f19;
+ overflow:hidden;
+ display:flex;
+}
+.pf10-scroll-layout{
+ height:100%;
+ min-height:0;
+ padding-top:clamp(80px,10svh,113px);
+ padding-bottom:clamp(15px,3svh,29px);
+ display:flex;
+ flex-direction:column;
+ gap:clamp(8px,2svh,22px);
+}
+.pf10-scroll-title{
+ display:flex;align-items:end;justify-content:space-between;
+ gap:28px;flex:none;
+}
+.pf10-scroll-title h2{
+ font:770 clamp(31px,3.75vw,53px)/1.1 Manrope,sans-serif;
+ letter-spacing:-.065em;
+ margin:12px 0 0;
+ color:#f2f8ff;
+}
+.pf10-scroll-title h2 em{font-style:normal;color:#9fe4fc}
+.pf10-scroll-title>p{
+ font-size:12px;
+ line-height:1.6;
+ color:#9eb8d0;
+ max-width:342px;
+ margin:0;
+}
+.pf10-scroll-title>p strong{color:#dbf5ff}
+.pf10-scroll-workspace{
+ display:grid;
+ grid-template-columns:minmax(0,1.42fr) minmax(255px,.58fr);
+ gap:15px;
+ min-height:0;
+ flex:1;
+}
+.pf10-network-visual{
+ min-width:0;
+ min-height:0;
+ position:relative;
+ border:1px solid #a3c9e251;
+ border-radius:16px;
+ background:
+  radial-gradient(ellipse at 50% 42%,#2878ae26,transparent 60%),
+  linear-gradient(145deg,#0c192b,#101c30 70%,#081321);
+ overflow:hidden;
+ perspective:850px;
+ transform-style:preserve-3d;
+}
+.pf10-grid{
+ position:absolute;inset:0;pointer-events:none;
+ background-image:linear-gradient(#accff710 1px,transparent 1px),linear-gradient(90deg,#accff710 1px,transparent 1px);
+ background-size:25px 25px;
+ mask-image:radial-gradient(ellipse at center,#000 30%,transparent 90%);
+}
+.pf10-network-visual:after{
+ content:'';position:absolute;inset:7px;
+ pointer-events:none;border:1px solid #9ce6fb19;border-radius:10px;
+}
+.pf10-corner{
+ position:absolute;width:27px;height:27px;border-color:#a7eaff;border-style:solid;
+ pointer-events:none;z-index:2;opacity:.8;
+}
+.pf10-corner-a{left:15px;top:15px;border-width:2px 0 0 2px}
+.pf10-corner-b{bottom:15px;right:15px;border-width:0 2px 2px 0}
+.pf10-scene-label,.pf10-scene-foot{
+ position:absolute;left:17px;right:17px;z-index:9;
+ display:flex;justify-content:space-between;gap:12px;align-items:center;
+ font-size:8px;letter-spacing:1.15px;font-weight:800;
+ color:#97b4d1;
+ pointer-events:none;
+}
+.pf10-scene-label{top:20px}
+.pf10-scene-label span{display:inline-flex;align-items:center;gap:7px}
+.pf10-scene-label i{width:6px;height:6px;background:#adf2ff;border-radius:50%;box-shadow:0 0 12px #8fe8ff}
+.pf10-scene-label b{color:#a9eeff}
+.pf10-scene-foot{bottom:17px;font-size:8px;letter-spacing:.7px}
+.pf10-edges{
+ position:absolute;inset:0;width:100%;height:100%;
+ pointer-events:none;z-index:1;
+ overflow:visible;
+}
+.pf10-edges path{
+ fill:none;stroke:#8fd1ff7f;stroke-width:2;
+ stroke-linecap:round;stroke-linejoin:round;
+ vector-effect:non-scaling-stroke;
+}
+.pf10-flow-path path{stroke:#b2f6f4;stroke-width:2.3;stroke-dasharray:10 7;animation:pf10-dash 13s linear infinite}
+@keyframes pf10-dash{to{stroke-dashoffset:-200}}
+.pf10-task-node{
+ z-index:3;position:absolute;
+ width:clamp(98px,10.8vw,146px);
+ min-height:68px;
+ border:1px solid #9abddb88;
+ border-radius:10px;
+ box-shadow:0 8px 23px #030819a8,inset 0 0 25px #97d3ff11;
+ background:linear-gradient(135deg,#223f5ef2,#121e35f7 70%);
+ color:#ebf7ff;
+ padding:10px 11px 11px;
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;
+ pointer-events:none;
+ will-change:transform,opacity;
+}
+.pf10-task-root{
+ border-color:#aff4ffd2;
+ background:linear-gradient(135deg,#275979e9,#1d3356f6);
+ box-shadow:0 10px 35px #1f87d14f;
+}
+.pf10-task-node .pf10-task-index{
+ position:absolute;top:8px;right:9px;color:#9bbad5;font-size:8px;letter-spacing:.6px;
+ font-weight:800;
+}
+.pf10-task-node svg{color:#a9e9ff;margin-bottom:2px;width:17px;height:17px}
+.pf10-task-node strong{font-size:clamp(10px,1vw,13px);line-height:1.18;font-weight:850}
+.pf10-task-node small{font-size:9px;color:#aec4d9;line-height:1.15}
+.pf10-task-live{border-color:#bcffb5;box-shadow:0 0 22px #8bfba84f;background:linear-gradient(135deg,#235560ed,#173042)}
+.pf10-sparks{
+ position:absolute;z-index:2;pointer-events:none;top:50%;left:50%;
+ width:0;height:0;
+ opacity:var(--pf10-explosion);
+}
+.pf10-sparks i{
+ --angle:0deg;
+ position:absolute;left:0;top:0;
+ width:5px;height:5px;border-radius:50%;
+ background:#b6eaff;box-shadow:0 0 14px 2px #9bdcfb9e;
+ transform:rotate(calc(var(--k) * 30deg)) translateY(-160px);
+}
+.pf10-sparks i:nth-child(even){background:#e8b6ff}
+.pf10-result{
+ position:absolute;left:50%;top:51%;width:min(79%,465px);z-index:7;
+ pointer-events:none;
+ border:1px solid #a9e2ffd1;border-radius:16px;
+ background:linear-gradient(145deg,#274564f9,#101e34fb 78%);
+ box-shadow:0 20px 70px #000e,0 0 45px #84dfff33;
+ padding:21px 22px 17px;
+}
+.pf10-result-top{display:flex;gap:12px;align-items:center;border-bottom:1px solid #cbeaff3d;padding-bottom:16px}
+.pf10-result-top svg{width:45px;height:45px;padding:10px;background:#b2fbd41a;border:1px solid #b2fbd475;border-radius:10px;color:#bbffe0}
+.pf10-result-top>div{display:flex;flex-direction:column;gap:5px}
+.pf10-result-top small{color:#b9f3ec;font-size:9px;font-weight:800;letter-spacing:.8px}
+.pf10-result-top strong{color:#fff;font:780 clamp(17px,2vw,24px)/1.2 Manrope,sans-serif}
+.pf10-result-progress{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:17px 0 12px}
+.pf10-result-progress>span{color:#a9bfd2;font-size:9px;font-weight:800;letter-spacing:.6px}
+.pf10-result-progress>b{color:#adffd8;font-size:9px;letter-spacing:.4px}
+.pf10-result-progress>i{display:block;width:100%;height:5px;border-radius:7px;background:linear-gradient(90deg,#65d6f8,#b3ffcf);box-shadow:0 0 14px #88e4ed62}
+.pf10-result-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.pf10-result-tiles>div{border:1px solid #b7d7f543;border-radius:9px;padding:12px;background:#ffffff0a;display:flex;flex-direction:column;gap:5px}
+.pf10-result-tiles small{font-size:9px;color:#9bb8d0;letter-spacing:1px}
+.pf10-result-tiles strong{font-size:13px;color:#eaf6ff}
+.pf10-result-foot{display:flex;align-items:center;justify-content:center;gap:9px;padding-top:14px;color:#b7dff2;font-size:8px;letter-spacing:.9px;font-weight:800}
+.pf10-scroll-story{
+ border:1px solid #aac9e34d;border-radius:16px;
+ background:linear-gradient(155deg,#1b2940,#0d192a);
+ min-height:0;
+ padding:clamp(16px,1.9vw,29px);
+ display:flex;flex-direction:column;align-items:start;
+ overflow:auto;
+}
+.pf10-story-top{
+ display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;
+ color:#b8efff;font-size:10px;font-weight:800;letter-spacing:1px;
+}
+.pf10-scroll-story h3{
+ font:750 clamp(26px,2.85vw,40px)/1.12 Manrope,sans-serif;
+ letter-spacing:-1.55px;color:#f3faff;margin:clamp(17px,3vh,31px) 0 10px;
+ text-wrap:balance;
+}
+.pf10-scroll-story h4{
+ color:#a6e6fb;font:650 clamp(15px,1.5vw,20px)/1.3 Manrope,sans-serif;
+ letter-spacing:-.4px;margin:0 0 16px;
+}
+.pf10-scroll-story>p{
+ color:#bacbda;font-size:clamp(11px,1.08vw,14px);line-height:1.7;
+ margin:0 0 18px;
+}
+.pf10-story-output{
+ display:flex;flex-direction:column;gap:7px;
+ width:100%;padding:13px 0;border-block:1px solid #a1d1e433;
+}
+.pf10-story-output span{font-size:9px;color:#8eacc3;font-weight:800;letter-spacing:1px}
+.pf10-story-output strong{font-size:11px;letter-spacing:.3px;color:#dbf3ff}
+.pf10-step-selector{display:flex;gap:8px;width:100%;margin:16px 0 12px}
+.pf10-step-selector button{
+ display:flex;flex:1;flex-direction:column;gap:7px;
+ background:transparent;border:0;text-align:left;
+ font-size:10px;color:#9bb4c9;font-weight:800;padding:0;
+}
+.pf10-step-selector button i{display:block;width:100%;height:3px;border-radius:8px;background:#a9becb60}
+.pf10-step-selector button[aria-pressed="true"]{color:#aff2ff}
+.pf10-step-selector button[aria-pressed="true"] i{background:#aaf0ff;box-shadow:0 0 13px #92e8ff7b}
+.pf10-step-selector button:focus-visible{outline:2px solid #96ecff;outline-offset:5px}
+.pf10-scroll-hint{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ width:100%;color:#a7bad2;font-size:9px;letter-spacing:.8px;font-weight:800;
+ margin-top:auto;padding-top:11px;
+}
+.pf10-scroll-progress{
+ width:100%;height:3px;border-radius:5px;background:#7892aa42;flex:none;overflow:hidden;
+}
+.pf10-scroll-progress>span{height:100%;display:block;background:linear-gradient(90deg,#87e3f8,#b8ffc7);box-shadow:0 0 13px #8cdafb70}
+@media(min-width:1250px) and (min-height:840px){
+ .pf10-scroll-section{height:310svh}
+ .pf10-task-node{min-height:77px;padding:12px}
+}
+@media(max-width:1020px){
+ .pf10-scroll-section{height:355svh}
+ .pf10-scroll-title h2{font-size:clamp(30px,4.6vw,47px)}
+ .pf10-scroll-workspace{grid-template-columns:minmax(0,1.15fr) minmax(230px,.85fr);gap:11px}
+ .pf10-task-node{width:105px;padding:8px;min-height:58px}
+ .pf10-task-node strong{font-size:10px}
+ .pf10-task-node small{font-size:8px}
+ .pf10-scroll-story{padding:16px}
+ .pf10-scroll-story h3{font-size:29px}
+ .pf10-scroll-story>p{font-size:12px}
+}
+@media(max-width:740px){
+ .pf10-scroll-section{height:385svh}
+ .pf10-scroll-layout{padding-top:80px;padding-bottom:13px;gap:8px}
+ .pf10-scroll-title{display:block}
+ .pf10-scroll-title h2{font-size:clamp(28px,7vw,42px);margin-top:7px}
+ .pf10-scroll-title>p{display:none}
+ .pf10-scroll-workspace{display:flex;flex-direction:column;gap:8px}
+ .pf10-network-visual{flex:1.13;min-height:0;border-radius:12px}
+ .pf10-scroll-story{flex:.87;min-height:0;border-radius:12px;padding:11px 13px}
+ .pf10-scene-label{top:11px;font-size:7px;left:11px;right:11px}
+ .pf10-scene-foot{bottom:9px;font-size:6px;left:10px;right:10px;letter-spacing:.3px}
+ .pf10-task-node{width:clamp(64px,17.5vw,92px);min-height:47px;padding:6px 5px;gap:2px;border-radius:6px}
+ .pf10-task-node svg{width:13px;height:13px;margin:0}
+ .pf10-task-node .pf10-task-index{font-size:6px;right:4px;top:4px}
+ .pf10-task-node strong{font-size:8px;letter-spacing:-.2px}
+ .pf10-task-node small{font-size:7px;line-height:1.1}
+ .pf10-result{width:83%;padding:10px;border-radius:10px}
+ .pf10-result-top{padding-bottom:7px;gap:7px}
+ .pf10-result-top svg{width:28px;height:28px;padding:6px}
+ .pf10-result-top small{font-size:7px}
+ .pf10-result-top strong{font-size:14px}
+ .pf10-result-progress{margin:9px 0 7px}
+ .pf10-result-progress>span,.pf10-result-progress>b{font-size:7px}
+ .pf10-result-tiles{gap:5px}
+ .pf10-result-tiles>div{padding:7px}
+ .pf10-result-tiles small{font-size:7px}
+ .pf10-result-tiles strong{font-size:10px}
+ .pf10-result-foot{font-size:7px;padding-top:7px}
+ .pf10-story-top{font-size:8px}
+ .pf10-story-top svg{width:18px;height:18px}
+ .pf10-scroll-story h3{font-size:clamp(19px,5.5vw,27px);margin:6px 0 4px;letter-spacing:-.8px}
+ .pf10-scroll-story h4{font-size:12px;margin:0 0 6px}
+ .pf10-scroll-story>p{font-size:10px;line-height:1.42;margin-bottom:6px}
+ .pf10-story-output{padding:6px 0;gap:3px}
+ .pf10-story-output span{font-size:7px}
+ .pf10-story-output strong{font-size:9px}
+ .pf10-step-selector{margin:8px 0 5px;gap:6px}
+ .pf10-step-selector button{font-size:8px;gap:3px}
+ .pf10-scroll-hint{font-size:7px;letter-spacing:.1px;margin-top:3px;padding-top:2px}
+}
+@media(max-height:640px) and (min-width:741px){
+ .pf10-scroll-layout{padding-top:73px;padding-bottom:11px;gap:7px}
+ .pf10-scroll-title h2{font-size:31px;margin-top:5px}
+ .pf10-scroll-title>p{font-size:10px}
+ .pf10-scroll-story h3{font-size:25px;margin:10px 0 6px}
+ .pf10-scroll-story h4{font-size:14px;margin-bottom:9px}
+ .pf10-scroll-story>p{font-size:10px;line-height:1.4}
+ .pf10-story-output{padding:8px 0}
+ .pf10-step-selector{margin:9px 0}
+}
+@media(prefers-reduced-motion:reduce){
+ .pf10-scroll-section{height:auto}
+ .pf10-scroll-sticky{position:relative;height:auto;min-height:0;overflow:visible}
+ .pf10-scroll-layout{height:auto;padding-top:60px;padding-bottom:60px;gap:23px}
+ .pf10-scroll-workspace{min-height:560px}
+ .pf10-task-node{will-change:auto}
+ .pf10-flow-path path{animation:none}
+ .pf10-scroll-progress{display:none}
+}
