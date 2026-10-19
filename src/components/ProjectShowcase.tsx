@@ -3,6 +3,7 @@ import type {CSSProperties,KeyboardEvent,PointerEvent,MouseEvent} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowUpRight,ChevronLeft,ChevronRight} from 'lucide-react';
 import {projects} from '../data/projects';
+import {projectHighlights} from '../data/projectHighlights';
 import type {Project} from '../data/projects';
 
 const order=['privacygate','privatestone','propertydex','propertydex-framework','websites','retail-it','lead-rescue','e-learning'];
@@ -14,6 +15,8 @@ export default function ProjectShowcase(){
  const pointerStart=useRef<{x:number;y:number}|null>(null);
  const dragged=useRef(false);
  const count=slides.length;
+ const focused=slides[active];
+ const focusedCopy=focused?projectHighlights[focused.id]:null;
  useEffect(()=>{
   const media=window.matchMedia('(max-width:740px)');
   const update=()=>setMobile(media.matches);
@@ -44,11 +47,18 @@ export default function ProjectShowcase(){
    onClickCapture={capture} onKeyDown={keys}>
    {slides.map((p,i)=>{
     const offset=offsetFor(i),far=Math.abs(offset)>(mobile?1:2),center=offset===0;
+    const highlight=projectHighlights[p.id];
     const inside=<>
      <img src={'/project-covers/'+p.id+'.svg'} alt="" className="pf-stage-image" loading={center?'eager':'lazy'} decoding="async"/>
      <span className="pf-stage-gradient" aria-hidden="true"/>
-     <span className="pf-stage-top"><span>{String(i+1).padStart(2,'0')} / SELECTED PROJECT</span><span>↗</span></span>
-     <span className="pf-stage-content"><small>{p.category.toUpperCase()} · {p.year}</small><strong>{p.title}</strong>
+     <span className="pf-stage-top">
+      <span className="pf-stage-brand"><img src={'/project-marks/'+p.id+'.svg'} alt="" className="pf-stage-brand-mark" loading="lazy"/><span>{String(i+1).padStart(2,'0')} / SELECTED PROJECT</span></span>
+      <span>↗</span>
+     </span>
+     <span className="pf-stage-content">
+      <small>{p.category.toUpperCase()} · {p.year}</small>
+      <strong>{highlight.shortTitle}</strong>
+      {center&&<span className="pf-stage-teaser">{highlight.teaser}</span>}
       {center&&<span className="pf-stage-open">EXPLORE PROJECT <ArrowUpRight size={16}/></span>}
      </span>
     </>;
@@ -72,5 +82,13 @@ export default function ProjectShowcase(){
    {slides.map((p,i)=><button type="button" key={p.id} className={i===active?'active':''} onClick={()=>setActive(i)}
     aria-label={'Show '+p.title} aria-current={i===active?'true':undefined}/>)}
   </div>
+  {focused&&focusedCopy&&<div className="pf-stage-story" aria-live="polite" aria-atomic="true" key={focused.id}>
+   <div className="pf-stage-story-head">
+    <img src={'/project-marks/'+focused.id+'.svg'} alt="" className="pf-stage-story-mark"/>
+    <div><small>IN FOCUS / {String(active+1).padStart(2,'0')}</small><h3>{focusedCopy.shortTitle}</h3><span>{focusedCopy.stage}</span></div>
+   </div>
+   <div className="pf-stage-story-detail"><span>WHAT IT IS</span><p>{focusedCopy.what}</p></div>
+   <div className="pf-stage-story-detail"><span>THE PROBLEM IT ADDRESSES</span><p>{focusedCopy.solves}</p></div>
+  </div>}
  </div>;
 }
