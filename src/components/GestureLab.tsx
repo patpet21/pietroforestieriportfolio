@@ -178,11 +178,11 @@ export default function GestureLab(){
    let tracker:Tracker;
    let useCpu=false;
    try{
-    tracker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:modelUrl,delegate:'GPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.55,minTrackingConfidence:.55}) as Tracker;
+    tracker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:modelUrl,delegate:'GPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minTrackingConfidence:.55}) as Tracker;
     setGpuStatus('GPU');
    }catch{
     useCpu=true;
-    tracker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:modelUrl,delegate:'CPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.55,minTrackingConfidence:.55}) as Tracker;
+    tracker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:modelUrl,delegate:'CPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minTrackingConfidence:.55}) as Tracker;
     setGpuStatus('CPU');
    }
    if(token!==sessionRef.current){tracker.close();return;}
