@@ -563,3 +563,109 @@ footer{background:#090b18}
 .pf-real-media-item span{display:block;font-size:11px;letter-spacing:.25px;font-weight:700;color:#d6e4f2;padding:13px 15px}
 .pf-media-note{font-size:11px;line-height:1.5;opacity:.7}
 @media(max-width:700px){.pf-real-media-grid{grid-template-columns:1fr;gap:12px}}
+
+
+/* PF / GALLERY FIRST AND LARGE SIDE ARROWS — 2026-10-19 */
+/* Menu overlays the first section: reserve room for it on desktop and mobile. */
+.pf-showcase-section:first-child{
+  padding-top:126px!important;
+  padding-bottom:54px!important;
+}
+.pf-showcase-section:first-child .section-head{
+  margin-bottom:8px;
+}
+.pf-showcase-section:first-child .section-head h2{
+  font-size:clamp(45px,5.8vw,82px);
+}
+.pf-stage-edge-controls{
+  position:absolute;
+  z-index:11;
+  left:50%;
+  top:49%;
+  transform:translate(-50%,-50%);
+  width:calc(var(--stage-w) + 150px);
+  max-width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  pointer-events:none;
+}
+.pf-stage-edge-arrow{
+  pointer-events:auto;
+  width:56px;
+  height:56px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  padding:0;
+  border-radius:50%;
+  border:2px solid #f7e3b4;
+  background:linear-gradient(135deg,#f7e7c3,#d9ba74);
+  color:#141c25;
+  box-shadow:0 10px 31px #000c,0 0 0 5px #edd19b28;
+  transition:background .2s,transform .2s,box-shadow .2s;
+}
+.pf-stage-edge-arrow:hover{
+  transform:scale(1.1);
+  background:#ffefd0;
+  box-shadow:0 14px 37px #000d,0 0 0 7px #edd19b40;
+}
+.pf-stage-edge-arrow:active{transform:scale(.95)}
+.pf-stage-edge-arrow:focus-visible{
+  outline:3px solid #95e6ff;
+  outline-offset:4px;
+}
+.pf-stage-edge-text{
+  position:absolute;
+  bottom:-23px;
+  left:50%;
+  transform:translateX(-50%);
+  color:#ead4a6;
+  font-size:9px;
+  letter-spacing:1.4px;
+  font-weight:800;
+  text-shadow:0 2px 10px #000;
+}
+/* The introduction stays on the homepage, but comes after the gallery. */
+.pf-showcase-section+.hero{
+  min-height:560px;
+  height:min(700px,90svh);
+}
+.pf-showcase-section+.hero .hero-inner{padding-top:110px}
+.pf-showcase-section+.hero h1{margin-top:35px}
+@media(max-width:1100px){
+  .pf-showcase-section:first-child{padding-top:120px!important}
+  .pf-stage-edge-controls{width:calc(var(--stage-w) + 123px)}
+  .pf-stage-edge-arrow{width:49px;height:49px}
+}
+@media(max-width:740px){
+  .pf-showcase-section:first-child{
+    padding-top:108px!important;
+    padding-bottom:42px!important;
+  }
+  .pf-showcase-section:first-child .section-head h2{
+    font-size:clamp(39px,9.4vw,60px);
+  }
+  .pf-showcase-section:first-child .section-head p{
+    font-size:11px;
+    line-height:1.5;
+  }
+  .pf-stage-edge-controls{
+    width:calc(var(--stage-w) + 91px);
+    top:49%;
+  }
+  .pf-stage-edge-arrow{
+    width:43px;
+    height:43px;
+    border-width:1.5px;
+    box-shadow:0 7px 22px #000e,0 0 0 3px #edd19b28;
+  }
+  .pf-stage-edge-arrow svg{width:25px;height:25px}
+  .pf-stage-edge-text{font-size:8px;bottom:-19px}
+  .pf-showcase-section+.hero{min-height:550px;height:auto}
+  .pf-showcase-section+.hero .hero-inner{min-height:550px;padding-top:88px}
+}
+@media(prefers-reduced-motion:reduce){
+  .pf-stage-edge-arrow{transition:none!important}
+}
