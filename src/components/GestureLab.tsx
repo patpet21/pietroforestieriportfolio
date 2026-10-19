@@ -56,7 +56,7 @@ export default function GestureLab(){
  const pointerGrabRef=useRef<{id:string;moved:boolean}|null>(null);
  const [gpuStatus,setGpuStatus]=useState('');
  const [hoveredKey,setHoveredKey]=useState<string|null>(null);
- const [inputMethod,setInputMethod]=useState<InputMethod>('pinch');
+ const [inputMethod,setInputMethod]=useState<InputMethod>('dwell');
  const [sensitivity,setSensitivity]=useState<Sensitivity>('easy');
  const [pinchMeter,setPinchMeter]=useState(0);
  const [rotationSpeed,setRotationSpeed]=useState(1.25);
@@ -155,6 +155,7 @@ export default function GestureLab(){
  };
  const start=async()=>{
   if(status==='loading'||status==='ready')return;
+  window.dispatchEvent(new Event('pf-lab-camera-start'));
   if(!navigator.mediaDevices?.getUserMedia){
    setError('Camera access needs a modern browser on HTTPS or localhost.');
    setStatus('error');return;
@@ -278,6 +279,11 @@ export default function GestureLab(){
    setStatus('error');setTracking(false);setCursor(null);setHint('Camera unavailable; demo controls still work without it.');
   }
  };
+ useEffect(()=>{
+  const releaseForHolo=()=>stop();
+  window.addEventListener('pf-holo-enable',releaseForHolo);
+  return()=>window.removeEventListener('pf-holo-enable',releaseForHolo);
+ });
  const chooseMode=(next:Mode)=>{
   modeRef.current=next;setMode(next);
   pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};
@@ -366,7 +372,7 @@ export default function GestureLab(){
       {mode==='keyboard'&&<div className="gsl-input-modes"><span>HOW TO TYPE</span><div><button type="button" className={inputMethod==='pinch'?'active':''} aria-pressed={inputMethod==='pinch'} onClick={()=>{setInputMethod('pinch');inputMethodRef.current='pinch';}}>PINCH</button><button type="button" className={inputMethod==='dwell'?'active':''} aria-pressed={inputMethod==='dwell'} onClick={()=>{setInputMethod('dwell');inputMethodRef.current='dwell';dwellRef.current={key:'',since:0,locked:false};}}>HOLD 1 SEC</button></div></div>}
       <div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>
       {mode==='cube'&&<label className="gsl-rotation-speed">ROTATION RESPONSE <strong>{rotationSpeed.toFixed(1)}×</strong><input type="range" min=".65" max="2.5" step=".15" value={rotationSpeed} onChange={e=>setRotationSpeed(Number(e.target.value))}/></label>}
-      {mode==='keyboard'?<p>The pointer now covers the keyboard area and highlights your target. Pinch briefly to type, or choose Hold 1 Sec for automatic selection. Move to another key before repeating a held letter.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
+      {mode==='keyboard'?<p>The keyboard starts in Hold 1 Sec mode: point at a key with one index finger and wait for the selection ring. Pinch is optional.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
       <div className="gsl-guide-tags"><span>NO CAMERA REQUIRED FOR MANUAL MODE</span><span>{mode==='workflow'?connections.length+' DEPENDENCIES':'GESTURE + POINTER'}</span></div>
       {mode==='workflow'&&<button type="button" onClick={()=>{setTasks(starterTasks);tasksRef.current=starterTasks;setConnections([['A','B']]);setLinkFrom(null);setHint('WBS reset.');}}><RotateCcw size={16}/> RESET WBS</button>}
      </div>
