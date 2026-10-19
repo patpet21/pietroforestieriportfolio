@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import type {CSSProperties} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowLeft,ArrowRight,ArrowUpRight,CheckCircle2} from 'lucide-react';
 import BrandImage from './BrandImage';
@@ -85,7 +86,7 @@ export function CompactCaseHero({project:p}:{project:Project}){
  const selected=pictures[mediaIndex];
  if(!theme||!highlight)return null;
  const label=p.id==='lead-rescue'?'CONCEPT VISUAL':theme.visualLabel;
- return <section className="wrap ccase-head" style={{'--cc-accent':p.accent} as React.CSSProperties}>
+ return <section className="wrap ccase-head" style={{'--cc-accent':p.accent} as CSSProperties}>
   <Link to="/projects" className="eyebrow ccase-back">← ALL PROJECTS</Link>
   <div className="ccase-split">
    <div className="ccase-copy">
