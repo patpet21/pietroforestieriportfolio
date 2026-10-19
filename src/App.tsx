@@ -1,7 +1,9 @@
 import{useEffect,useState}from'react';
 import ImmersiveCanvas from './components/ImmersiveCanvas';
 import ProjectShowcase from './components/ProjectShowcase';
-import PortfolioGuide from './components/PortfolioGuide';import{Link,NavLink,useLocation}from'react-router-dom';import{motion}from'motion/react';import{ArrowUpRight,ArrowRight,ArrowDown,Menu,X,MapPin,CheckCircle2}from'lucide-react';import{projects,categories}from'./data/projects';
+import PortfolioGuide from './components/PortfolioGuide';
+import BrandImage from './components/BrandImage';
+import {brandMedia} from './data/brandMedia';import{Link,NavLink,useLocation}from'react-router-dom';import{motion}from'motion/react';import{ArrowUpRight,ArrowRight,ArrowDown,Menu,X,MapPin,CheckCircle2}from'lucide-react';import{projects,categories}from'./data/projects';
 import{projectHighlights}from'./data/projectHighlights';import type{Project}from'./data/projects';
 const nav=[['/','Home'],['/about','About'],['/projects','Projects'],['/services','Services'],['/contact','Contact']];const appear={initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},viewport:{once:true,amount:.14},transition:{duration:.65}};
 function Header(){const[open,setOpen]=useState(false),loc=useLocation();useEffect(()=>{setOpen(false);window.scrollTo(0,0)},[loc.pathname]);return <header className="header"><Link className="logo" to="/"><b>pf<span>.</span></b><small>PIETRO<br/>FORESTIERI</small></Link><nav className={open?'open':''}>{nav.map(([url,label])=><NavLink key={url} end={url==='/'} to={url}>{label}</NavLink>)}</nav><Link className="header-contact" to="/contact">LET'S TALK <ArrowUpRight size={16}/></Link><button className="menu" aria-label="Toggle menu" aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></header>}
@@ -9,8 +11,8 @@ function Foot(){return <footer><div className="wrap"><small className="eyebrow">
 function Heading({label,title,description}:{label:string;title:string;description?:string}){return <motion.div {...appear} className="section-head"><small className="eyebrow"><i/> {label}</small><div><h2>{title}</h2>{description&&<p>{description}</p>}</div></motion.div>}
 function Artwork({p}:{p:Project}){
  return <div className="art pf-case-art" data-project={p.id} style={{'--color':p.accent} as React.CSSProperties}>
-  <img src={'/project-covers/'+p.id+'.svg'} alt={'Illustrated visual concept for '+p.title} loading="lazy"/>
-  <span className="pf-case-identity"><img src={'/project-marks/'+p.id+'.svg'} alt="" loading="lazy"/></span>
+  <BrandImage key={p.id+'case'} project={p.id} alt={'Visual for '+p.title} loading="lazy"/>
+  <span className="pf-case-identity"><BrandImage key={p.id+'logo'} project={p.id} kind="logo" alt="" loading="lazy"/></span>
   <div className="art-label">{p.category.toUpperCase()} <span>2026 / PF</span></div>
   <div className="art-center"><strong>{p.title.toUpperCase()}</strong><span>SELECTED WORK / CONCEPT VISUAL</span></div>
   <div className="art-foot">EXPLORE CASE STUDY <ArrowUpRight size={16}/></div>
@@ -19,8 +21,8 @@ function Artwork({p}:{p:Project}){
 function ProjectVisual({p}:{p:Project}){
  return <div className="pf-project-visual" data-project={p.id} style={{'--color':p.accent} as React.CSSProperties}>
   <div className="pf-project-glow"/>
-  <img className="pf-project-mark" src={'/project-marks/'+p.id+'.svg'} alt="" loading="lazy"/>
-  <div className="pf-project-image-frame"><img src={'/project-covers/'+p.id+'.svg'} alt={'Illustrative visual for '+p.title} loading="lazy" decoding="async"/></div>
+  <BrandImage key={p.id+'mark'} className="pf-project-mark" project={p.id} kind="logo" alt="" loading="lazy"/>
+  <div className="pf-project-image-frame"><BrandImage key={p.id+'thumbnail'} project={p.id} alt={'Project preview for '+p.title} loading="lazy" decoding="async"/></div>
   <div className="pf-project-glass"><span>CASE STUDY / {p.year}</span><strong>{p.title}</strong><span className="pf-project-visit">EXPLORE PROJECT <ArrowUpRight size={14}/></span></div>
   <div className="pf-project-corner" aria-hidden="true">↗</div>
  </div>;

@@ -4,6 +4,7 @@ import {Link} from 'react-router-dom';
 import {ArrowUpRight,ChevronLeft,ChevronRight} from 'lucide-react';
 import {projects} from '../data/projects';
 import {projectHighlights} from '../data/projectHighlights';
+import BrandImage from './BrandImage';
 import type {Project} from '../data/projects';
 
 const order=['privacygate','privatestone','propertydex','propertydex-framework','websites','retail-it','lead-rescue','e-learning'];
@@ -49,10 +50,10 @@ export default function ProjectShowcase(){
     const offset=offsetFor(i),far=Math.abs(offset)>(mobile?1:2),center=offset===0;
     const highlight=projectHighlights[p.id];
     const inside=<>
-     <img src={'/project-covers/'+p.id+'.svg'} alt="" className="pf-stage-image" loading={center?'eager':'lazy'} decoding="async"/>
+     <BrandImage key={p.id+'cover'} project={p.id} alt="" className="pf-stage-image" loading={center?'eager':'lazy'} decoding="async"/>
      <span className="pf-stage-gradient" aria-hidden="true"/>
      <span className="pf-stage-top">
-      <span className="pf-stage-brand"><img src={'/project-marks/'+p.id+'.svg'} alt="" className="pf-stage-brand-mark" loading="lazy"/><span>{String(i+1).padStart(2,'0')} / SELECTED PROJECT</span></span>
+      <span className="pf-stage-brand"><BrandImage key={p.id+'brand'} project={p.id} kind="logo" alt="" className="pf-stage-brand-mark" loading="lazy"/><span>{String(i+1).padStart(2,'0')} / SELECTED PROJECT</span></span>
       <span>↗</span>
      </span>
      <span className="pf-stage-content">
@@ -84,7 +85,7 @@ export default function ProjectShowcase(){
   </div>
   {focused&&focusedCopy&&<div className="pf-stage-story" aria-live="polite" aria-atomic="true" key={focused.id}>
    <div className="pf-stage-story-head">
-    <img src={'/project-marks/'+focused.id+'.svg'} alt="" className="pf-stage-story-mark"/>
+    <BrandImage key={focused.id+'story'} project={focused.id} kind="logo" alt="" className="pf-stage-story-mark"/>
     <div><small>IN FOCUS / {String(active+1).padStart(2,'0')}</small><h3>{focusedCopy.shortTitle}</h3><span>{focusedCopy.stage}</span></div>
    </div>
    <div className="pf-stage-story-detail"><span>WHAT IT IS</span><p>{focusedCopy.what}</p></div>
