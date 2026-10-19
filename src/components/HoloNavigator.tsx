@@ -87,7 +87,7 @@ export default function HoloNavigator(){
   window.addEventListener('keydown',onKey);
   return()=>{window.removeEventListener('pf-lab-camera-start',close);document.removeEventListener('focusin',onFocus);window.removeEventListener('keydown',onKey);stopRef.current();};
  },[]);
- useEffect(()=>{clearTarget();},[location.pathname,clearTarget]);
+ useEffect(()=>{clearTarget();focusRef.current=null;},[location.pathname,clearTarget]);
  const insertText=useCallback((value:string)=>{
   const field=focusRef.current;
   if(!field||!document.contains(field)){
@@ -112,7 +112,7 @@ export default function HoloNavigator(){
   if(editable(target)){
    focusRef.current=target;
    target.focus({preventScroll:true});
-   setKeyboard(true);
+   setKeyboard(true);keyboardRef.current=true;setMode('point');modeRef.current='point';setMinimized(true);
    setTargetName('TEXT FIELD · KEYBOARD OPEN');
    return;
   }
@@ -186,6 +186,11 @@ export default function HoloNavigator(){
      let candidate:HTMLElement|null=hit?.closest(VALID) as HTMLElement|null;
      if(candidate?.closest('.holo-control')&&!candidate.closest('[data-holo-key]'))candidate=null;
      // Only UI controls and links are activatable; never click random page content.
+     // 14px target hysteresis prevents a shaky index fingertip from restarting dwell at edges.
+     if(targetRef.current&&candidate!==targetRef.current){
+      const rect=targetRef.current.getBoundingClientRect();
+      if(px>=rect.left-14&&px<=rect.right+14&&py>=rect.top-14&&py<=rect.bottom+14)candidate=targetRef.current;
+     }
      if(candidate!==targetRef.current){
       targetRef.current?.classList.remove('holo-focused-target');
       targetRef.current=candidate;
@@ -215,7 +220,7 @@ export default function HoloNavigator(){
   }
  };
  const switchMode=(next:Mode)=>{modeRef.current=next;setMode(next);if(next==='scroll'){keyboardRef.current=false;setKeyboard(false);}clearTarget();};
- const switchKeyboard=(next:boolean)=>{keyboardRef.current=next;setKeyboard(next);clearTarget();if(next)modeRef.current='point';if(next)setMode('point');};
+ const switchKeyboard=(next:boolean)=>{keyboardRef.current=next;setKeyboard(next);clearTarget();if(next){modeRef.current='point';setMode('point');setMinimized(true);}};
  return <>
   <div className="holo-launch holo-control">
    {status==='off'||status==='error'?<button type="button" className="holo-open" onClick={start}><Scan size={19}/> <span>HOLO CONTROL</span><i/></button>:minimized?<div className="holo-minimized"><span><i/> {status==='ready'?'HOLO ACTIVE':'CONNECTING…'}</span><button onClick={()=>setMinimized(false)} aria-label="Expand Holo Control"><ChevronUp size={16}/></button><button onClick={stop} aria-label="Stop webcam"><X size={16}/></button></div>:null}
