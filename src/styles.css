@@ -2277,3 +2277,21 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  .header nav{gap:12px}
  .header-contact{display:none}
 }
+
+/* Gesture Lab V12 — visible target feedback, dwell progress and calibration controls */
+.gsl-keyboard-hud{width:100%;max-width:680px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#b5edff;font-size:10px;font-weight:850;letter-spacing:.8px}
+.gsl-key-row button.gsl-key-target{background:linear-gradient(145deg,#92eaff,#52a9d9);color:#091a2b;border-color:#e5ffff;box-shadow:0 0 0 2px #c6f6ff,0 0 22px #9feaff99;transform:translateY(-2px)}
+.gsl-dwell-cursor{background:conic-gradient(#baffce var(--gsl-dwell-deg),#b3edff26 0);border:2px solid #eaffff}
+.gsl-input-modes{margin:15px 0 10px;display:grid;gap:8px}
+.gsl-input-modes>span,.gsl-rotation-speed{font-size:10px;letter-spacing:.8px;color:#bdd7e9;font-weight:850}
+.gsl-input-modes>div{display:flex;gap:6px;flex-wrap:wrap}
+.gsl-input-modes button{flex:1;border:1px solid #85b3ce75;background:#1b3048;color:#c7e4f5;border-radius:7px;padding:9px 7px;font-size:9px;font-weight:850}
+.gsl-input-modes button.active{background:#a5e9ff;color:#0c2131;border-color:#d9f9ff}
+.gsl-rotation-speed{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:14px 0}
+.gsl-rotation-speed input{width:100%;accent-color:#a9eaff}
+.gsl-pinch-feedback{margin-top:13px}
+.gsl-pinch-feedback>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#b5d5e9;font-weight:850;letter-spacing:.5px}
+.gsl-pinch-feedback strong{color:#d7ffdf}
+.gsl-pinch-track{margin-top:7px;height:6px;border-radius:6px;background:#486179;overflow:hidden}
+.gsl-pinch-track i{display:block;height:100%;background:linear-gradient(90deg,#80cfff,#b4ffc9);transition:width .08s linear}
+@media(max-width:620px){.gsl-keyboard-hud{font-size:8px;letter-spacing:.3px}.gsl-input-modes button{font-size:8px;padding:8px 5px}}
