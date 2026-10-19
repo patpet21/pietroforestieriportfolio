@@ -1496,7 +1496,7 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 .pf3-depth-plate{
  pointer-events:auto;cursor:pointer;position:absolute;
  left:50%;top:50%;width:275px;height:145px;
- transform:translate(-50%,-50%) translate3d(calc(var(--pf3-depth)*16px),calc(var(--pf3-depth)*-24px),calc(110px - var(--pf3-depth)*20px));
+ transform:translate(-50%,-50%) translate3d(var(--pf3-offset-x),var(--pf3-offset-y),var(--pf3-offset-z));
  transform-style:preserve-3d;
  border:1px solid #bdb7ff9f;border-radius:12px;
  background:linear-gradient(130deg,#253456ef,#121b34f6 70%);
@@ -1505,7 +1505,7 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  padding:17px 20px;
  box-shadow:8px 14px 24px #0408169c,inset 0 0 25px #7baeff11;
  transition:transform .62s cubic-bezier(.2,.7,.2,1),border-color .32s,background .32s,opacity .4s;
- opacity:calc(1 - var(--pf3-depth)*.105);
+ opacity:var(--pf3-opacity);
 }
 .pf3-depth-plate.active{
  border:1.8px solid #c1f4ff;
