@@ -1,7 +1,7 @@
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import type {CSSProperties} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,ArrowUpRight,CheckCircle2} from 'lucide-react';
+import {ArrowLeft,ArrowRight,ArrowUpRight,CheckCircle2,Maximize2,X} from 'lucide-react';
 import BrandImage from './BrandImage';
 import {brandMedia} from '../data/brandMedia';
 import {projectHighlights} from '../data/projectHighlights';
@@ -83,6 +83,15 @@ export function CompactCaseHero({project:p}:{project:Project}){
  const pictures=isConcept?[{src:brand?.backup??'/project-covers/'+p.id+'.svg',title:'Illustrative project visual'}]:brand.gallery;
  const [mode,setMode]=useState<'visual'|'method'|'status'>('visual');
  const [mediaIndex,setMediaIndex]=useState(0);
+ const [zoom,setZoom]=useState(false);
+ useEffect(()=>{
+  if(!zoom)return;
+  const handler=(event:KeyboardEvent)=>{if(event.key==='Escape')setZoom(false);};
+  document.addEventListener('keydown',handler);
+  const old=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  return()=>{document.removeEventListener('keydown',handler);document.body.style.overflow=old;};
+ },[zoom]);
  const selected=pictures[mediaIndex];
  if(!theme||!highlight)return null;
  const label=p.id==='lead-rescue'?'CONCEPT VISUAL':theme.visualLabel;
@@ -110,7 +119,10 @@ export function CompactCaseHero({project:p}:{project:Project}){
     <div className="ccase-display" aria-live="polite">
      {mode==='visual'?<>
       <div className="ccase-image-wrap">
-       <img key={selected.src} src={selected.src} alt={selected.title} loading="lazy" decoding="async" />
+       <button type="button" className="ccase-zoom-target" aria-label={'Expand '+selected.title} onClick={()=>setZoom(true)}>
+        <img key={selected.src} src={selected.src} alt={selected.title} loading="lazy" decoding="async" />
+        <span className="ccase-zoom-hint"><Maximize2 size={15}/> ENLARGE VISUAL</span>
+       </button>
        <span className="ccase-picture-tag">{label}</span>
       </div>
       <div className="ccase-image-caption"><p>{selected.title}</p>{pictures.length>1&&<div><button type="button" onClick={()=>setMediaIndex(i=>(i+pictures.length-1)%pictures.length)} aria-label="Previous visual"><ArrowLeft size={17}/></button><span>{mediaIndex+1} / {pictures.length}</span><button type="button" onClick={()=>setMediaIndex(i=>(i+1)%pictures.length)} aria-label="Next visual"><ArrowRight size={17}/></button></div>}</div>
@@ -119,6 +131,13 @@ export function CompactCaseHero({project:p}:{project:Project}){
     </div>
    </div>
   </div>
+  {zoom&&<div className="ccase-lightbox" role="presentation" onClick={()=>setZoom(false)}>
+   <div role="dialog" aria-modal="true" aria-label={'Enlarged visual: '+selected.title} className="ccase-lightbox-content" onClick={e=>e.stopPropagation()}>
+    <div className="ccase-lightbox-header"><div><small>PROJECT VISUAL / {label}</small><strong>{selected.title}</strong></div><button type="button" aria-label="Close enlarged image" autoFocus onClick={()=>setZoom(false)}><X size={20}/></button></div>
+    <img src={selected.src} alt={selected.title}/>
+    <p>ESC TO CLOSE · {mediaIndex+1} / {pictures.length}</p>
+   </div>
+  </div>}
   <div className="ccase-facts">{[['CATEGORY',p.category],['YEAR',p.year],['STATUS',p.status],['MY ROLE',p.role]].map(([title,value])=><div key={title}><small>{title}</small><strong>{value}</strong></div>)}</div>
  </section>;
 }
