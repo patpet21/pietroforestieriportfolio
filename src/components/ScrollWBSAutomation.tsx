@@ -115,7 +115,7 @@ export default function ScrollWBSAutomation(){
         <path d="M225 253 H310 M475 253 H545 M713 253 H790 M240 349 V390 H500 V425 M500 349 V425 M770 349 V425"/>
        </g>
       </svg>
-      <div className="pf10-sparks" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{'--k':i} as CSSProperties}/>)}</div>
+      <div className="pf10-sparks" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{'--pf10-angle':(i*30)+'deg','--pf10-distance':(125+i*5)+'px'} as CSSProperties}/>)}</div>
       {nodeInfo.map((n,i)=>{
        const pose=getPose(i,progress);
        const Icon=n.Icon;
