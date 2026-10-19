@@ -1907,7 +1907,7 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  position:absolute;left:0;top:0;
  width:5px;height:5px;border-radius:50%;
  background:#b6eaff;box-shadow:0 0 14px 2px #9bdcfb9e;
- transform:rotate(calc(var(--k) * 30deg)) translateY(-160px);
+ transform:rotate(var(--pf10-angle)) translateY(calc(-1 * var(--pf10-distance)));
 }
 .pf10-sparks i:nth-child(even){background:#e8b6ff}
 .pf10-result{
