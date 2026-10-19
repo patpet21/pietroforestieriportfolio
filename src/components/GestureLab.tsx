@@ -1,7 +1,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CSSProperties,PointerEvent as ReactPointerEvent} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,Camera,CameraOff,Check,Copy,Hand,Keyboard,Layers3,Link2,MousePointer2,RotateCcw,ShieldCheck,Sparkles,Trash2,Video,Workflow,Zap} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Camera,CameraOff,Scan,Check,Copy,Hand,Keyboard,Layers3,Link2,MousePointer2,RotateCcw,ShieldCheck,Sparkles,Trash2,Video,Workflow,Zap} from 'lucide-react';
 
 type Mode='keyboard'|'cube'|'workflow';
 type CameraStatus='off'|'loading'|'ready'|'error';
@@ -330,6 +330,7 @@ export default function GestureLab(){
    <div className="gsl-back"><Link to="/"><ArrowLeft size={16}/> BACK TO PORTFOLIO</Link><span><i/> EXPERIMENTAL INTERACTION LAB / 2026</span></div>
    <header className="gsl-heading"><div><div className="eyebrow"><i/> HUMAN × MACHINE INTERACTION</div><h1>Gesture <em>Lab.</em></h1><p>Move your hands. Control an interface. Explore how computer vision can connect people, projects and intelligent systems.</p></div><div className="gsl-heading-mark"><Hand size={54}/><span>CAMERA-POWERED<br/>INTERACTION STUDY</span></div></header>
    <div className="gsl-privacy"><ShieldCheck size={18}/><span>Your camera starts <strong>only when you press Enable Camera</strong>. Video frames are processed locally in the browser; this demo does not record or upload them. On first use, MediaPipe model/WASM files are downloaded from external hosts. The MediaPipe SDK may report usage metrics to Google. <strong>Stop Camera</strong> immediately closes the stream.</span></div>
+   <div className="gsl-holo-invite"><Scan size={22}/><span><strong>NEW: HOLO CONTROL</strong> · Use the floating HOLO CONTROL button at the bottom left to navigate the entire website with one hand. Point at a link and hold for one second to click. The webcam follows you between pages.</span></div>
    <div className="gsl-mode-tabs" role="group" aria-label="Choose an interactive experiment">{modes.map(({id,title,sub,Icon},i)=><button key={id} type="button" aria-pressed={mode===id} className={mode===id?'active':''} onClick={()=>chooseMode(id)}><span>0{i+1} / EXPERIENCE</span><Icon size={23}/><strong>{title}</strong><small>{sub}</small></button>)}</div>
    <div className="gsl-workspace">
     <div className="gsl-interactive">
