@@ -1033,3 +1033,12 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 @media(prefers-reduced-motion:reduce){
  .ccase-actions a,.svx-selector button,.svx-evidence-card{transition:none!important}
 }
+
+/* Tighter follow-up details on the redesigned project cases */
+.ccase-details{padding-top:46px;padding-bottom:62px}
+.ccase-details .case-row{padding:27px 0}
+.ccase-details .case-row h2{font-size:clamp(28px,2.7vw,42px);margin-bottom:13px}
+.ccase-details .case-row p{font-size:13px;line-height:1.7}
+.ccase-details .pf-real-media-grid{gap:12px;margin:20px 0}
+.ccase-details .pf-real-media-item img{max-height:270px}
+@media(max-width:620px){.ccase-details{padding-top:31px;padding-bottom:40px}.ccase-details .case-row{padding:21px 0}.ccase-details .case-row h2{font-size:29px}}
