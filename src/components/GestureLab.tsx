@@ -229,15 +229,21 @@ export default function GestureLab(){
      if(activeMode==='keyboard'){
       const keys=keyboardKeysRef.current,stage=stageRef.current;
       if(keys&&stage){
-       const kr=keys.getBoundingClientRect(),sr=stage.getBoundingClientRect();
-       const targetX=kr.left+kr.width*clamp((x-.13)/.74,0,1);
-       const targetY=kr.top+kr.height*clamp((y-.16)/.68,0,1);
+       const sr=stage.getBoundingClientRect();
+       // Preview uses object-fit: cover and a horizontally mirrored webcam.
+       // Project MediaPipe fingertip into the same visible camera pixels.
+       const nativeW=video.videoWidth,nativeH=video.videoHeight;
+       const cover=Math.max(sr.width/nativeW,sr.height/nativeH);
+       const visibleW=nativeW*cover,visibleH=nativeH*cover;
+       const targetX=sr.left+((x*visibleW)-(visibleW-sr.width)/2);
+       const targetY=sr.top+((y*visibleH)-(visibleH-sr.height)/2);
        px=clamp((targetX-sr.left)/sr.width,0,1);
        py=clamp((targetY-sr.top)/sr.height,0,1);
-       let key='';
-       let nearest=Infinity;
+       let key='',nearest=Infinity;
        keys.querySelectorAll<HTMLButtonElement>('[data-air-key]').forEach(button=>{
         const r=button.getBoundingClientRect();
+        const margin=12;
+        if(targetX<r.left-margin||targetX>r.right+margin||targetY<r.top-margin||targetY>r.bottom+margin)return;
         const dx=clamp(targetX,r.left,r.right)-targetX;
         const dy=clamp(targetY,r.top,r.bottom)-targetY;
         const d=dx*dx+dy*dy;
@@ -245,15 +251,17 @@ export default function GestureLab(){
        });
        const candidateKey=keyCandidateRef.current;
        if(candidateKey.key!==key){candidateKey.key=key;candidateKey.since=time;}
-       if(key&&time-candidateKey.since>=90&&hoveredKeyRef.current!==key){
-        hoveredKeyRef.current=key;setHoveredKey(key);
+       // Requiring a stable target prevents random letters being typed during movement.
+       if(time-candidateKey.since>=130&&hoveredKeyRef.current!==key){
+        hoveredKeyRef.current=key||null;
+        setHoveredKey(key||null);
         dwellRef.current={key,since:time,locked:false};
        }
        const activeKey=hoveredKeyRef.current;
        if(inputMethodRef.current==='dwell'&&activeKey){
         const state=dwellRef.current;
         if(state.key!==activeKey){state.key=activeKey;state.since=time;state.locked=false;}
-        dwell=clamp((time-state.since)/1050,0,1);
+        dwell=state.locked?1:clamp((time-state.since)/1000,0,1);
         if(dwell>=1&&!state.locked){
          state.locked=true;keyAction(activeKey);
         }
@@ -290,7 +298,7 @@ export default function GestureLab(){
   handGrabRef.current=null;cubeMotionRef.current=null;
   hoveredKeyRef.current=null;setHoveredKey(null);
   keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
-  setHint(next==='keyboard'?'Aim at a highlighted letter and pinch, or switch to dwell typing.':next==='cube'?'Move your hand to rotate continuously; pinch to change size.':'Pinch a WBS card, move it and release near another card to link them.');
+  setHint(next==='keyboard'?'See the camera behind the virtual keys. Move your finger directly onto a letter and hold.':next==='cube'?'Move your hand to rotate continuously; pinch to change size.':'Pinch a WBS card, move it and release near another card to link them.');
  };
  const pointerCoords=(e:ReactPointerEvent<HTMLElement>)=>{
   const r=stageRef.current?.getBoundingClientRect();if(!r)return null;
@@ -336,12 +344,14 @@ export default function GestureLab(){
     <div className="gsl-interactive">
      <div className="gsl-stage-top"><span><i/> {mode==='keyboard'?'AIR KEYBOARD':mode==='cube'?'SPATIAL CONTROL':'PROJECT FLOW CANVAS'}</span><b>{status==='ready'?(tracking?'HAND TRACKED':'WAITING FOR HAND'):'POINTER CONTROLS READY'}</b></div>
      <div className={'gsl-stage gsl-stage-'+mode} ref={stageRef}>
+      <video ref={videoRef} playsInline muted autoPlay className={'gsl-stage-webcam '+(status==='ready'&&mode==='keyboard'?'on':'')} aria-hidden="true"/>
       {mode==='keyboard'&&<div className="gsl-keyboard-panel">
+       {status!=='ready'&&<div className="gsl-vision-placeholder" aria-hidden="true"><Camera size={24}/><span>{status==='loading'?'LOADING COMPUTER VISION…':'ENABLE CAMERA TO SEE YOUR HAND BEHIND THE KEYS'}</span></div>}
        <div className="gsl-typed"><div><span>LIVE INPUT / AIR TYPING</span><button type="button" onClick={copy} aria-label="Copy typed text">{copied?<Check size={16}/>:<Copy size={16}/>} {copied?'COPIED':'COPY'}</button></div><textarea value={typing} onChange={e=>setTyping(e.target.value.slice(0,220))} aria-label="Text composed on virtual keyboard" placeholder="Your text appears here…" rows={3}/><small>{typing.length} / 220 CHARACTERS</small></div>
-       <div className="gsl-keyboard-hud"><span>{status==='ready'?(hoveredKey?'TARGET: '+(hoveredKey==='SPACE'?'SPACE':hoveredKey):'SHOW YOUR INDEX FINGER'):'CAMERA OPTIONAL'}</span><span>{inputMethod==='dwell'?'HOLD 1 SECOND TO TYPE':'PINCH TO TYPE'}</span></div>
+       <div className="gsl-keyboard-hud"><span>{status==='ready'?(hoveredKey?'TARGET: '+(hoveredKey==='SPACE'?'SPACE':hoveredKey):tracking?'MOVE INDEX ONTO A KEY':'SHOW YOUR INDEX FINGER IN THIS CAMERA VIEW'):'CAMERA OPTIONAL'}</span><strong className="gsl-target-glyph" aria-live="off">{status==='ready'?(hoveredKey||'◎'):'◇'}</strong><span>{inputMethod==='dwell'?'HOLD 1 SEC TO TYPE':'PINCH TO TYPE'}</span></div>
        <div className="gsl-keys" ref={keyboardKeysRef}>{rows.map((row,i)=><div className="gsl-key-row" key={i}>{row.split('').map(char=><button type="button" data-air-key={char} key={char} className={hoveredKey===char&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction(char)}>{char}</button>)}</div>)}
         <div className="gsl-key-row gsl-key-functions"><button type="button" data-air-key="CLEAR" className={hoveredKey==='CLEAR'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('CLEAR')}><Trash2 size={16}/> CLEAR</button><button type="button" data-air-key="SPACE" className={hoveredKey==='SPACE'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('SPACE')}>SPACE</button><button type="button" data-air-key="BACK" className={hoveredKey==='BACK'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('BACK')}>⌫ BACKSPACE</button></div>
-       </div><p className="gsl-stage-caption">One-hand typing is ON by default: hold your index over a highlighted key for 1 second. No pinch needed.</p>
+       </div><p className="gsl-stage-caption">Move your index finger directly over a key in the live camera image. Hold for 1 second to type. No second hand or pinch.</p>
       </div>}
       {mode==='cube'&&<div className="gsl-cube-panel">
        <div className="gsl-cube-scene"><div className="gsl-cube-orbit"/><div className="gsl-3d-object" style={{transform:'rotateX('+cubeAngles.x+'deg) rotateY('+cubeAngles.y+'deg) scale('+(cubeExpanded?1.22:1)+')'}} onPointerDown={e=>{downCube.current={x:e.clientX,y:e.clientY,rx:cubeAngles.x,ry:cubeAngles.y};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={cubeMove} onPointerUp={e=>{downCube.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}} onPointerCancel={()=>{downCube.current=null;}}>
@@ -363,7 +373,7 @@ export default function GestureLab(){
     </div>
     <aside className="gsl-side">
      <div className="gsl-camera-panel"><div className="gsl-camera-heading"><span><Video size={18}/> CAMERA INPUT</span><small>{status==='ready'?(tracking?'TRACKING':'READY'):status.toUpperCase()}</small></div>
-      <div className="gsl-video-shell"><video ref={videoRef} playsInline muted autoPlay className={status==='ready'?'on':''}/>{status!=='ready'&&<div className="gsl-no-video">{status==='loading'?<Camera size={30}/>:<CameraOff size={30}/>}<strong>{status==='loading'?'Preparing hand tracking…':'Camera off'}</strong><span>{status==='loading'?'Downloading the model. You can cancel camera setup at any time.':'Enable the webcam to track your hand. Manual controls work anytime.'}</span></div>}</div>
+      <div className="gsl-camera-link"><Camera size={22}/><div><strong>{status==='ready'?'CAMERA INSIDE THE KEYBOARD':status==='loading'?'PREPARING CAMERA OVERLAY':'WEBCAM + KEYBOARD TOGETHER'}</strong><span>{status==='ready'?'Watch the big left panel: your fingertip, highlighted key and typed text appear in one view.':'Activate the camera and the live preview will appear behind the large holographic keyboard.'}</span></div></div>
       {error&&<p role="alert" className="gsl-camera-error">{error}</p>}
       <button type="button" className={'gsl-camera-btn '+(status==='ready'?'gsl-camera-stop':'')} onClick={status==='ready'||status==='loading'?stop:start}>{status==='ready'?<><CameraOff size={18}/> STOP CAMERA</>:status==='loading'?<><CameraOff size={18}/> CANCEL CAMERA SETUP</>:<><Camera size={18}/> ENABLE CAMERA</>}</button>
       <div className="gsl-camera-meta"><span>{status==='ready'?'MODEL READY'+(gpuStatus?' · '+gpuStatus:''):'MEDIAPIPE / LOCAL INFERENCE'}</span><span>{tracking?'● HAND DETECTED':'○ NO HAND DATA'}</span></div>
@@ -373,7 +383,7 @@ export default function GestureLab(){
       {mode==='keyboard'&&<div className="gsl-input-modes"><span>HOW TO TYPE</span><div><button type="button" className={inputMethod==='pinch'?'active':''} aria-pressed={inputMethod==='pinch'} onClick={()=>{setInputMethod('pinch');inputMethodRef.current='pinch';}}>PINCH</button><button type="button" className={inputMethod==='dwell'?'active':''} aria-pressed={inputMethod==='dwell'} onClick={()=>{setInputMethod('dwell');inputMethodRef.current='dwell';dwellRef.current={key:'',since:0,locked:false};}}>HOLD 1 SEC</button></div></div>}
       <div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>
       {mode==='cube'&&<label className="gsl-rotation-speed">ROTATION RESPONSE <strong>{rotationSpeed.toFixed(1)}×</strong><input type="range" min=".65" max="2.5" step=".15" value={rotationSpeed} onChange={e=>setRotationSpeed(Number(e.target.value))}/></label>}
-      {mode==='keyboard'?<p>The keyboard starts in Hold 1 Sec mode: point at a key with one index finger and wait for the selection ring. Pinch is optional.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
+      {mode==='keyboard'?<p>Look at the large camera view, not the small controls. Place your index fingertip over a translucent key in the live image and hold for one second. The glowing ring and highlighted key show when it is ready; no pinch needed.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
       <div className="gsl-guide-tags"><span>NO CAMERA REQUIRED FOR MANUAL MODE</span><span>{mode==='workflow'?connections.length+' DEPENDENCIES':'GESTURE + POINTER'}</span></div>
       {mode==='workflow'&&<button type="button" onClick={()=>{setTasks(starterTasks);tasksRef.current=starterTasks;setConnections([['A','B']]);setLinkFrom(null);setHint('WBS reset.');}}><RotateCcw size={16}/> RESET WBS</button>}
      </div>
