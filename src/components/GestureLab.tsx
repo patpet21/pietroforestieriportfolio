@@ -191,6 +191,85 @@ export default function GestureLab(){
    const tick=(time:number)=>{
     if(token!==sessionRef.current)return;
     rafRef.current=requestAnimationFrame(tick);
+    if(document.hidden||time-lastFrame<(useCpu?56:37)||!video.videoWidth||video.currentTime===lastVideoTime)return;
+    lastFrame=time;lastVideoTime=video.currentTime;
+    try{
+     const result=tracker.detectForVideo(video,time);
+     const hand=result.landmarks?.[0];
+     if(!hand){
+      setTracking(false);setCursor(null);setPinchMeter(0);
+      pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};
+      cubeMotionRef.current=null;handGrabRef.current=null;
+      hoveredKeyRef.current=null;setHoveredKey(null);
+      keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
+      return;
+     }
+     setTracking(true);
+     const finger=hand[8],thumb=hand[4],leftPalm=hand[5],rightPalm=hand[17];
+     if(!finger||!thumb||!leftPalm||!rightPalm)return;
+     const sm=smoothRef.current;
+     const x=sm.x=sm.x*.36+clamp(1-finger.x,0,1)*.64;
+     const y=sm.y=sm.y*.36+clamp(finger.y,0,1)*.64;
+     const ratio=distance(finger,thumb)/Math.max(.065,distance(leftPalm,rightPalm));
+     const limits=sensitivityRef.current==='easy'?[.68,.88]:sensitivityRef.current==='balanced'?[.54,.76]:[.42,.64];
+     const was=pinchRef.current;
+     const candidateClosed=was?ratio<limits[1]:ratio<limits[0];
+     const candidate=pinchCandidateRef.current;
+     if(candidate.value!==candidateClosed){candidate.value=candidateClosed;candidate.frames=1;}
+     else candidate.frames++;
+     const pinching=candidate.frames>=2?candidateClosed:was;
+     const started=pinching&&!was&&time-lastActionRef.current>240;
+     const ended=was&&!pinching;
+     pinchRef.current=pinching;
+     if(started)lastActionRef.current=time;
+     setPinchMeter(Math.round(clamp(1-ratio/1.3,0,1)*100));
+     let px=x,py=y,dwell=0;
+     const activeMode=modeRef.current;
+     if(activeMode==='keyboard'){
+      const keys=keyboardKeysRef.current,stage=stageRef.current;
+      if(keys&&stage){
+       const kr=keys.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+       const targetX=kr.left+kr.width*clamp((x-.13)/.74,0,1);
+       const targetY=kr.top+kr.height*clamp((y-.16)/.68,0,1);
+       px=clamp((targetX-sr.left)/sr.width,0,1);
+       py=clamp((targetY-sr.top)/sr.height,0,1);
+       let key='';
+       let nearest=Infinity;
+       keys.querySelectorAll<HTMLButtonElement>('[data-air-key]').forEach(button=>{
+        const r=button.getBoundingClientRect();
+        const dx=clamp(targetX,r.left,r.right)-targetX;
+        const dy=clamp(targetY,r.top,r.bottom)-targetY;
+        const d=dx*dx+dy*dy;
+        if(d<nearest){nearest=d;key=button.dataset.airKey||'';}
+       });
+       const candidateKey=keyCandidateRef.current;
+       if(candidateKey.key!==key){candidateKey.key=key;candidateKey.since=time;}
+       if(key&&time-candidateKey.since>=90&&hoveredKeyRef.current!==key){
+        hoveredKeyRef.current=key;setHoveredKey(key);
+        dwellRef.current={key,since:time,locked:false};
+       }
+       const activeKey=hoveredKeyRef.current;
+       if(inputMethodRef.current==='dwell'&&activeKey){
+        const state=dwellRef.current;
+        if(state.key!==activeKey){state.key=activeKey;state.since=time;state.locked=false;}
+        dwell=clamp((time-state.since)/1050,0,1);
+        if(dwell>=1&&!state.locked){
+         state.locked=true;keyAction(activeKey);
+        }
+       }
+      }
+     }else if(activeMode==='workflow'){
+      px=clamp((x-.12)/.76,0,1);
+      py=clamp((y-.12)/.76,0,1);
+     }
+     setCursor({x:px,y:py,pinching,dwell});
+     gestureRef.current(px,py,pinching,started,ended);
+    }catch(e){
+     console.warn('Hand tracking paused:',e);
+     setTracking(false);
+    }
+   };
+   rafRef.current=requestAnimationFrame(tick);
   }catch(e){
    if(token!==sessionRef.current)return;
    release();
