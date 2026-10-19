@@ -554,3 +554,12 @@ footer{background:#090b18}
  .pf-stage-story{padding:13px}
 }
 @media(prefers-reduced-motion:reduce){.pf-stage-story{animation:none!important}}
+
+/* Authentic project image gallery — only uploaded images render */
+.pf-real-media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin:25px 0}
+.pf-real-media-item{overflow:hidden;background:#101b2c;border:1px solid #b4c9ec42;border-radius:15px}
+.pf-real-media-item[hidden]{display:none!important}
+.pf-real-media-item img{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#eaf2fb}
+.pf-real-media-item span{display:block;font-size:11px;letter-spacing:.25px;font-weight:700;color:#d6e4f2;padding:13px 15px}
+.pf-media-note{font-size:11px;line-height:1.5;opacity:.7}
+@media(max-width:700px){.pf-real-media-grid{grid-template-columns:1fr;gap:12px}}
