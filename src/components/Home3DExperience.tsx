@@ -27,10 +27,12 @@ export function HeroSystems3D(){
  const [rx,setRx]=useState(-18),[ry,setRy]=useState(24),[active,setActive]=useState(0);
  const drag=useRef<{x:number;y:number;rx:number;ry:number}|null>(null);
  const [dragging,setDragging]=useState(false);
+ const [interacted,setInteracted]=useState(false);
  const down=(e:PointerEvent<HTMLDivElement>)=>{
   if(e.button!==0)return;
   drag.current={x:e.clientX,y:e.clientY,rx,ry};
   setDragging(true);
+  setInteracted(true);
   e.currentTarget.setPointerCapture(e.pointerId);
  };
  const move=(e:PointerEvent<HTMLDivElement>)=>{
@@ -45,10 +47,10 @@ export function HeroSystems3D(){
   if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
  };
  const keys=(e:KeyboardEvent<HTMLDivElement>)=>{
-  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();setRy(v=>v+(e.key==='ArrowLeft'?-18:18));}
-  if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();setRx(v=>Math.max(-68,Math.min(68,v+(e.key==='ArrowUp'?12:-12))));}
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();setInteracted(true);setRy(v=>v+(e.key==='ArrowLeft'?-18:18));}
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();setInteracted(true);setRx(v=>Math.max(-68,Math.min(68,v+(e.key==='ArrowUp'?12:-12))));}
  };
- const reset=()=>{setRx(-18);setRy(24);setDragging(false);drag.current=null;};
+ const reset=()=>{setRx(-18);setRy(24);setDragging(false);setInteracted(false);drag.current=null;};
  const story=heroModes[active];
  const angle={transform:'rotateX('+rx+'deg) rotateY('+ry+'deg)'} as CSSProperties;
  return <aside className="pf3-hero-engine" aria-label="Interactive 3D project and operations system">
@@ -59,7 +61,7 @@ export function HeroSystems3D(){
    <div className="pf3-cube-glow" aria-hidden="true"/>
    <div className="pf3-cube-drag" role="img" tabIndex={0} aria-label="Rotatable 3D cube: AI project management, workflows, automation, execution, analysis and operations. Drag or use arrow keys to rotate."
     onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onKeyDown={keys}>
-    <div className={'pf3-auto-spin '+(dragging?'pf3-paused':'')}>
+    <div className={'pf3-auto-spin '+(dragging||interacted?'pf3-paused':'')}>
      <div className="pf3-geometry" style={angle}>
       {faces.map(({label,sub,Icon},i)=><div key={label} className={'pf3-face pf3-face-'+i}>
        <div className="pf3-face-frame">
