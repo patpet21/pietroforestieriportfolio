@@ -2269,3 +2269,11 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 @media(prefers-reduced-motion:reduce){
  .gsl-mode-tabs button,.gsl-key-row button,.gsl-hand-cursor,.gsl-3d-object,.gsl-home-hand{transition:none!important}
 }
+
+
+/* Six menu links must fit at laptop widths without pushing the last link off screen. */
+@media(min-width:761px) and (max-width:1110px){
+ .header{padding-left:clamp(19px,3vw,30px);padding-right:clamp(19px,3vw,30px)}
+ .header nav{gap:12px}
+ .header-contact{display:none}
+}
