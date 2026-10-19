@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import type {CSSProperties} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowUpRight,ChevronLeft,ChevronRight,ArrowRight,Layers3,CheckCircle2} from 'lucide-react';
 import BrandImage from './BrandImage';
@@ -21,7 +22,7 @@ export function ProjectStory({project:p}:{project:Project}){
  return <section className="pf-story-section">
   <div className="wrap">
    <div className="pf-story-heading"><div><span className="eyebrow"><i/> THE PROJECT STORY / {p.year}</span><h2>Go beyond <em>the visuals.</em></h2></div><p>Explore the thinking, execution and current status behind this project. Select a chapter to see the details.</p></div>
-   <div className="pf-story-frame" style={{'--pf-story-accent':p.accent} as React.CSSProperties}>
+   <div className="pf-story-frame" style={{'--pf-story-accent':p.accent} as CSSProperties}>
     <div className="pf-story-nav" role="group" aria-label={'Explore '+p.title+' chapters'}>
      {items.map((part,i)=><button type="button" key={part.label} aria-pressed={active===i} className={i===active?'selected':''} onClick={()=>setActive(i)}>
       <span>{String(i+1).padStart(2,'0')}</span><strong>{part.label}</strong><ArrowUpRight size={16}/></button>)}
@@ -48,7 +49,7 @@ export function NextProjectSpotlight({current,projects}:{current:Project;project
  const copy=projectHighlights[next.id];
  return <section className="wrap pf-next-section">
   <div className="pf-next-top"><span className="eyebrow"><i/> KEEP EXPLORING</span><Link to="/projects">ALL PROJECTS <ArrowUpRight size={14}/></Link></div>
-  <Link to={'/projects/'+next.id} className="pf-next-card" style={{'--pf-next-accent':next.accent} as React.CSSProperties}>
+  <Link to={'/projects/'+next.id} className="pf-next-card" style={{'--pf-next-accent':next.accent} as CSSProperties}>
    <div className="pf-next-image"><BrandImage project={next.id} alt={'Preview of '+next.title} loading="lazy"/><span>UP NEXT / {String((index+1)%projects.length+1).padStart(2,'0')}</span></div>
    <div className="pf-next-copy"><span>{next.category.toUpperCase()}</span><h2>{copy?.shortTitle??next.title}</h2><p>{copy?.teaser??next.summary}</p><small>DISCOVER THE CASE STUDY <ArrowRight size={15}/></small></div>
    <span className="pf-next-arrow"><ArrowUpRight size={25}/></span>
