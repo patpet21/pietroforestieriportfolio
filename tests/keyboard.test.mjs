@@ -1,109 +1,81 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {KeyboardPointer} from '../src/lib/gesture/KeyboardPointer.ts';
-import {measureForwardDepth} from '../src/lib/gesture/forwardDepth.ts';
 import {AirTypingEngine} from '../src/lib/AirTypingEngine.ts';
-import {makeHand} from './fixtures/hand.mjs';
+import {measureFingerDepth} from '../src/lib/gesture/fingerDepth.ts';
+import {makeHand,tapFinger} from './fixtures/hand.mjs';
 const settings={reach:1,mode:'push',sensitivity:'easy'};
-const locate=(x,y)=>y<.1||y>.9||x<.1||x>.9?null:x<.5?'A':'B';
-const sample=(x=.65,scale=1)=>({landmarks:makeHand({x,y:.4,scale})});
-const left=(scale=1,x=.7)=>({...sample(x,scale),handedness:{categoryName:'Left',score:.98}});
-const right=(scale=1,x=.3)=>({...sample(x,scale),handedness:{categoryName:'Right',score:.98}});
-test('floating forward-touch keyboard: aim, push, withdraw; no two-hand typing calibration',()=>{
- const e=new AirTypingEngine();let now=100;
- const frame=(scale=1)=>e.process([sample(.65,scale)],locate,now+=50,settings);
- for(let i=0;i<8;i++)frame();assert.equal(frame().fingers[0].armed,true);
- frame(1.2);assert.deepEqual(frame(1.2).presses.map(p=>p.key),['A']);
- for(let i=0;i<20;i++)assert.deepEqual(frame(1.2).presses,[]);
- frame();frame();frame(1.2);assert.deepEqual(frame(1.2).presses.map(p=>p.key),['A']);
- assert.equal(e.calibratedHands(),0);
+const tips=[4,8,12,16,20],names=['THUMB','INDEX','MIDDLE','RING','PINKY'];
+const hand=(side='Left',points=makeHand({x:side==='Left'?.7:.25,palm:true}))=>({landmarks:points,handedness:{categoryName:side,score:.98}});
+test('both hands immediately show ten current fingertips without calibration or settling',()=>{
+ const e=new AirTypingEngine(),hands=[hand(),hand('Right')];
+ const f=e.process(hands,()=> 'A',100,settings);
+ assert.equal(f.fingers.length,10);assert.equal(f.controls.length,10);
+ assert.deepEqual(f.fingers.map(f=>f.id),['L','R'].flatMap(s=>names.map(n=>s+'-'+n)));
+ for(let h=0;h<2;h++)for(let i=0;i<5;i++){
+  const finger=f.fingers[h*5+i],p=hands[h].landmarks[tips[i]];
+  assert.ok(Math.abs(finger.x-(1-p.x))<1e-10);assert.equal(finger.y,p.y);assert.equal(finger.armed,true);
+ }
+ assert.deepEqual(f.presses,[]);assert.equal(f.calibrated,0);
 });
-test('whole-hand movement aims at a new key, then a forward push writes it',()=>{
- const e=new AirTypingEngine();let now=100;
- const at=(x,scale=1)=>e.process([sample(x,scale)],locate,now+=50,settings);
- for(let i=0;i<8;i++)at(.65);at(.65,1.2);assert.equal(at(.65,1.2).presses[0].key,'A');
- for(let i=0;i<12;i++)at(.4);at(.4,1.2);assert.equal(at(.4,1.2).presses[0].key,'B');
-});
-test('both hands have independent index pointers; hovering and thumb pinches cannot type',()=>{
- const e=new AirTypingEngine();let now=100;
- for(let i=0;i<20;i++){
-  const f=e.process([{landmarks:makeHand({x:.7,pinch:i%2===0}),handedness:{categoryName:'Left',score:.98}},right()],locate,now+=50,settings);
-  assert.deepEqual(f.fingers.map(f=>f.id),['L-INDEX','R-INDEX']);
-  assert.equal(f.controls.length,2);assert.deepEqual(f.presses,[]);
+for(let index=0;index<5;index++)test(`${names[index]} on either hand acts on the first small forward sample, independently`,()=>{
+ for(const side of ['Left','Right']){
+  const e=new AirTypingEngine(),base=hand(side),other=hand(side==='Left'?'Right':'Left');
+  e.process([base,other],()=> 'A',100,settings);
+  const pressed={...base,landmarks:tapFinger(base.landmarks,tips[index],.07)};
+  const f=e.process([pressed,other],()=> 'A',116,settings);
+  assert.deepEqual(f.presses,[{key:'A',fingerId:(side==='Left'?'L':'R')+'-'+names[index]}]);
+  assert.equal(f.controls.find(c=>c.id===f.presses[0].fingerId).confirmationMs,0);
+  assert.deepEqual(e.process([pressed,other],()=> 'A',132,settings).presses,[]);
+  e.process([base,other],()=> 'A',148,settings);
+  assert.equal(e.process([pressed,other],()=> 'A',164,settings).presses.length,1);
  }
 });
-
-test('either hand can press while the other stays down, with independent planes and release latches',()=>{
- const e=new AirTypingEngine();let now=100;
- const frame=(l=1,r=.8,reverse=false)=>e.process(reverse?[right(r),left(l)]:[left(l),right(r)],locate,now+=50,settings);
- for(let i=0;i<8;i++)frame();
- frame(1.2);assert.deepEqual(frame(1.2).presses,[{key:'A',fingerId:'L-INDEX'}]);
- frame(1.2,.96,true);assert.deepEqual(frame(1.2,.96).presses,[{key:'B',fingerId:'R-INDEX'}]);
- for(let i=0;i<8;i++)assert.deepEqual(frame(1.2,.96,i%2===0).presses,[]);
- frame(1,.96);frame(1,.96);frame(1.2,.96);
- assert.deepEqual(frame(1.2,.96).presses,[{key:'A',fingerId:'L-INDEX'}]);
+test('simultaneous index and middle contacts do not block each other',()=>{
+ const e=new AirTypingEngine(),left=hand(),right=hand('Right');
+ e.process([left,right],()=> 'A',100,settings);
+ left.landmarks=tapFinger(tapFinger(left.landmarks,8,.07),12,.07);
+ right.landmarks=tapFinger(right.landmarks,4,.07);
+ assert.deepEqual(e.process([right,left],()=> 'A',140,settings).presses.map(p=>p.fingerId),['L-INDEX','L-MIDDLE','R-THUMB']);
 });
-
-test('simultaneous forward contacts produce one event per hand in a stable order',()=>{
- const e=new AirTypingEngine();let now=100;
- const frame=(scale=1)=>e.process([right(scale),left(scale)],locate,now+=50,settings);
- for(let i=0;i<8;i++)frame();frame(1.2);
- assert.deepEqual(frame(1.2).presses,[{key:'A',fingerId:'L-INDEX'},{key:'B',fingerId:'R-INDEX'}]);
- assert.deepEqual(frame(1.2).presses,[]);
-});
-
-test('losing one hand clears only its contact; reacquisition cannot replay it',()=>{
- const e=new AirTypingEngine();let now=100;
- const frame=hands=>e.process(hands,locate,now+=50,settings);
- for(let i=0;i<8;i++)frame([left(),right()]);
- frame([left(1.07),right()]);
- assert.deepEqual(frame([right()]).fingers.map(f=>f.id),['R-INDEX']);
- frame([right(1.2)]);
- assert.deepEqual(frame([right(1.2)]).presses,[{key:'B',fingerId:'R-INDEX'}]);
- for(let i=0;i<9;i++)assert.deepEqual(frame([left(1.2),right(1.2)]).presses,[]);
- // The returning hand aligns independently; the held right hand cannot repeat.
- frame([left(),right(1.2)]);frame([left(),right(1.2)]);frame([left(1.2),right(1.2)]);
- assert.deepEqual(frame([left(1.2),right(1.2)]).presses,[{key:'A',fingerId:'L-INDEX'}]);
-});
-
-test('identities survive detection reordering and hand crossings without moving controllers to the other hand',()=>{
- const e=new AirTypingEngine();let now=100;
- const frame=(lx,rx,reverse=false)=>e.process(reverse?[right(1,rx),left(1,lx)]:[left(1,lx),right(1,rx)],locate,now+=50,settings);
- for(let i=0;i<8;i++)frame(.7,.3,i%2===0);
- for(const [lx,rx] of [[.64,.36],[.56,.44],[.48,.52],[.4,.6]]){
-  const f=frame(lx,rx,true);
-  assert.equal(f.fingers.find(f=>f.id==='L-INDEX').x,1-lx);
-  assert.equal(f.fingers.find(f=>f.id==='R-INDEX').x,1-rx);
-  assert.deepEqual(f.presses,[]);
+test('whole-hand translation, scaling, wrist-Z offset and rigid palm tilt cannot press ten keys',()=>{
+ const e=new AirTypingEngine(),base=makeHand({x:.5,palm:true});let now=100;
+ e.process([hand('Left',base)],()=> 'A',now,settings);
+ for(const amount of [.01,.02,.03,.02,0]){
+  const points=base.map(p=>({x:(p.x-.5)*1.02+.5+amount,y:p.y*1.02,z:p.z*1.02+.2+amount*p.x}));
+  assert.deepEqual(e.process([hand('Left',points)],()=> 'A',now+=40,settings).presses,[]);
  }
+ const angle=.3;
+ const a=measureFingerDepth(base,8),b=measureFingerDepth(base.map(p=>({x:p.x*Math.cos(angle)+p.z*Math.sin(angle),y:p.y,z:-p.x*Math.sin(angle)+p.z*Math.cos(angle)})),8);
+ assert.ok(Math.abs(a.fingerDepth-b.fingerDepth)<1e-10);
 });
-
-test('abruptly crossing unequal palm sizes cannot borrow the other hand\'s touch plane',()=>{
- const e=new AirTypingEngine();let now=100;
- // Scale each hand around its wrist so these are different neutral hand sizes,
- // with no forward gesture hidden in the fixture's index-anchored scaling.
- const at=(categoryName,wristX,size)=>{
-  const points=makeHand({x:wristX+.015,y:.35});
-  const wrist=points[0];
-  const landmarks=points.map(p=>({x:wristX+(p.x-wrist.x)*size,y:wrist.y+(p.y-wrist.y)*size,z:p.z*size}));
-  return {landmarks,handedness:{categoryName,score:.98}};
- };
- const frame=(lx,rx)=>e.process([at('Left',lx,1),at('Right',rx,.8)],locate,now+=50,settings);
- for(let i=0;i<8;i++)frame(.6,.5);
- assert.ok(frame(.6,.5).fingers.every(f=>f.armed));
- for(let i=0;i<12;i++)assert.deepEqual(frame(.5,.6).presses,[],'crossing alone must never be a depth press');
- const final=frame(.5,.6);
- assert.equal(final.fingers.find(f=>f.id==='L-INDEX').x,1-at('Left',.5,1).landmarks[8].x);
- assert.equal(final.fingers.find(f=>f.id==='R-INDEX').x,1-at('Right',.6,.8).landmarks[8].x);
+test('isolated tip noise and a thumb/index pinch cannot masquerade as a coherent forward touch',()=>{
+ const e=new AirTypingEngine(),base=hand();e.process([base],()=> 'A',100,settings);
+ const bad=base.landmarks.map(p=>({...p}));bad[8].z-=.02;
+ assert.deepEqual(e.process([hand('Left',bad)],()=> 'A',140,settings).presses,[]);
+ const pinch=makeHand({x:.7,palm:true,pinch:true});
+ assert.deepEqual(e.process([hand('Left',pinch)],()=> 'A',180,settings).presses,[]);
 });
-test('lost tracking clears the old touch plane',()=>{
- const e=new AirTypingEngine();let now=100;
- const at=hands=>e.process(hands,locate,now+=50,settings);
- for(let i=0;i<8;i++)at([sample()]);at([]);at([sample(.65,1.2)]);assert.deepEqual(at([sample(.65,1.2)]).presses,[]);
+test('one missing hand removes its five markers; other held fingers keep their own state',()=>{
+ const e=new AirTypingEngine(),l=hand(),r=hand('Right');let now=100;
+ const at=hands=>e.process(hands,()=> 'A',now+=40,settings);
+ at([l,r]);const down={...r,landmarks:tapFinger(r.landmarks,12,.07)};
+ assert.equal(at([l,down]).presses[0].fingerId,'R-MIDDLE');
+ assert.equal(at([down]).fingers.length,5);assert.deepEqual(at([down]).presses,[]);
+ const returning={...l,landmarks:tapFinger(l.landmarks,8,.07)};
+ assert.deepEqual(at([returning,down]).presses,[]);
+ at([l,down]);assert.equal(at([returning,down]).presses[0].fingerId,'L-INDEX');
 });
-test('approach locks the key, and blocked/moved geometry suppresses activation',()=>{
- const p=new KeyboardPointer();let now=100;
- const at=(x,scale,keys=locate)=>p.process({x,y:.5},measureForwardDepth(makeHand({scale})),now+=50,keys);
- for(let i=0;i<8;i++)at(.4,1);at(.8,1.06);at(.8,1.2);assert.equal(at(.8,1.2).activation,'A');
- p.reset();for(let i=0;i<8;i++)at(.4,1);at(.4,1.06);at(.4,1.2);assert.equal(at(.4,1.2,()=>null).activation,null);
+test('holding and moving to a different key does not stick or type until a new small stroke',()=>{
+ const e=new AirTypingEngine(),base=hand();let now=100;
+ const at=(h,key)=>e.process([h],()=>key,now+=40,settings);
+ at(base,'A');const down={...base,landmarks:tapFinger(base.landmarks,8,.07)};
+ assert.equal(at(down,'A').presses[0].key,'A');assert.deepEqual(at(down,'B').presses,[]);
+ assert.deepEqual(at(down,'B').presses,[]);at(base,'B');assert.equal(at(down,'B').presses[0].key,'B');
+});
+test('loss, long gaps and disabled geometry cannot replay a contact',()=>{
+ const e=new AirTypingEngine(),base=hand(),down={...hand(),landmarks:tapFinger(hand().landmarks,8,.07)};
+ e.process([base],()=> 'A',100,settings);e.process([],()=> 'A',140,settings);
+ assert.deepEqual(e.process([down],()=> 'A',180,settings).presses,[]);
+ assert.deepEqual(e.process([down],()=> 'A',900,settings).presses,[]);
+ e.process([base],()=> 'A',940,settings);assert.deepEqual(e.process([down],()=>null,980,settings).presses,[]);
 });

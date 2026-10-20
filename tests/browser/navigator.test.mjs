@@ -48,7 +48,7 @@ async function pose(page,kind){
   const x=.5-((rect.left+rect.width/2)/innerWidth-.5)/1.48;
   const y=.5+((rect.top+rect.height/2)/innerHeight-.5)/1.48;
   const {makeHand}=await import('/tests/fixtures/hand.mjs');
-  const p=makeHand({x,y,scale:kind==='push'?1.2:1,pinch:kind==='pinch',palm:kind==='palm'});
+  const p=makeHand({x,y,scale:kind==='push'?1.02:1,pinch:kind==='pinch',palm:kind==='palm'});
   window.__hands=kind==='lost'?[]:[p];window.__poseStart=window.__inferences||0;
  },kind);
  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
@@ -118,8 +118,8 @@ async function keyboardPose(page,key,closed=false){
   const nx=(target.left+target.width/2-plane.left)/plane.width,ny=(target.top+target.height/2-plane.top)/plane.height;
   const reach=Number(document.querySelector('[aria-label="Typing hand movement range"]').value);
   const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
-  const {makeHand}=await import('/tests/fixtures/hand.mjs');
-  const p=makeHand({x,y,scale:closed?1.2:1});
+  const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
+  const base=makeHand({x,y}),p=closed?tapFinger(base,8,.09):base;
   window.__hands=[p];window.__poseStart=window.__inferences||0;
  },{key,closed});
  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=6);
@@ -132,7 +132,7 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
   await page.waitForSelector('.air-desk-plane');
   assert.equal(await page.locator('.air-calibrate').count(),0);
-  assert.match(await page.locator('.air-calibration-note').textContent(),/TOUCH PLANE ALIGNS AUTOMATICALLY/);
+  assert.match(await page.locator('.air-calibration-note').textContent(),/all ten fingertips/i);
   const press=async key=>{await keyboardPose(page,key);await keyboardPose(page,key,true);};
   await keyboardPose(page,'C');assert.equal(await page.locator('[data-holo-key="C"]').evaluate(el=>el.classList.contains('air-key-hover')),true);
   await keyboardPose(page,'C',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'C');
@@ -172,8 +172,9 @@ test('in-page Gesture Lab keyboard uses the same forward touch instead of pinch 
     const gain=Number(document.querySelector('[aria-label="Hand pointer reach"]').value);
     const vx=(key.left+key.width/2-stage.left+(w-stage.width)/2)/w,vy=(key.top+key.height/2-stage.top+(h-stage.height)/2)/h;
     const x=1-(.5+(vx-.5)/gain),y=.5+(vy-.5)/gain;
-    const {makeHand}=await import('/tests/fixtures/hand.mjs');
-    window.__hands=[makeHand({x,y,scale,pinch})];window.__poseStart=window.__inferences;
+    const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
+    const base=makeHand({x,y,pinch});
+    window.__hands=[scale>1?tapFinger(base,8,.09):base];window.__poseStart=window.__inferences;
    },{scale,pinch});
    await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
    if(scale===1)await page.waitForFunction(()=>document.querySelector('[data-air-key="A"]')?.classList.contains('gsl-key-target'),null,{timeout:5000});

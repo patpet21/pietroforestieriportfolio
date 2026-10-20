@@ -15,7 +15,7 @@ export class GestureDiagnostics{
   const timings=Object.fromEntries(Object.entries(this.samples).map(([name,values])=>{
    const sorted=[...values].sort((a,b)=>a-b);
    const at=(p:number)=>Math.round((sorted[Math.min(sorted.length-1,Math.ceil(sorted.length*p)-1)]||0)*10)/10;
-   return [name,{p50:at(.5),p95:at(.95),samples:sorted.length}];
+   return [name,{p50:at(.5),p95:at(.95),p99:at(.99),samples:sorted.length}];
   }));
   return {...this.values,counters:{...this.counters},timings};
  }

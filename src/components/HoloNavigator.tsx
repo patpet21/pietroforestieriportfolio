@@ -79,8 +79,16 @@ export default function HoloNavigator(){
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
  const [airFrame,setAirFrame]=useState<KeyboardFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
+ const keyboardOverlays=useRef(new Map<number,Landmark[][]>());
  const keyboardCommitted=useCallback((id:number,at:number)=>{
   const metrics=diagnostics.current;
+  const hands=keyboardOverlays.current.get(id),canvas=overlayRef.current,video=videoRef.current;
+  if(hands&&canvas&&video){
+   const start=performance.now();paintHandSkeleton(canvas,video,hands);
+   canvas.dataset.sampleId=String(id);canvas.dataset.hands=String(hands.length);
+   metrics.record('keyboardOverlayMs',performance.now()-start);
+  }
+  for(const key of keyboardOverlays.current.keys())if(key<=id)keyboardOverlays.current.delete(key);
   if(!metrics.enabled)return;
   metrics.values.keyboardPresentedSample=id;
   metrics.record('sampleToKeyboardCommitMs',performance.now()-at);
@@ -310,9 +318,6 @@ export default function HoloNavigator(){
       videoFrames=quality?.totalVideoFrames||0;processed=0;rateAt=now;
      }
      metrics.values.handedness=result.handedness||[];
-     const drawStart=performance.now();
-     if((!mobile||mobilePanelExpandedRef.current)&&now-lastDraw>=1000/15){paintHandSkeleton(overlayRef.current,video,landmarks);lastDraw=now;}
-     metrics.record('overlayMs',performance.now()-drawStart);
      const poseStart=performance.now();
      // Preserve per-detection identity evidence before filtering invalid hands.
      // Detection order itself is not a persistent hand identity.
@@ -321,8 +326,21 @@ export default function HoloNavigator(){
       return hand?[{...hand,handedness:result.handedness?.[index]?.[0]}]:[];
      });
      metrics.record('poseMs',performance.now()-poseStart);
+     // Keyboard bones, hand count and ten markers share the same valid sample.
+     // The former 15 Hz overlay could still show a hand already lost by input.
+     const drawStart=performance.now();
+     if(keyboardRef.current){
+      keyboardOverlays.current.set(sampleId,samples.map(s=>s.landmarks));
+      if(keyboardOverlays.current.size>4)keyboardOverlays.current.delete(keyboardOverlays.current.keys().next().value!);
+     }else if((!mobile||mobilePanelExpandedRef.current)&&(now-lastDraw>=1000/15||samples.length!==lastCount)){
+      paintHandSkeleton(overlayRef.current,video,samples.map(s=>s.landmarks));lastDraw=now;
+      if(overlayRef.current){overlayRef.current.dataset.sampleId=String(sampleId);overlayRef.current.dataset.hands=String(samples.length);}
+     }
+     metrics.record('overlayMs',performance.now()-drawStart);
      if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      metrics.values.detectedHands=samples.length;
+     metrics.values.rawDetectedHands=landmarks.length;metrics.values.rejectedHands=landmarks.length-samples.length;
+     metrics.values.queueDepth=0;
      if(!samples.length){
       if(hadHand)metrics.count('handLoss');hadHand=false;
       controllerRef.current.reset();metrics.values.suppression='tracker-lost';
@@ -330,7 +348,7 @@ export default function HoloNavigator(){
       missedRef.current++;
       if(keyboardRef.current){
        airEngineRef.current.reset();
-       setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS'});
+       setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS',sampleId,sampledAt:frameStart});
       }
       // Never carry a clickable target or press across missing landmarks.
       if(missedRef.current<3)return;
@@ -345,19 +363,23 @@ export default function HoloNavigator(){
      missedRef.current=0;
      if(keyboardRef.current){
       controllerRef.current.reset();metrics.values.suppression='mode-switch';
-      // Keyboard is exclusive: forward index touch, or opt-in ten-finger research.
+      // Keyboard is exclusive: ten small forward touches, or bend research.
       // Full key geometry is only needed while calibrating the finger experiment.
       const root=airKeysRef.current;
       const box=root?.getBoundingClientRect();
       const keyBoxes=root&&airModeRef.current==='tap'&&autoCalibrationRef.current.enabled?Array.from(root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]')).map(button=>({
        key:button.dataset.holoKey||'',rect:button.getBoundingClientRect()
       })):[];
+      let hitTime=0;
       const keyAt=(nx:number,ny:number):string|null=>{
+       const hitStart=performance.now();
+       try{
        if(!box||!box.width||!box.height)return null;
        const px=box.left+(root?.clientLeft||0)+nx*(root?.clientWidth||0),py=box.top+(root?.clientTop||0)+ny*(root?.clientHeight||0);
        if(px<box.left||px>box.right||py<box.top||py>box.bottom)return null;
        const key=document.elementFromPoint(px,py)?.closest<HTMLButtonElement>('button[data-holo-key]');
        return key&&root?.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.holoKey||null:null;
+       }finally{hitTime+=performance.now()-hitStart;}
       };
       // Auto-calibrate without a mouse or a third hand:
       // once two hands remain reasonably steady in frame for ~2.4 seconds,
@@ -409,6 +431,7 @@ export default function HoloNavigator(){
       const frame=airEngineRef.current.process(samples,keyAt,now,{
        reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current,aspect:video.videoWidth/video.videoHeight
       });
+      metrics.record('keyboardHitTestMs',hitTime);
       if(frame.controls){metrics.values.pose='keyboard-forward-touch';metrics.values.press=frame.controls;}
       if(metrics.enabled){
        metrics.values.keyboardProcessedSample=sampleId;
@@ -454,13 +477,11 @@ export default function HoloNavigator(){
      const rawPose=pressHand?'press':spread?'zoom':control.open?'scroll':control.pointing?'point':'idle';
      const p=pointerRef.current,tip=control.landmarks[8];
      const rawX=clamp((1-tip.x-.5)*1.48+.5,0,1),rawY=clamp((tip.y-.5)*1.48+.5,0,1);
-     const motion=Math.hypot(rawX-p.x,rawY-p.y);
-     const smoothing=motion<.015?.24:motion<.055?.47:.7;
-     const point={x:p.x=p.x*(1-smoothing)+rawX*smoothing,y:p.y=p.y*(1-smoothing)+rawY*smoothing};
+     const point={x:p.x=rawX,y:p.y=rawY};
      const classifyStart=performance.now();
      // Acquire on OPEN aim only. Every frame advances release before mode returns.
      const hitStart=performance.now();
-     const aimed=control.pointing&&!pressHand?findGestureTarget(point.x*innerWidth,point.y*innerHeight):null;
+     const aimed=control.pointing||pressHand?findGestureTarget(point.x*innerWidth,point.y*innerHeight):null;
      metrics.record('hitTestMs',performance.now()-hitStart);
      const click=controllerRef.current.step({now,tracking:true,depth,pointing:control.pointing||!!pressHand,
       mode:rawPose==='scroll'?'scroll':rawPose==='zoom'?'zoom':'navigation',target:aimed,point});
@@ -470,7 +491,7 @@ export default function HoloNavigator(){
      metrics.values.suppression=click.reason;
      metrics.values.targetAgeMs=click.targetAgeMs;
      if(click.reason!=='none')metrics.count('suppressed:'+click.reason);
-     setPressSignal(click.reason==='stale-target'?'WITHDRAW TO RESET':controllerRef.current.down?'TOUCH · WITHDRAW':click.pending?('PUSH '+Math.round(click.progress*100)+'%'):controllerRef.current.ready?'READY · PUSH FORWARD':'AIM · POSITIONING PLANE');
+     setPressSignal(controllerRef.current.down?'TOUCH':controllerRef.current.ready?'READY · SMALL TAP':'AIM');
      if(click.activation){
       const target=click.activation;
       if(canActivateTarget(target,click.point.x*innerWidth,click.point.y*innerHeight)){
@@ -535,7 +556,7 @@ export default function HoloNavigator(){
      }
      if(metrics.enabled)metrics.values.target=target?{tag:target.tagName,rect:target.getBoundingClientRect().toJSON(),method:'direct'}:null;
      if(now-clickFeedbackRef.current.at<650&&clickFeedbackRef.current.label)setLabel(clickFeedbackRef.current.label);
-     else setLabel(click.reason==='stale-target'?'WITHDRAW TO REPOSITION THE TOUCH PLANE':click.pending?'PUSH INDEX FORWARD · WITHDRAW TO RELEASE':controllerRef.current.ready?'TOUCH PLANE READY · PUSH FORWARD':'AIM BRIEFLY TO POSITION THE TOUCH PLANE');
+     else setLabel(controllerRef.current.down?'TOUCH · RELAX TO RELEASE':'SMALL FORWARD TAP · NO HOLD REQUIRED');
      setCursor(control.pointing||click.pending?{...click.point,progress:click.progress,press:controllerRef.current.down}:null);
     }catch{
      controllerRef.current.reset();airEngineRef.current.reset();clearHover();setCursor(null);metrics.count('frameErrors');

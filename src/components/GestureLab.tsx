@@ -249,8 +249,8 @@ export default function GestureLab(){
       const readyKey=touch.armed||touch.pending?touch.key:null;
       hoveredKeyRef.current=readyKey;setHoveredKey(readyKey);
       if(touch.activation)keyAction(touch.activation);
-      else setHint(touch.pending?'Push forward to touch · withdraw to release':touch.armed?'Virtual surface ready · push index forward':'Aim briefly at a key to position the virtual surface');
-      setCursor({x:touch.point.x,y:touch.point.y,pinching:touch.down,dwell:touch.progress});
+      else setHint('Small forward tap to press · relax to release');
+      setCursor({x:touch.livePoint.x,y:touch.livePoint.y,pinching:touch.down,dwell:0});
       return;
      }
      if(activeMode==='keyboard'){
@@ -422,7 +422,7 @@ export default function GestureLab(){
         <small>WBS / {t.id}</small><strong>{t.name}</strong><span>{t.detail}</span><i>{t.done?'REVIEWED':'PLANNED'}</i></button>)}
        <div className="gsl-wbs-corner">PROJECT CONTROL / DEPENDENCY MAP</div>
       </div>}
-      {cursor&&status==='ready'&&<div className={'gsl-hand-cursor '+(cursor.pinching?'pinching':'')+((inputMethod==='dwell'||inputMethod==='push')&&mode==='keyboard'?' gsl-dwell-cursor':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--gsl-dwell-deg':(cursor.dwell*360)+'deg'} as CSSProperties} aria-hidden="true"><span/></div>}
+      {cursor&&status==='ready'&&<div className={'gsl-hand-cursor '+(cursor.pinching?'pinching':'')+(inputMethod==='dwell'&&mode==='keyboard'?' gsl-dwell-cursor':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--gsl-dwell-deg':(cursor.dwell*360)+'deg'} as CSSProperties} aria-hidden="true"><span/></div>}
      </div>
      <div className="gsl-stage-footer"><span><MousePointer2 size={15}/> {hint}</span><span>PROTOTYPE · NOT A PRODUCTION AUTOMATION</span></div>
     </div>

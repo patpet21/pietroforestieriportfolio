@@ -2758,7 +2758,7 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  width:49px;height:49px;border-radius:50%;
  display:grid;place-items:center;
  border:1px solid #e7ffff;
- background:conic-gradient(#b8ffe1 var(--holo-progress),#60d0f978 var(--holo-progress));
+ background:#24648278;
  box-shadow:0 0 0 5px #4edaff24,0 0 31px #64deffba;
  will-change:top,left;
 }

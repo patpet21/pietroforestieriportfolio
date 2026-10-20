@@ -5,7 +5,8 @@ import type {ForwardDepth} from './forwardDepth.ts';
 /** Both keyboard views use the navigation forward-touch lifecycle. Keyboard coordinates
  * are supplied by the view, independent of experimental ten-finger calibration. */
 export class KeyboardPointer{
- private controller=new ForwardPushController<string>();
+ private controller:ForwardPushController<string>;
+ constructor(travel?:number){this.controller=new ForwardPushController<string>(travel);}
  reset(){this.controller.reset();}
  process(point:Point,depth:ForwardDepth|null,now:number,keyAt:(x:number,y:number)=>string|null){
   // Pointer feedback and targeting use this exact camera sample. A fixed
