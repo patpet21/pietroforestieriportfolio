@@ -8,7 +8,7 @@ import type{AirFrame,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 
 type Landmark={x:number;y:number;z:number};
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][]};close:()=>void};
-type Status='off'|'loading'|'ready'|'error';
+type Status='off'|'loading'|'ready'|'preview'|'error';
 type Cursor={x:number;y:number;progress:number;press:boolean};
 type HandSample={landmarks:Landmark[];wrist:Landmark;palm:{x:number;y:number};open:boolean;pointing:boolean;spread:boolean};
 type PalmScroll={armed:boolean;rawY:number;smoothedY:number;lastAt:number;velocity:number};
@@ -90,6 +90,9 @@ export default function HoloNavigator(){
  const location=useLocation();
  const [status,setStatus]=useState<Status>('off');
  const [error,setError]=useState('');
+ const [cameraPlaying,setCameraPlaying]=useState(false);
+ const [cameraNeedsTap,setCameraNeedsTap]=useState(false);
+ const mobileView=typeof window!=='undefined'&&window.matchMedia('(max-width:760px)').matches;
  const [cursor,setCursor]=useState<Cursor|null>(null);
  const [handCount,setHandCount]=useState(0);
  const [stateLabel,setStateLabel]=useState('SHOW YOUR HAND');
@@ -160,6 +163,7 @@ export default function HoloNavigator(){
   modelRef.current?.close();modelRef.current=null;
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
+  setCameraPlaying(false);setCameraNeedsTap(false);
   swipeRef.current={armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0};
   zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0};
   zoomValueRef.current=1;setZoomLevel(1);
@@ -251,12 +255,24 @@ export default function HoloNavigator(){
   target.click();
  },[insertText]);
  const activateRef=useRef(activate);activateRef.current=activate;
+ const resumeCamera=async()=>{
+  const video=videoRef.current;
+  if(!video?.srcObject)return;
+  try{
+   video.muted=true;video.playsInline=true;
+   await video.play();
+   setCameraPlaying(true);setCameraNeedsTap(false);
+   setLabel('FRONT CAMERA READY');
+  }catch{
+   setCameraNeedsTap(true);setLabel('CAMERA BLOCKED · TRY MOBILE CHROME');
+  }
+ };
  const start=async()=>{
   if(status==='loading'||status==='ready')return;
   if(!navigator.mediaDevices?.getUserMedia){setError('Camera access requires HTTPS and a compatible browser.');setStatus('error');return;}
   window.dispatchEvent(new Event('pf-holo-enable'));
   const session=++tokenRef.current;
-  setStatus('loading');setError('');setLabel('STARTING CAMERA');
+  setStatus('loading');setCameraPlaying(false);setCameraNeedsTap(false);setError('');setLabel('REQUESTING FRONT CAMERA');
   try{
    const mobile=window.matchMedia('(max-width: 760px)').matches;
    const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:mobile?480:960},height:{ideal:mobile?640:720},facingMode:'user'},audio:false});
@@ -264,17 +280,21 @@ export default function HoloNavigator(){
    streamRef.current=stream;
    const video=videoRef.current;
    if(!video)throw Error('Camera preview unavailable');
-   video.srcObject=stream;await video.play();
+   video.muted=true;video.playsInline=true;video.setAttribute('playsinline','');
+   video.srcObject=stream;
+   setLabel('FRONT CAMERA CONNECTED · STARTING VIDEO');
+   try{await video.play();setCameraPlaying(true);}
+   catch{setCameraNeedsTap(true);setLabel('TAP PLAY VIDEO TO CONTINUE');}
    const {FilesetResolver,HandLandmarker}=await import('@mediapipe/tasks-vision');
    if(session!==tokenRef.current)return;
    const fileset=await FilesetResolver.forVisionTasks(WASM);
    if(session!==tokenRef.current)return;
    let landmarker:Landmarker,cpu=false;
    try{
-    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.47,minHandPresenceConfidence:.47,minTrackingConfidence:.5}) as Landmarker;
+    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.50,minHandPresenceConfidence:.50,minTrackingConfidence:.52}) as Landmarker;
    }catch{
     cpu=true;
-    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.47,minHandPresenceConfidence:.47,minTrackingConfidence:.5}) as Landmarker;
+    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.50,minHandPresenceConfidence:.50,minTrackingConfidence:.52}) as Landmarker;
    }
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
@@ -284,7 +304,7 @@ export default function HoloNavigator(){
    const tick=(now:number)=>{
     if(session!==tokenRef.current)return;
     rafRef.current=requestAnimationFrame(tick);
-    if(document.hidden||now-lastFrame<(cpu?68:47)||!video.videoWidth||video.currentTime===lastVideo)return;
+    if(document.hidden||now-lastFrame<(mobile?(cpu?150:105):(cpu?68:47))||!video.videoWidth||video.currentTime===lastVideo)return;
     lastFrame=now;lastVideo=video.currentTime;
     try{
      const landmarks=landmarker.detectForVideo(video,now).landmarks||[];
@@ -388,7 +408,7 @@ export default function HoloNavigator(){
      if(poseRef.current.kind!==rawPose)poseRef.current={kind:rawPose,since:now};
      const poseStable=now-poseRef.current.since>=160;
      const zg=zoomGestureRef.current;
-     if(spread&&!keyboardRef.current&&poseStable){
+     if(spread&&!keyboardRef.current&&poseStable&&!mobile){
       const fingerGap=dist(spread.landmarks[8],spread.landmarks[12]);
       const width=Math.max(.04,dist(spread.landmarks[5],spread.landmarks[17]));
       const gap=clamp(fingerGap/width,.15,2.8);
@@ -551,9 +571,17 @@ export default function HoloNavigator(){
    rafRef.current=requestAnimationFrame(tick);
   }catch(e){
    if(session!==tokenRef.current)return;
-   stop();setStatus('error');
+   const hasStream=!!streamRef.current?.getVideoTracks().some(track=>track.readyState==='live');
    const name=e instanceof DOMException?e.name:'';
-   setError(name==='NotAllowedError'?'Camera permission denied. Site controls still work normally.':name==='NotFoundError'?'No camera found.':e instanceof Error?e.message:'Unable to start camera.');
+   if(hasStream){
+    modelRef.current?.close();modelRef.current=null;
+    setStatus('preview');
+    setError('Front camera connected, but hand tracking failed to load. Stop the camera and retry in Chrome.');
+    setLabel('CAMERA ON · TRACKER UNAVAILABLE');
+   }else{
+    stop();setStatus('error');
+    setError(name==='NotAllowedError'?'Camera permission denied. Allow camera access in your browser.':name==='NotFoundError'?'No camera found.':name==='NotReadableError'?'Camera in use by another app. Close that app and retry.':e instanceof Error?e.message:'Unable to start camera.');
+   }
   }
  };
 
