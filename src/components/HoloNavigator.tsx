@@ -105,10 +105,10 @@ export default function HoloNavigator(){
  const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
  const [airCalibrationMessage,setAirCalibrationMessage]=useState('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
  const autoCalibrationRef=useRef<AutoCalibration>(freshAutoCalibration());
- const [airMode,setAirMode]=useState<AirTypingMode>('tap');
+ const [airMode,setAirMode]=useState<AirTypingMode>('pinch');
  const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('easy');
  const [airReach,setAirReach]=useState(1.3);
- const airModeRef=useRef<AirTypingMode>('tap');
+ const airModeRef=useRef<AirTypingMode>('pinch');
  const airSensitivityRef=useRef<AirSensitivity>('easy');
  const airReachRef=useRef(1.3);
  const airEngineRef=useRef(new AirTypingEngine());
@@ -628,7 +628,7 @@ export default function HoloNavigator(){
   }
  };
 
- const mobileCompact=mobileView&&status==='ready'&&!mobilePanelExpanded;
+ const mobileCompact=mobileView&&status==='ready'&&cameraPlaying&&!mobilePanelExpanded;
  const mobileIdle=mobileView&&status==='off';
  return <>
   <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")+(mobileCompact?" holo-mobile-compact":"")+(mobileIdle?" holo-mobile-idle":"")} aria-label="Natural gesture control">
