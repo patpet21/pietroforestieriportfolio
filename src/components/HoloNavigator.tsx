@@ -64,6 +64,7 @@ export default function HoloNavigator(){
  const [handCount,setHandCount]=useState(0);
  const [stateLabel,setStateLabel]=useState('SHOW YOUR HAND');
  const [targetName,setTargetName]=useState('');
+ const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
  const [hoverKey,setHoverKey]=useState('');
  const [scratch,setScratch]=useState('');
@@ -188,7 +189,7 @@ export default function HoloNavigator(){
  const activate=useCallback((target:HTMLElement)=>{
   const key=target.closest<HTMLElement>('[data-holo-key]');
   if(key){insertText(key.dataset.holoKey||'');return;}
-  if(target.closest('.holo-natural-control'))return;
+  if(target.closest('.holo-natural-control')&&!target.closest('[data-holo-test]'))return;
   if(isEditable(target)){
    focusRef.current=target;
    target.focus({preventScroll:true});
@@ -393,7 +394,7 @@ export default function HoloNavigator(){
      const px=pointX*window.innerWidth,py=pointY*window.innerHeight;
      const element=document.elementFromPoint(px,py) as HTMLElement|null;
      let target=pendingPress&&aimFresh&&targetRef.current&&document.contains(targetRef.current)?targetRef.current:element?.closest<HTMLElement>(CLICKABLE)||null;
-     if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]'))target=null;
+     if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]')&&!target.closest('[data-holo-test]'))target=null;
      if(targetRef.current&&target!==targetRef.current){
       const rect=targetRef.current.getBoundingClientRect();
       if(px>=rect.left-12&&px<=rect.right+12&&py>=rect.top-12&&py<=rect.bottom+12)target=targetRef.current;
@@ -451,6 +452,7 @@ export default function HoloNavigator(){
    </div>
    {status==='ready'?<>
     <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span></div>
+    <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
