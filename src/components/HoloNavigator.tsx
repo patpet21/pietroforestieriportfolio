@@ -279,7 +279,7 @@ export default function HoloNavigator(){
       zg.active=false;zg.frames=0;zg.missed=0;
      }
      // Separate the open-palm scroll state from index-based pointing and clicking.
-     const palm=samples.find(item=>item.open&&!item.spread);
+     const palm=samples.some(item=>item.pointing)?null:samples.find(item=>item.open&&!item.spread);
      if(palm&&rawPose==='scroll'&&!keyboardRef.current){
       const scroll=palmScrollRef.current,y=clamp(palm.palm.y,0,1);
       if(!poseStable){
