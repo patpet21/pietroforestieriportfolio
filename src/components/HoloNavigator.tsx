@@ -165,7 +165,8 @@ export default function HoloNavigator(){
   const session=++tokenRef.current;
   setStatus('loading');setError('');setLabel('STARTING CAMERA');
   try{
-   const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user'},audio:false});
+   const mobile=window.matchMedia('(max-width: 760px)').matches;
+   const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:mobile?480:640},height:{ideal:mobile?640:480},facingMode:'user'},audio:false});
    if(session!==tokenRef.current){stream.getTracks().forEach(t=>t.stop());return;}
    streamRef.current=stream;
    const video=videoRef.current;
