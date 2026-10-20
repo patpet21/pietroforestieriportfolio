@@ -15,13 +15,9 @@ export class KeyboardPointer{
   const elapsed=now-this.lastAt;
   if(elapsed>320||elapsed<0)this.reset();
   this.lastAt=now;
-  const prior=this.position;
-  const travel=prior?Math.hypot(point.x-prior.x,point.y-prior.y):Infinity;
-  const rate=Math.max(16,Math.min(160,elapsed||40));
-  const alpha=travel>.10?.85:Math.max(.28,Math.min(.72,1-Math.exp(-rate/70)));
-  const livePoint:Point=prior?{
-   x:prior.x+(point.x-prior.x)*alpha,y:prior.y+(point.y-prior.y)*alpha
-  }:{...point};
+  // Marker, hit-test and skeleton use the same camera sample. Input debounce
+  // belongs to the touch controller, not an extra position filter.
+  const livePoint:Point={...point};
   this.position=livePoint;
   const aimed=keyAt(livePoint.x,livePoint.y);
   const result=this.controller.step({now,tracking:true,depth,pointing:true,mode:'navigation',target:aimed,point:livePoint});
