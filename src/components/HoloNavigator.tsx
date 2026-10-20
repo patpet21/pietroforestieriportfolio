@@ -39,6 +39,34 @@ const dist=(a:Landmark,b:Landmark)=>Math.hypot(a.x-b.x,a.y-b.y);
 const isEditable=(element:Element|null):element is HTMLInputElement|HTMLTextAreaElement=>
  (element instanceof HTMLInputElement&&['text','search','email','url','tel','number'].includes(element.type))||element instanceof HTMLTextAreaElement;
 const nameOf=(el:HTMLElement)=>el.getAttribute('aria-label')||el.getAttribute('title')||el.textContent?.trim().replace(/\s+/g,' ').slice(0,33)||'SELECT';
+/** Hit-target assistance for webcam pointing, where 10-25px of hand jitter is normal.
+ * Direct hits always win; nearby hits are only a fallback and ignore blocked controls.
+ */
+function findGestureTarget(px:number,py:number,airKeyboard:boolean):HTMLElement|null{
+ const valid=(el:Element|null):HTMLElement|null=>{
+  const target=el?.closest<HTMLElement>(CLICKABLE)||null;
+  if(!target||!target.isConnected||target.getAttribute('aria-disabled')==='true')return null;
+  if(target.closest('.holo-natural-control')&&!target.closest('[data-holo-test]'))return null;
+  if(airKeyboard&&!target.closest('[data-holo-key]'))return null;
+  if(!airKeyboard&&target.closest('.holo-air-console'))return null;
+  const rect=target.getBoundingClientRect();
+  if(rect.width<4||rect.height<4)return null;
+  return target;
+ };
+ const direct=valid(document.elementFromPoint(px,py));
+ if(direct)return direct;
+ const offsets=[[0,-18],[0,18],[-18,0],[18,0],[-26,-16],[26,-16],[-26,16],[26,16]];
+ let nearest:HTMLElement|null=null,best=Infinity;
+ for(const [dx,dy] of offsets){
+  const x=clamp(px+dx,1,window.innerWidth-1),y=clamp(py+dy,1,window.innerHeight-1);
+  const match=valid(document.elementFromPoint(x,y));
+  if(!match)continue;
+  const rect=match.getBoundingClientRect();
+  const distPx=Math.hypot(Math.max(rect.left-px,0,px-rect.right),Math.max(rect.top-py,0,py-rect.bottom));
+  if(distPx<best){best=distPx;nearest=match;}
+ }
+ return best<=30?nearest:null;
+}
 const extended=(points:Landmark[],tip:number,pip:number,mcp:number)=>{
  const a=points[tip],b=points[pip],c=points[mcp],w=points[0];
  return !!(a&&b&&c&&w&&dist(a,w)>dist(b,w)*1.11&&dist(a,c)>dist(b,c)*1.55);
@@ -283,7 +311,7 @@ export default function HoloNavigator(){
       const h=item.landmarks;
       const gap=dist(h[4],h[8])/Math.max(.065,dist(h[5],h[17]));
       const bend=dist(h[8],h[5])/Math.max(.045,dist(h[6],h[5]));
-      return gap<(pinchRef.current.down ? .78 : .61)||(recentAim&&bend<(tapRef.current.down ? 2.18 : 1.85));
+      return gap<(pinchRef.current.down ? .90 : .72)||(recentAim&&bend<(tapRef.current.down ? 2.18 : 1.85));
      });
      const spread=pressHand?null:actionHands.find(item=>item.spread);
      const rawPose=pressHand?'press':spread?'zoom':actionHands.some(item=>item.open)?'scroll':actionHands.some(item=>item.pointing)?'point':'idle';
@@ -389,7 +417,7 @@ export default function HoloNavigator(){
      const tapStarted=down&&!tap.down;tap.down=down;
      const pinch=pinchRef.current;
      const ratio=dist(tip,thumb)/Math.max(.065,dist(pointer.landmarks[5],pointer.landmarks[17]));
-     const close=pinch.down?ratio<.78:ratio<.61;
+     const close=pinch.down?ratio<.90:ratio<.72;
      if(close!==pinch.candidate){pinch.candidate=close;pinch.frames=1;}else pinch.frames++;
      const pinching=pinch.frames>=2?close:pinch.down;
      const pinchStarted=pinching&&!pinch.down;pinch.down=pinching;
@@ -412,9 +440,9 @@ export default function HoloNavigator(){
      const pointX=pendingPress&&aimFresh?pointerAimRef.current.x:x;
      const pointY=pendingPress&&aimFresh?pointerAimRef.current.y:y;
      const px=pointX*window.innerWidth,py=pointY*window.innerHeight;
-     const element=document.elementFromPoint(px,py) as HTMLElement|null;
-     let target=pendingPress&&aimFresh&&targetRef.current&&document.contains(targetRef.current)?targetRef.current:element?.closest<HTMLElement>(CLICKABLE)||null;
-     if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]')&&!target.closest('[data-holo-test]'))target=null;
+     let target=pendingPress&&aimFresh&&targetRef.current&&document.contains(targetRef.current)
+      ?targetRef.current
+      :findGestureTarget(px,py,keyboardRef.current);
      if(targetRef.current&&target!==targetRef.current){
       const rect=targetRef.current.getBoundingClientRect();
       if(px>=rect.left-12&&px<=rect.right+12&&py>=rect.top-12&&py<=rect.bottom+12)target=targetRef.current;
@@ -432,7 +460,7 @@ export default function HoloNavigator(){
      // Both gestures share one latch, preventing double-click when a pinch also bends the index.
      // Pinch-only air typing on a stable key; finger bends were producing nonsense text.
      const keyboardKey=target?.closest<HTMLElement>('[data-holo-key]');
-     const keyboardStable=!!keyboardKey&&now-hoverRef.current.since>=300;
+     const keyboardStable=!!keyboardKey&&now-hoverRef.current.since>=280;
      const clickGesture=keyboardRef.current?pinchStarted:(pinchStarted||tapStarted);
      const allowedTarget=keyboardRef.current?(keyboardStable?keyboardKey:null):target;
      const clickedNow=clickGesture&&!clickLatchRef.current;
