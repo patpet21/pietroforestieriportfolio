@@ -36,6 +36,8 @@ export class ForwardPushController<T>{
   if(!input.tracking||!depth||now<=this.lastAt){this.reset();return result('tracker-lost');}
   if(input.mode!=='navigation'){this.reset();return result('mode-switch');}
   if(!input.pointing||!depth.indexExtended){this.reset();return result('not-pointing');}
+  const sampleWindow=Math.max(FORWARD_TOUCH_POLICY.windowMs,
+   Math.min(now-this.lastAt,FORWARD_TOUCH_POLICY.maxFrameGapMs)*FORWARD_TOUCH_POLICY.minSamples);
   if(now-this.lastAt>FORWARD_TOUCH_POLICY.maxFrameGapMs)this.reset();
   this.lastAt=now;
   const approaching=!!this.rest&&travelFrom(depth,this.rest)>FORWARD_TOUCH_POLICY.approach;
@@ -45,7 +47,7 @@ export class ForwardPushController<T>{
   if(!this.pending&&!approaching&&target!==this.target){this.samples=[];this.target=target;this.aim={...point};}
   if(!this.rest){
    if(!target){this.phase='AIMING';return result('target-missing');}
-   this.samples.push({at:now,depth});this.samples=this.samples.filter(s=>now-s.at<=FORWARD_TOUCH_POLICY.windowMs);
+   this.samples.push({at:now,depth});this.samples=this.samples.filter(s=>now-s.at<=sampleWindow);
    this.phase='AIMING';this.aim={...point};
    if(this.samples.length<FORWARD_TOUCH_POLICY.minSamples||now-this.samples[0].at<FORWARD_TOUCH_POLICY.settleMs)return result('aligning-plane');
    const scale=median(this.samples.map(s=>s.depth.scale));

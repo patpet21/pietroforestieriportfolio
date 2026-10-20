@@ -61,3 +61,9 @@ test('moving between keys shares the existing plane without another calibration 
  const depth=measureForwardDepth(makeHand({scale:1.2}));frame({target:other,depth});
  assert.equal(frame({target:other,depth}).activation,other);
 });
+test('a slow but continuous 5 Hz tracker can establish the plane and touch',()=>{
+ const controller=new ForwardPushController();let now=100;
+ const at=scale=>controller.step({now:now+=200,tracking:true,depth:measureForwardDepth(makeHand({scale})),pointing:true,mode:'navigation',target,point:{x:.4,y:.5}});
+ for(let i=0;i<5;i++)at(1);assert.equal(controller.ready,true);
+ at(1.2);assert.equal(at(1.2).activation,target);
+});

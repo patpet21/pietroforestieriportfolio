@@ -34,6 +34,8 @@ surface confirm contact. Two samples after withdrawing below 10% rearm it.
 The 850 ms stroke expiry requires withdrawal/reset and is shown in the UI.
 These values define the initial estimated surface; they are **not hardware-
 validated accuracy or physical-distance calibration**.
+The reference-sampling window expands with observed frame intervals so a slow
+but continuous tracker can still collect four samples instead of aligning forever.
 
 The open-aim target is captured before forward motion can shift the cursor XY.
 The reference surface is shared by the tracked hand across different buttons or
@@ -54,7 +56,7 @@ floating keyboard typing (`CIAO`, repeated letters, space/backspace and native
 textarea insertion), and the in-page keyboard's forward-touch cycle. They also
 assert that a thumb/index pinch alone does not activate anything in these modes.
 
-Local result: strict TypeScript/Vite build passed, all 23 unit tests and all
+Local result: strict TypeScript/Vite build passed, all 24 unit tests and all
 9 Chromium browser tests passed. The existing large-bundle warning remains.
 
 These tests validate software control flow with canvas video and mocked model
