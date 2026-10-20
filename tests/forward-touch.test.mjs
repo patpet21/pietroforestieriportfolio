@@ -24,8 +24,8 @@ test('press must follow stable aim and cannot activate from a moving target',()=
  aim();const first=at(depth(.18),{target:other});
  assert.equal(first.activation,null);
  assert.equal(at(depth(.18),{target:other}).activation,null);
- for(let i=0;i<6;i++)at(depth());
- const first=at(depth(.18),{target:other});assert.equal(first.activation,null);
+ for(let i=0;i<6;i++)at(depth(),{target:other});
+ const renewed=at(depth(.18),{target:other});assert.equal(renewed.activation,null);
  let confirmed=null;
  for(let k=0;k<3;k++)confirmed=at(depth(.18),{target:other}).activation||confirmed;
  assert.equal(confirmed,other);
