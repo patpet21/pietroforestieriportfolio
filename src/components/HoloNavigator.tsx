@@ -6,7 +6,7 @@ import {AirTypingEngine} from '../lib/AirTypingEngine';
 import type{AirFrame,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 
 import {getHand} from '../lib/gesture/pose';
-import type {Landmark,HandSample} from '../lib/gesture/pose';
+import type {Landmark} from '../lib/gesture/pose';
 import {ForwardPushController} from '../lib/gesture/ForwardPushController';
 import {measureForwardDepth} from '../lib/gesture/forwardDepth';
 import {findGestureTarget,canActivateTarget} from '../lib/gesture/targets';
@@ -16,6 +16,7 @@ import type {PalmScroll} from '../lib/gesture/palmScroll';
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][];handedness?:{categoryName:string;score:number}[][]};close:()=>void};
 type Status='off'|'loading'|'ready'|'preview'|'error';
 type Cursor={x:number;y:number;progress:number;press:boolean};
+type KeyboardFrame=AirFrame&{sampleId?:number;sampledAt?:number};
 type AutoCalibration={enabled:boolean;since:number;last:{x:number;y:number;fx:number;fy:number}[]|null;hint:string};
 const freshAutoCalibration=():AutoCalibration=>({enabled:false,since:0,last:null,hint:''});
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
@@ -77,7 +78,13 @@ export default function HoloNavigator(){
  const [targetName,setTargetName]=useState('');
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
- const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
+ const [airFrame,setAirFrame]=useState<KeyboardFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
+ const keyboardCommitted=useCallback((id:number,at:number)=>{
+  const metrics=diagnostics.current;
+  if(!metrics.enabled)return;
+  metrics.values.keyboardPresentedSample=id;
+  metrics.record('sampleToKeyboardCommitMs',performance.now()-at);
+ },[]);
  const [airCalibrationMessage,setAirCalibrationMessage]=useState('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
  const autoCalibrationRef=useRef<AutoCalibration>(freshAutoCalibration());
  const [airMode,setAirMode]=useState<AirTypingMode>('push');
@@ -105,8 +112,7 @@ export default function HoloNavigator(){
  const rafRef=useRef(0);
  const tokenRef=useRef(0);
  const pointerRef=useRef({x:.5,y:.5});
- // Track both hands visually but use one persistent control hand to avoid
- // the second hand accidentally clicking, scrolling or typing.
+ // Navigation uses one control hand. Air Type owns separate per-hand pointers.
  const controlHandRef=useRef<{x:number;y:number;at:number}|null>(null);
  const zoomGestureRef=useRef({frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0});
  const zoomValueRef=useRef(1);
@@ -279,15 +285,16 @@ export default function HoloNavigator(){
    metrics.values={browser:navigator.userAgent,viewport:[innerWidth,innerHeight],dpr:devicePixelRatio,
     camera:{width:video.videoWidth,height:video.videoHeight,frameRate:stream.getVideoTracks()[0]?.getSettings().frameRate},backend:cpu?'CPU':'GPU',
     latencyNote:'sample-to-action excludes camera exposure/transport and display scanout'};
-   let lastFrame=0,lastVideo=-1,lastCount=-1,rateAt=performance.now(),processed=0,videoFrames=0,lastDraw=0,hadHand=false;
+   let lastFrame=0,lastVideo=-1,lastCount=-1,rateAt=performance.now(),processed=0,videoFrames=0,lastDraw=0,hadHand=false,sampleId=0;
    const tick=(now:number)=>{
     if(session!==tokenRef.current)return;
     rafRef.current=requestAnimationFrame(tick);
-    if(document.hidden){controllerRef.current.reset();palmScrollRef.current=newPalmScroll();controlHandRef.current=null;clearHover();setCursor(null);return;}
+    if(document.hidden){controllerRef.current.reset();airEngineRef.current.reset();palmScrollRef.current=newPalmScroll();controlHandRef.current=null;clearHover();setCursor(null);return;}
     if(!video.videoWidth||video.currentTime===lastVideo)return;
     if(now-lastFrame<budget.interval)return;
     lastVideo=video.currentTime;
     const frameStart=performance.now();
+    sampleId++;
     if(lastFrame)metrics.record('processedIntervalMs',now-lastFrame);
     lastFrame=now;
     try{
@@ -307,7 +314,12 @@ export default function HoloNavigator(){
      if((!mobile||mobilePanelExpandedRef.current)&&now-lastDraw>=1000/15){paintHandSkeleton(overlayRef.current,video,landmarks);lastDraw=now;}
      metrics.record('overlayMs',performance.now()-drawStart);
      const poseStart=performance.now();
-     const samples=landmarks.map(getHand).filter((item):item is HandSample=>!!item);
+     // Preserve per-detection identity evidence before filtering invalid hands.
+     // Detection order itself is not a persistent hand identity.
+     const samples=landmarks.flatMap((points,index)=>{
+      const hand=getHand(points);
+      return hand?[{...hand,handedness:result.handedness?.[index]?.[0]}]:[];
+     });
      metrics.record('poseMs',performance.now()-poseStart);
      if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      metrics.values.detectedHands=samples.length;
@@ -342,7 +354,7 @@ export default function HoloNavigator(){
       })):[];
       const keyAt=(nx:number,ny:number):string|null=>{
        if(!box||!box.width||!box.height)return null;
-       const px=box.left+nx*box.width,py=box.top+ny*box.height;
+       const px=box.left+(root?.clientLeft||0)+nx*(root?.clientWidth||0),py=box.top+(root?.clientTop||0)+ny*(root?.clientHeight||0);
        if(px<box.left||px>box.right||py<box.top||py>box.bottom)return null;
        const key=document.elementFromPoint(px,py)?.closest<HTMLButtonElement>('button[data-holo-key]');
        return key&&root?.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.holoKey||null:null;
@@ -397,10 +409,16 @@ export default function HoloNavigator(){
       const frame=airEngineRef.current.process(samples,keyAt,now,{
        reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current,aspect:video.videoWidth/video.videoHeight
       });
-      if(frame.control){metrics.values.pose='keyboard-forward-touch';metrics.values.press=frame.control;}
-      setAirFrame(frame);
+      if(frame.controls){metrics.values.pose='keyboard-forward-touch';metrics.values.press=frame.controls;}
+      if(metrics.enabled){
+       metrics.values.keyboardProcessedSample=sampleId;
+       metrics.values.keyboardPointers=frame.fingers.map(f=>({id:f.id,x:f.x,y:f.y,contact:f.contact,pending:f.pending,down:f.pressed,progress:f.progress}));
+      }
+      setAirFrame({...frame,sampleId,sampledAt:frameStart});
       if(frame.presses.length){
-       for(const press of frame.presses)insertText(press.key);
+       for(const press of frame.presses){insertText(press.key);metrics.count('keyboardPresses');}
+       metrics.record('sampleToKeyboardActionMs',performance.now()-frameStart);
+       for(const control of frame.controls||[])if(control.confirmationMs!==undefined)metrics.record('keyboardConfirmationMs',control.confirmationMs);
        setLabel('AIR TYPED · '+frame.presses.map(p=>p.key).join(' '));
       }else setLabel(frame.status+' · '+airModeRef.current.toUpperCase());
       if(targetRef.current)clearHover();
@@ -520,7 +538,8 @@ export default function HoloNavigator(){
      else setLabel(click.reason==='stale-target'?'WITHDRAW TO REPOSITION THE TOUCH PLANE':click.pending?'PUSH INDEX FORWARD · WITHDRAW TO RELEASE':controllerRef.current.ready?'TOUCH PLANE READY · PUSH FORWARD':'AIM BRIEFLY TO POSITION THE TOUCH PLANE');
      setCursor(control.pointing||click.pending?{...click.point,progress:click.progress,press:controllerRef.current.down}:null);
     }catch{
-     controllerRef.current.reset();clearHover();setCursor(null);metrics.count('frameErrors');
+     controllerRef.current.reset();airEngineRef.current.reset();clearHover();setCursor(null);metrics.count('frameErrors');
+     if(keyboardRef.current)setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'TRACKING INTERRUPTED · SHOW YOUR HANDS'});
     }finally{
      const work=performance.now()-frameStart;
      metrics.record('frameWorkMs',work);budget.observe(work);metrics.values.budgetMs=budget.interval;
@@ -570,7 +589,7 @@ export default function HoloNavigator(){
    </div>
    {status==='loading'&&<p className="holo-camera-progress" role="status">Connecting camera and loading hand tracking…</p>}
    {status==='ready'?<>
-    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · 1 CONTROL · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PUSH: <b>{pressSignal}</b></span></div>
+    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {keyboard?airFrame.fingers.length+' POINTERS':'1 CONTROL'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PUSH: <b>{pressSignal}</b></span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     {!mobileView&&location.pathname==='/gesture-lab'?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
@@ -599,6 +618,9 @@ export default function HoloNavigator(){
    fingers={airFrame.fingers}
    hands={airFrame.hands}
    status={airFrame.status}
+   sampleId={airFrame.sampleId}
+   sampledAt={airFrame.sampledAt}
+   onFrameCommit={keyboardCommitted}
    calibrationMessage={airCalibrationMessage}
    text={focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-110):scratch.slice(-110)}
    mode={airMode}

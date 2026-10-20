@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ForwardPushController} from '../src/lib/gesture/ForwardPushController.ts';
 import {measureForwardDepth} from '../src/lib/gesture/forwardDepth.ts';
+import {KeyboardPointer} from '../src/lib/gesture/KeyboardPointer.ts';
 import {makeHand} from './fixtures/hand.mjs';
 const target={id:'button'};
 const setup=()=>{
@@ -26,6 +27,27 @@ test('touch plane progress is spatial; a partial push fills the ring without act
 });
 test('a noisy depth spike cannot click; crossing needs consecutive confirmation',()=>{
  const {frame,aim,push}=setup();aim();frame({depth:measureForwardDepth(makeHand({scale:1.2}))});frame();frame();assert.equal(push().activation,target);
+});
+test('one neutral sample breaks contact confirmation before release completes',()=>{
+ const {frame,aim}=setup();aim();const depth=measureForwardDepth(makeHand({scale:1.2}));
+ assert.equal(frame({depth}).activation,null);
+ frame();
+ assert.equal(frame({depth}).activation,null);
+ assert.equal(frame({depth}).activation,target);
+});
+test('keyboard live feedback follows the current sample while contact stays locked',()=>{
+ const pointer=new KeyboardPointer();let now=0;
+ const keyAt=x=>x<.5?'A':'B';
+ const at=(point,scale=1)=>pointer.process(point,measureForwardDepth(makeHand({scale})),now+=50,keyAt);
+ at({x:.1,y:.5});
+ assert.deepEqual(at({x:.2,y:.5}).livePoint,{x:.2,y:.5});
+ for(let i=0;i<6;i++)at({x:.2,y:.5});
+ const pushing=at({x:.8,y:.5},1.06);
+ assert.deepEqual(pushing.livePoint,{x:.8,y:.5});
+ assert.deepEqual(pushing.point,{x:.2,y:.5});
+ assert.equal(pushing.key,'A');assert.equal(pushing.pending,true);
+ at({x:.8,y:.5},1.2);
+ assert.equal(at({x:.8,y:.5},1.2).activation,'A');
 });
 test('finger-relative forward movement also crosses the plane without hand translation',()=>{
  const {frame,aim}=setup();aim();const depth=measureForwardDepth(makeHand());depth.fingerDepth+=.4;

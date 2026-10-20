@@ -2,6 +2,7 @@ import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {createServer} from 'vite';
+import {mockRemoteFonts} from './environment.mjs';
 let server,browser,origin;
 before(async()=>{
  server=await createServer({server:{port:0,host:'127.0.0.1'}});await server.listen();origin=server.resolvedUrls.local[0];
@@ -10,6 +11,7 @@ before(async()=>{
 after(async()=>{await browser?.close();await server?.close();});
 async function fixture({mobile=false,cpu=false,denied=false,path=''}={}){
  const page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:900}});
+ await mockRemoteFonts(page);
  await page.route(/@mediapipe_tasks-vision/,route=>route.fulfill({contentType:'text/javascript',body:`
   export const FilesetResolver={forVisionTasks:async()=>({})};
   export const HandLandmarker={createFromOptions:async(_files,options)=>{
