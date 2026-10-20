@@ -54,7 +54,7 @@ export default function HoloNavigator(){
  const tokenRef=useRef(0);
  const pointerRef=useRef({x:.5,y:.5,wristX:.5,wristY:.5,lastPoint:0});
  const swipeRef=useRef({armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0});
- const zoomGestureRef=useRef({frames:0,active:false,baseGap:0,baseZoom:1,gap:0});
+ const zoomGestureRef=useRef({frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0});
  const zoomValueRef=useRef(1);
  const missedRef=useRef(0);
  const pointerAimRef=useRef({x:.5,y:.5});
@@ -84,7 +84,7 @@ export default function HoloNavigator(){
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
   swipeRef.current={armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0};
-  zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0};
+  zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0};
   zoomValueRef.current=1;setZoomLevel(1);
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
@@ -190,82 +190,152 @@ export default function HoloNavigator(){
    const tick=(now:number)=>{
     if(session!==tokenRef.current)return;
     rafRef.current=requestAnimationFrame(tick);
-    if(document.hidden||now-lastFrame<(cpu?66:45)||!video.videoWidth||video.currentTime===lastVideo)return;
+    if(document.hidden||now-lastFrame<(cpu?68:47)||!video.videoWidth||video.currentTime===lastVideo)return;
     lastFrame=now;lastVideo=video.currentTime;
     try{
-     const samples=landmarker.detectForVideo(video,now).landmarks.map(getHand).filter((hand):hand is HandSample=>!!hand);
-     if(samples.length!==lastCount){setHandCount(samples.length);lastCount=samples.length;}
+     const samples=(landmarker.detectForVideo(video,now).landmarks||[]).map(getHand).filter((item):item is HandSample=>!!item);
+     if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      if(!samples.length){
-      palmRef.current=null;tapRef.current={down:false,candidate:false,frames:0};
-      clearHover();setCursor(null);setLabel('SHOW ONE OR TWO HANDS');
-      return;
+      missedRef.current++;
+      // Ignore up to two dropped frames; mobile landmark tracking sometimes misses a single frame.
+      if(missedRef.current<3)return;
+      swipeRef.current.armed=false;swipeRef.current.active=false;
+      zoomGestureRef.current.active=false;zoomGestureRef.current.frames=0;
+      tapRef.current={down:false,candidate:false,frames:0};
+      if(targetRef.current)clearHover();
+      setCursor(null);setLabel('SHOW YOUR INDEX FINGER');return;
      }
-     // A broad open palm moves the page in the same direction as a touch-swipe.
-     // It has priority only for its own hand; another hand may point simultaneously.
-     const openHands=samples.filter(item=>item.open);
-     let scrollHand:HandSample|undefined;
-     const prevPalm=palmRef.current;
-     if(openHands.length){
-      scrollHand=prevPalm?openHands.reduce((a,b)=>
-       Math.hypot(1-a.palm.x-prevPalm.x,a.palm.y-prevPalm.y)
-       <=Math.hypot(1-b.palm.x-prevPalm.x,b.palm.y-prevPalm.y)?a:b):openHands[0];
-     }
-     let scrolling=false;
-     if(scrollHand){
-      const point={x:1-scrollHand.palm.x,y:scrollHand.palm.y};
-      if(prevPalm&&Math.hypot(prevPalm.x-point.x,prevPalm.y-point.y)<.35){
-       const delta=point.y-prevPalm.y;
-       if(Math.abs(delta)>=.008&&!keyboardRef.current){
-        const px=clamp(-delta*window.innerHeight*1.6,-96,96);
-        window.scrollBy(0,px);
-        scrolling=Math.abs(px)>3;
-        palmRef.current={...point,last:now};
+     missedRef.current=0;
+     // Two-finger V gesture: spread index + middle to zoom the site's content.
+     // A short pose debounce avoids resizing when passing through an intermediate hand shape.
+     const spread=samples.find(item=>item.spread);
+     const zg=zoomGestureRef.current;
+     if(spread&&!keyboardRef.current){
+      const fingerGap=dist(spread.landmarks[8],spread.landmarks[12]);
+      const width=Math.max(.04,dist(spread.landmarks[5],spread.landmarks[17]));
+      const gap=clamp(fingerGap/width,.15,2.8);
+      zg.missed=0;zg.frames++;
+      if(zg.frames>=4){
+       if(!zg.active){
+        zg.active=true;zg.baseGap=gap;zg.gap=gap;zg.baseZoom=zoomValueRef.current;
+        if(targetRef.current)clearHover();
        }
-      }else palmRef.current={...point,last:now};
-     }else palmRef.current=null;
-     // With two hands, an open palm can scroll while the other index points.
-     // With one hand, raising an open palm immediately suspends clicking.
-     const candidates=samples.filter(item=>!item.open);
+       zg.gap=zg.gap*.65+gap*.35;
+       const scale=clamp(zg.baseZoom*(zg.gap/Math.max(.15,zg.baseGap)),.85,1.4);
+       if(Math.abs(scale-zoomValueRef.current)>=.015){
+        zoomValueRef.current=scale;
+        document.documentElement.style.setProperty('--spatial-site-zoom',scale.toFixed(3));
+        setZoomLevel(scale);
+       }
+       swipeRef.current.active=false;swipeRef.current.armed=false;
+       tapRef.current={down:false,candidate:false,frames:0};
+       setCursor(null);setLabel('TWO FINGERS · ZOOM '+Math.round(zoomValueRef.current*100)+'%');
+       return;
+      }
+     }else if(zg.active&&zg.missed<2){
+      zg.missed++;return; // tolerate brief classification dropouts
+     }else{
+      zg.active=false;zg.frames=0;zg.missed=0;
+     }
+     const candidates=samples.filter(item=>!item.open&&!item.spread);
      const pointer=candidates.sort((a,b)=>{
-      const prev=pointerRef.current;
-      const d1=Math.hypot(1-a.wrist.x-prev.wristX,a.wrist.y-prev.wristY);
-      const d2=Math.hypot(1-b.wrist.x-prev.wristX,b.wrist.y-prev.wristY);
+      const previous=pointerRef.current;
+      const d1=Math.hypot(1-a.wrist.x-previous.wristX,a.wrist.y-previous.wristY);
+      const d2=Math.hypot(1-b.wrist.x-previous.wristX,b.wrist.y-previous.wristY);
       return d1-d2;
      })[0];
      if(!pointer){
-      clearHover();setCursor(null);tapRef.current={down:false,candidate:false,frames:0};
-      setLabel('OPEN PALM · MOVE UP OR DOWN');
+      swipeRef.current.armed=false;swipeRef.current.active=false;
+      tapRef.current={down:false,candidate:false,frames:0};
+      if(targetRef.current)clearHover();
+      setCursor(null);setLabel('ONE INDEX = MOVE / SWIPE · TWO FINGERS = ZOOM');
       return;
      }
-     const tip=pointer.landmarks[8],middle=pointer.landmarks[6],base=pointer.landmarks[5];
-     if(!tip||!middle||!base)return;
-     const prev=pointerRef.current;
-     const xTarget=clamp((1-tip.x-.5)*1.55+.5,0,1);
-     const yTarget=clamp((tip.y-.5)*1.55+.5,0,1);
-     const x=prev.x=prev.x*.38+xTarget*.62;
-     const y=prev.y=prev.y*.38+yTarget*.62;
-     prev.wristX=1-pointer.wrist.x;prev.wristY=pointer.wrist.y;
-     if(pointer.pointing){prev.lastPoint=now;if(!tapRef.current.down)pointerAimRef.current={x,y};}
-     const ratio=dist(tip,base)/Math.max(.04,dist(middle,base));
+     const tip=pointer.landmarks[8],joint=pointer.landmarks[6],base=pointer.landmarks[5];
+     if(!tip||!joint||!base)return;
+     const p=pointerRef.current;
+     const wristJump=Math.hypot(1-pointer.wrist.x-p.wristX,pointer.wrist.y-p.wristY);
+     if(wristJump>.32){
+      swipeRef.current.armed=false;swipeRef.current.active=false;
+      tapRef.current={down:false,candidate:false,frames:0};
+      if(targetRef.current)clearHover();
+     }
+     const rawX=clamp((1-tip.x-.5)*1.48+.5,0,1);
+     const rawY=clamp((tip.y-.5)*1.48+.5,0,1);
+     // Temporal smoothing makes a slight hand tremor move the cursor only slightly.
+     const x=p.x=p.x*.46+rawX*.54;
+     const y=p.y=p.y*.46+rawY*.54;
+     p.wristX=1-pointer.wrist.x;p.wristY=pointer.wrist.y;
+     const curledRatio=dist(tip,base)/Math.max(.045,dist(joint,base));
      const tap=tapRef.current;
-     const next=tap.down?ratio<2.25:ratio<1.91;
-     if(next!==tap.candidate){tap.candidate=next;tap.frames=1;}else tap.frames++;
-     const down=tap.frames>=2?next:tap.down;
+     const tapCandidate=tap.down?curledRatio<2.25:curledRatio<1.88;
+     if(tap.candidate!==tapCandidate){tap.candidate=tapCandidate;tap.frames=1;}else tap.frames++;
+     const down=tap.frames>=2?tapCandidate:tap.down;
      const tapStarted=down&&!tap.down;tap.down=down;
-     const validPointer=pointer.pointing||down&&now-prev.lastPoint<650;
-     if(!validPointer){
-      clearHover();setCursor(null);
-      setLabel(scrolling?'OPEN PALM · SCROLLING':'POINT YOUR INDEX TO SELECT');
-      return;
+     if(pointer.pointing&&!down){
+      p.lastPoint=now;
+      pointerAimRef.current={x,y};
      }
-     const px=(down&&targetRef.current?pointerAimRef.current.x:x)*window.innerWidth;
-     const py=(down&&targetRef.current?pointerAimRef.current.y:y)*window.innerHeight;
+     const eligible=pointer.pointing||(down&&now-p.lastPoint<600);
+     const swipe=swipeRef.current;
+     if(eligible&&!keyboardRef.current&&!down){
+      if(!swipe.armed){
+       swipe.armed=true;swipe.active=false;swipe.anchorX=x;swipe.anchorY=y;
+       swipe.lastY=y;swipe.startFrames=0;swipe.stillFrames=0;swipe.reverse=0;
+      }
+      if(!swipe.active){
+       const dy=y-swipe.anchorY,dx=x-swipe.anchorX;
+       if(Math.abs(dy)>.055&&Math.abs(dy)>Math.abs(dx)*1.45){
+        swipe.startFrames++;
+        if(swipe.startFrames>=2){
+         swipe.active=true;swipe.lastY=y;swipe.direction=Math.sign(dy);
+         swipe.reverse=0;swipe.stillFrames=0;
+         if(targetRef.current)clearHover();
+        }
+       }else if(Math.abs(dx)>.09||Math.abs(dy)<.026){
+        swipe.startFrames=0;
+        if(Math.abs(dx)>.09){swipe.anchorX=x;swipe.anchorY=y;}
+       }
+      }
+      if(swipe.active){
+       const dy=y-swipe.lastY;swipe.lastY=y;
+       if(Math.abs(dy)<.006){swipe.stillFrames++;}
+       else{
+        swipe.stillFrames=0;
+        const sign=Math.sign(dy);
+        if(sign!==swipe.direction){
+         swipe.reverse+=Math.abs(dy);
+         if(swipe.reverse>.036){swipe.direction=sign;swipe.reverse=0;}
+        }else{
+         swipe.reverse=0;
+         const pixels=clamp(-dy*window.innerHeight*.92,-43,43);
+         // At 20fps a small step threshold prevents jitter scrolling.
+         if(Math.abs(pixels)>4)window.scrollBy(0,pixels);
+        }
+       }
+       if(swipe.stillFrames>=5){
+        swipe.active=false;swipe.armed=false;swipe.stillFrames=0;
+       }else{
+        setCursor({x,y,progress:0,press:false});
+        setLabel('INDEX SWIPE · SCROLLING');return;
+       }
+      }
+     }else if(!eligible||down){
+      swipe.armed=false;swipe.active=false;swipe.startFrames=0;
+     }
+     if(!eligible){
+      if(targetRef.current)clearHover();
+      setCursor(null);setLabel('EXTEND INDEX TO POINT OR SWIPE');return;
+     }
+     const pointX=down&&targetRef.current?pointerAimRef.current.x:x;
+     const pointY=down&&targetRef.current?pointerAimRef.current.y:y;
+     const px=pointX*window.innerWidth,py=pointY*window.innerHeight;
      const element=document.elementFromPoint(px,py) as HTMLElement|null;
      let target=element?.closest<HTMLElement>(CLICKABLE)||null;
      if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]'))target=null;
      if(targetRef.current&&target!==targetRef.current){
-      const r=targetRef.current.getBoundingClientRect();
-      if(px>=r.left-12&&px<=r.right+12&&py>=r.top-12&&py<=r.bottom+12)target=targetRef.current;
+      const rect=targetRef.current.getBoundingClientRect();
+      if(px>=rect.left-12&&px<=rect.right+12&&py>=rect.top-12&&py<=rect.bottom+12)target=targetRef.current;
      }
      if(target!==targetRef.current){
       targetRef.current?.classList.remove('holo-focused-target');
@@ -275,16 +345,17 @@ export default function HoloNavigator(){
       setHoverKey(target?.dataset.holoKey||'');
       setTargetName(target?nameOf(target):'');
      }
-     const hovering=hoverRef.current;
-     const dwellTime=keyboardRef.current&&target?.dataset.holoKey?1100:1450;
-     const progress=target&&!hovering.fired?clamp((now-hovering.since)/dwellTime,0,1):0;
-     if(target&&!hovering.fired&&!scrolling&&now-lastPressRef.current>420&&
-       ((tapStarted&&now-prev.lastPoint<650)||(pointer.pointing&&progress>=1))){
-      hovering.fired=true;lastPressRef.current=now;
+     const hover=hoverRef.current;
+     const holdMs=keyboardRef.current&&target?.dataset.holoKey?1100:1550;
+     const progress=target&&!hover.fired?clamp((now-hover.since)/holdMs,0,1):0;
+     const stableTarget=target&&now-hover.since>150;
+     if(stableTarget&&!hover.fired&&now-lastPressRef.current>460&&
+       ((tapStarted&&now-p.lastPoint<600)||(pointer.pointing&&progress>=1))){
+      hover.fired=true;lastPressRef.current=now;
       activateRef.current(target);
      }
-     setCursor({x:px/window.innerWidth,y:py/window.innerHeight,progress,press:down});
-     setLabel(target?'INDEX · TAP OR HOLD TO SELECT':scrolling?'PALM · SCROLLING':'INDEX · POINT TO AN ELEMENT');
+     setCursor({x:pointX,y:pointY,progress,press:down});
+     setLabel(target?'INDEX · PRESS OR HOLD TO CLICK':'INDEX · SWIPE VERTICALLY TO SCROLL');
     }catch(e){console.warn('Gesture frame skipped:',e);}
    };
    rafRef.current=requestAnimationFrame(tick);
@@ -301,7 +372,7 @@ export default function HoloNavigator(){
    <div className="holo-natural-title"><Scan size={17}/><strong>SPATIAL CONTROL</strong>{status==='ready'&&<i/>}</div>
    <video ref={videoRef} muted playsInline autoPlay className={'holo-natural-preview '+(status==='ready'?'on':'')} aria-hidden="true"/>
    {status==='ready'?<>
-    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend}</span><span>{stateLabel}</span></div>
+    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span></div>
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
