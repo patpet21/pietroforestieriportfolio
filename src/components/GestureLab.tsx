@@ -1,3 +1,5 @@
+import {KeyboardPointer} from '../lib/gesture/KeyboardPointer';
+import {measureForwardDepth} from '../lib/gesture/forwardDepth';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CSSProperties,PointerEvent as ReactPointerEvent} from 'react';
 import {Link} from 'react-router-dom';
@@ -8,7 +10,7 @@ type CameraStatus='off'|'loading'|'ready'|'error';
 type Point={x:number;y:number;z:number};
 type Tracker={detectForVideo:(video:HTMLVideoElement,timestamp:number)=>{landmarks:Point[][]};close:()=>void};
 type Cursor={x:number;y:number;pinching:boolean;dwell:number};
-type InputMethod='tap'|'pinch'|'dwell';
+type InputMethod='tap'|'push'|'dwell';
 type Sensitivity='easy'|'balanced'|'precise';
 type Task={id:string;name:string;detail:string;x:number;y:number;done:boolean};
 const wasmUrl='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
@@ -56,7 +58,7 @@ export default function GestureLab(){
  const pointerGrabRef=useRef<{id:string;moved:boolean}|null>(null);
  const [gpuStatus,setGpuStatus]=useState('');
  const [hoveredKey,setHoveredKey]=useState<string|null>(null);
- const [inputMethod,setInputMethod]=useState<InputMethod>('tap');
+ const [inputMethod,setInputMethod]=useState<InputMethod>('push');
  const [sensitivity,setSensitivity]=useState<Sensitivity>('easy');
  const [pinchMeter,setPinchMeter]=useState(0);
  const [tapMessage,setTapMessage]=useState('EXTEND INDEX TO AIM');
@@ -73,6 +75,7 @@ export default function GestureLab(){
  const cubeMotionRef=useRef<{x:number;y:number}|null>(null);
  const airTapRef=useRef({down:false,candidate:false,frames:0});
  const lastAimRef=useRef({x:0,y:0,key:''});
+ const touchRef=useRef(new KeyboardPointer());
  const reachRef=useRef(reach);
  inputMethodRef.current=inputMethod;
  sensitivityRef.current=sensitivity;
@@ -101,13 +104,7 @@ export default function GestureLab(){
  },[addLink]);
  const applyGesture=useCallback((x:number,y:number,isPinching:boolean,started:boolean,ended:boolean)=>{
   const activeMode=modeRef.current;
-  if(activeMode==='keyboard'){
-   if(!started||inputMethodRef.current!=='pinch')return;
-   const key=hoveredKeyRef.current;
-   if(key)keyAction(key);
-   else setHint('Aim at a highlighted key before pinching.');
-   return;
-  }
+  if(activeMode==='keyboard')return;
   if(activeMode==='cube'){
    if(started){setCubeExpanded(v=>!v);setHint('Pinch detected · cube size changed');}
    const prev=cubeMotionRef.current;
@@ -144,6 +141,7 @@ export default function GestureLab(){
   streamRef.current?.getTracks().forEach(track=>track.stop());
   streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
+  touchRef.current.reset();
   pinchRef.current=false;
   pinchCandidateRef.current={value:false,frames:0};
   airTapRef.current={down:false,candidate:false,frames:0};
@@ -194,17 +192,19 @@ export default function GestureLab(){
    }
    if(token!==sessionRef.current){tracker.close();return;}
    trackerRef.current=tracker;
-   setStatus('ready');setHint('Show your hand. Move the index finger to aim; pinch to interact.');
+   setStatus('ready');setHint('Show your hand. Aim with the index and push forward to touch a key.');
    let lastFrame=0,lastVideoTime=-1;
    const tick=(time:number)=>{
     if(token!==sessionRef.current)return;
     rafRef.current=requestAnimationFrame(tick);
-    if(document.hidden||time-lastFrame<(useCpu?56:37)||!video.videoWidth||video.currentTime===lastVideoTime)return;
+    if(document.hidden){touchRef.current.reset();return;}
+    if(time-lastFrame<(useCpu?56:37)||!video.videoWidth||video.currentTime===lastVideoTime)return;
     lastFrame=time;lastVideoTime=video.currentTime;
     try{
      const result=tracker.detectForVideo(video,time);
      const hand=result.landmarks?.[0];
      if(!hand){
+      touchRef.current.reset();
       setTracking(false);setCursor(null);setPinchMeter(0);
       pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};
       cubeMotionRef.current=null;handGrabRef.current=null;
@@ -234,6 +234,25 @@ export default function GestureLab(){
      setPinchMeter(Math.round(clamp(1-ratio/1.3,0,1)*100));
      let px=x,py=y,dwell=0;
      const activeMode=modeRef.current;
+     if(activeMode==='keyboard'&&inputMethodRef.current==='push'){
+      const stage=stageRef.current,keys=keyboardKeysRef.current;
+      if(!stage||!keys){touchRef.current.reset();return;}
+      const sr=stage.getBoundingClientRect(),cover=Math.max(sr.width/video.videoWidth,sr.height/video.videoHeight);
+      const visibleW=video.videoWidth*cover,visibleH=video.videoHeight*cover,gain=reachRef.current;
+      const projectedX=(clamp((1-finger.x-.5)*gain+.5,0,1)*visibleW-(visibleW-sr.width)/2)/sr.width;
+      const projectedY=(clamp((finger.y-.5)*gain+.5,0,1)*visibleH-(visibleH-sr.height)/2)/sr.height;
+      const keyAt=(nx:number,ny:number)=>{
+       const key=document.elementFromPoint(sr.left+nx*sr.width,sr.top+ny*sr.height)?.closest<HTMLButtonElement>('[data-air-key]');
+       return key&&keys.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.airKey||null:null;
+      };
+      const touch=touchRef.current.process({x:projectedX,y:projectedY},measureForwardDepth(hand,video.videoWidth/video.videoHeight),time,keyAt);
+      const readyKey=touch.armed||touch.pending?touch.key:null;
+      hoveredKeyRef.current=readyKey;setHoveredKey(readyKey);
+      if(touch.activation)keyAction(touch.activation);
+      else setHint(touch.pending?'Push forward to touch · withdraw to release':touch.armed?'Virtual surface ready · push index forward':'Aim briefly at a key to position the virtual surface');
+      setCursor({x:touch.point.x,y:touch.point.y,pinching:touch.down,dwell:touch.progress});
+      return;
+     }
      if(activeMode==='keyboard'){
       // Index finger bends toward the palm to emulate pressing a physical key.
       // A webcam estimates finger geometry, not contact with a real surface.
@@ -334,7 +353,7 @@ export default function GestureLab(){
   handGrabRef.current=null;cubeMotionRef.current=null;
   hoveredKeyRef.current=null;setHoveredKey(null);
   keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
-  setHint(next==='keyboard'?'Point with a straight index, bend it to press a highlighted key.':next==='cube'?'Move your hand to rotate continuously; pinch to change size.':'Pinch a WBS card, move it and release near another card to link them.');
+  setHint(next==='keyboard'?'Aim briefly at a key, push the index forward to touch, then withdraw.':next==='cube'?'Move your hand to rotate continuously; pinch to change size.':'Pinch a WBS card, move it and release near another card to link them.');
  };
  const pointerCoords=(e:ReactPointerEvent<HTMLElement>)=>{
   const r=stageRef.current?.getBoundingClientRect();if(!r)return null;
@@ -374,7 +393,7 @@ export default function GestureLab(){
    <div className="gsl-back"><Link to="/"><ArrowLeft size={16}/> BACK TO PORTFOLIO</Link><span><i/> EXPERIMENTAL INTERACTION LAB / 2026</span></div>
    <header className="gsl-heading"><div><div className="eyebrow"><i/> HUMAN × MACHINE INTERACTION</div><h1>Gesture <em>Lab.</em></h1><p>Move your hands. Control an interface. Explore how computer vision can connect people, projects and intelligent systems.</p></div><div className="gsl-heading-mark"><Hand size={54}/><span>CAMERA-POWERED<br/>INTERACTION STUDY</span></div></header>
    <div className="gsl-privacy"><ShieldCheck size={18}/><span>Your camera starts <strong>only when you press Enable Camera</strong>. Video frames are processed locally in the browser; this demo does not record or upload them. On first use, MediaPipe model/WASM files are downloaded from external hosts. The MediaPipe SDK may report usage metrics to Google. <strong>Stop Camera</strong> immediately closes the stream.</span></div>
-   <div className="gsl-holo-invite"><Scan size={22}/><span><strong>NAVIGATION + LEGACY EXPERIMENTS</strong> · Enable Spatial Control at the bottom left once. Move an open hand up or down to scroll naturally, point your index at any real site element and pinch thumb + index to click. No remote menu or mode switching. Up to two hands can be tracked. LEGACY EXPERIMENT: the separate camera controls below use different experimental input methods and stop global navigation.</span></div>
+   <div className="gsl-holo-invite"><Scan size={22}/><span><strong>NAVIGATION + LEGACY EXPERIMENTS</strong> · Enable Spatial Control at the bottom left once. Move an open hand up or down to scroll naturally, point your index at any real site element and push your index forward to click. No remote menu or mode switching. Up to two hands can be tracked. LEGACY EXPERIMENT: the separate camera controls below use different experimental input methods and stop global navigation.</span></div>
    <div className="gsl-mode-tabs" role="group" aria-label="Choose an interactive experiment">{modes.map(({id,title,sub,Icon},i)=><button key={id} type="button" aria-pressed={mode===id} className={mode===id?'active':''} onClick={()=>chooseMode(id)}><span>0{i+1} / EXPERIENCE</span><Icon size={23}/><strong>{title}</strong><small>{sub}</small></button>)}</div>
    <div className="gsl-workspace">
     <div className="gsl-interactive">
@@ -387,7 +406,7 @@ export default function GestureLab(){
        <div className="gsl-keyboard-hud"><span>{status==='ready'?(hoveredKey?'TARGET: '+(hoveredKey==='SPACE'?'SPACE':hoveredKey):tracking?'MOVE INDEX ONTO A KEY':'SHOW YOUR INDEX FINGER IN THIS CAMERA VIEW'):'CAMERA OPTIONAL'}</span><strong className="gsl-target-glyph" aria-live="off">{status==='ready'?(hoveredKey||'◎'):'◇'}</strong><span>{inputMethod==='tap'?'BEND INDEX = CLICK':inputMethod==='dwell'?'HOLD 1 SEC TO TYPE':'PINCH TO TYPE'}</span></div>
        <div className="gsl-keys" ref={keyboardKeysRef}>{rows.map((row,i)=><div className="gsl-key-row" key={i}>{row.split('').map(char=><button type="button" data-air-key={char} key={char} className={hoveredKey===char&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction(char)}>{char}</button>)}</div>)}
         <div className="gsl-key-row gsl-key-functions"><button type="button" data-air-key="CLEAR" className={hoveredKey==='CLEAR'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('CLEAR')}><Trash2 size={16}/> CLEAR</button><button type="button" data-air-key="SPACE" className={hoveredKey==='SPACE'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('SPACE')}>SPACE</button><button type="button" data-air-key="BACK" className={hoveredKey==='BACK'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('BACK')}>⌫ BACKSPACE</button></div>
-       </div><p className="gsl-stage-caption">Point at a highlighted key with one extended finger, bend it to press, then straighten to release. Switch to Hold for automatic selection.</p>
+       </div><p className="gsl-stage-caption">Aim at a virtual key, push your index forward to touch it, then withdraw. The cursor ring shows approach depth.</p>
       </div>}
       {mode==='cube'&&<div className="gsl-cube-panel">
        <div className="gsl-cube-scene"><div className="gsl-cube-orbit"/><div className="gsl-3d-object" style={{transform:'rotateX('+cubeAngles.x+'deg) rotateY('+cubeAngles.y+'deg) scale('+(cubeExpanded?1.22:1)+')'}} onPointerDown={e=>{downCube.current={x:e.clientX,y:e.clientY,rx:cubeAngles.x,ry:cubeAngles.y};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={cubeMove} onPointerUp={e=>{downCube.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}} onPointerCancel={()=>{downCube.current=null;}}>
@@ -403,7 +422,7 @@ export default function GestureLab(){
         <small>WBS / {t.id}</small><strong>{t.name}</strong><span>{t.detail}</span><i>{t.done?'REVIEWED':'PLANNED'}</i></button>)}
        <div className="gsl-wbs-corner">PROJECT CONTROL / DEPENDENCY MAP</div>
       </div>}
-      {cursor&&status==='ready'&&<div className={'gsl-hand-cursor '+(cursor.pinching?'pinching':'')+(inputMethod==='dwell'&&mode==='keyboard'?' gsl-dwell-cursor':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--gsl-dwell-deg':(cursor.dwell*360)+'deg'} as CSSProperties} aria-hidden="true"><span/></div>}
+      {cursor&&status==='ready'&&<div className={'gsl-hand-cursor '+(cursor.pinching?'pinching':'')+((inputMethod==='dwell'||inputMethod==='push')&&mode==='keyboard'?' gsl-dwell-cursor':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--gsl-dwell-deg':(cursor.dwell*360)+'deg'} as CSSProperties} aria-hidden="true"><span/></div>}
      </div>
      <div className="gsl-stage-footer"><span><MousePointer2 size={15}/> {hint}</span><span>PROTOTYPE · NOT A PRODUCTION AUTOMATION</span></div>
     </div>
@@ -413,15 +432,15 @@ export default function GestureLab(){
       {error&&<p role="alert" className="gsl-camera-error">{error}</p>}
       <button type="button" className={'gsl-camera-btn '+(status==='ready'?'gsl-camera-stop':'')} onClick={status==='ready'||status==='loading'?stop:start}>{status==='ready'?<><CameraOff size={18}/> STOP CAMERA</>:status==='loading'?<><CameraOff size={18}/> CANCEL CAMERA SETUP</>:<><Camera size={18}/> ENABLE CAMERA</>}</button>
       <div className="gsl-camera-meta"><span>{status==='ready'?'MODEL READY'+(gpuStatus?' · '+gpuStatus:''):'MEDIAPIPE / LOCAL INFERENCE'}</span><span>{tracking?'● HAND DETECTED':'○ NO HAND DATA'}</span></div>
-      {status==='ready'&&(mode!=='keyboard'||inputMethod==='pinch')&&<div className="gsl-pinch-feedback"><div><span>THUMB + INDEX / CLOSURE</span><strong>{tracking?(cursor?.pinching?'PINCH DETECTED':pinchMeter+'%'):'WAITING FOR HAND'}</strong></div><div className="gsl-pinch-track"><i style={{width:pinchMeter+'%'}}/></div></div>}
+      {status==='ready'&&mode!=='keyboard'&&<div className="gsl-pinch-feedback"><div><span>THUMB + INDEX / CLOSURE</span><strong>{tracking?(cursor?.pinching?'PINCH DETECTED':pinchMeter+'%'):'WAITING FOR HAND'}</strong></div><div className="gsl-pinch-track"><i style={{width:pinchMeter+'%'}}/></div></div>}
      </div>
      <div className="gsl-guide"><div><Sparkles size={18}/><strong>HOW TO INTERACT</strong></div>
-      {mode==='keyboard'&&<div className="gsl-input-modes"><span>HOW TO TYPE</span><div><button type="button" className={inputMethod==='tap'?'active':''} aria-pressed={inputMethod==='tap'} onClick={()=>{setInputMethod('tap');inputMethodRef.current='tap';airTapRef.current={down:false,candidate:false,frames:0};}}>INDEX TAP</button><button type="button" className={inputMethod==='pinch'?'active':''} aria-pressed={inputMethod==='pinch'} onClick={()=>{setInputMethod('pinch');inputMethodRef.current='pinch';}}>PINCH</button><button type="button" className={inputMethod==='dwell'?'active':''} aria-pressed={inputMethod==='dwell'} onClick={()=>{setInputMethod('dwell');inputMethodRef.current='dwell';dwellRef.current={key:'',since:0,locked:false};}}>HOLD 1 SEC</button></div></div>}
+      {mode==='keyboard'&&<div className="gsl-input-modes"><span>HOW TO TYPE</span><div><button type="button" className={inputMethod==='tap'?'active':''} aria-pressed={inputMethod==='tap'} onClick={()=>{touchRef.current.reset();setInputMethod('tap');inputMethodRef.current='tap';airTapRef.current={down:false,candidate:false,frames:0};}}>INDEX TAP · EXPERIMENT</button><button type="button" className={inputMethod==='push'?'active':''} aria-pressed={inputMethod==='push'} onClick={()=>{setInputMethod('push');inputMethodRef.current='push';touchRef.current.reset();}}>FORWARD TOUCH</button><button type="button" className={inputMethod==='dwell'?'active':''} aria-pressed={inputMethod==='dwell'} onClick={()=>{touchRef.current.reset();setInputMethod('dwell');inputMethodRef.current='dwell';dwellRef.current={key:'',since:0,locked:false};}}>HOLD 1 SEC</button></div></div>}
       {mode==='keyboard'&&<div className="gsl-input-modes"><span>HAND MOVEMENT RANGE</span><input type="range" min=".8" max="1.8" step=".1" value={reach} onChange={e=>setReach(Number(e.target.value))} aria-label="Hand pointer reach"/><small>{reach.toFixed(1)}× · increase if keys are hard to reach</small></div>}
       {mode==='keyboard'&&status==='ready'&&inputMethod==='tap'&&<p className="gsl-tap-feedback" aria-live="off">{tapMessage}</p>}
-      {(mode!=='keyboard'||inputMethod==='pinch')&&<div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>}
+      {mode!=='keyboard'&&<div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>}
       {mode==='cube'&&<label className="gsl-rotation-speed">ROTATION RESPONSE <strong>{rotationSpeed.toFixed(1)}×</strong><input type="range" min=".65" max="2.5" step=".15" value={rotationSpeed} onChange={e=>setRotationSpeed(Number(e.target.value))}/></label>}
-      {mode==='keyboard'?<p>Use one extended index to aim at a highlighted letter in the camera view. Bend that same finger briefly to press, then straighten it. This is an estimated gesture, not physical screen contact. Use HOLD 1 SEC if finger bending is unreliable.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
+      {mode==='keyboard'?<p>FORWARD TOUCH: aim briefly at a key to position its virtual surface, push the index toward the camera, and withdraw to release. Depth is estimated by the webcam. Finger-bend and hold modes remain separate experiments.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
       <div className="gsl-guide-tags"><span>NO CAMERA REQUIRED FOR MANUAL MODE</span><span>{mode==='workflow'?connections.length+' DEPENDENCIES':'GESTURE + POINTER'}</span></div>
       {mode==='workflow'&&<button type="button" onClick={()=>{setTasks(starterTasks);tasksRef.current=starterTasks;setConnections([['A','B']]);setLinkFrom(null);setHint('WBS reset.');}}><RotateCcw size={16}/> RESET WBS</button>}
      </div>

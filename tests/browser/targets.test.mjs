@@ -13,15 +13,15 @@ test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links
  await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('.holo-natural-control');
  const result=await page.evaluate(async()=>{
   const {findGestureTarget,canActivateTarget}=await import('/src/lib/gesture/targets.ts');
-  const {PointerController}=await import('/src/lib/gesture/PointerController.ts');
+  const {ForwardPushController}=await import('/src/lib/gesture/ForwardPushController.ts');
   document.body.innerHTML=`<style>body{margin:0}button,a,input,fieldset{position:absolute;left:100px;top:100px;width:100px;height:50px;margin:0}#cover{position:absolute;left:100px;top:100px;width:100px;height:50px;z-index:10}</style><button id="button"><svg width="80" height="35"><path d="M0 0 L80 35"/></svg></button>`;
   const button=document.getElementById('button');let clicks=0;button.onclick=()=>clicks++;
   const nested=findGestureTarget(150,125)===button;
-  const c=new PointerController();let now=100;
-  const frame=ratio=>c.step({now:now+=50,tracking:true,ratio,pointing:ratio>1,mode:'navigation',target:findGestureTarget(150,125),point:{x:150,y:125}});
-  frame(1.2);frame(1.2);frame(.4);const click=frame(.4);
+  const c=new ForwardPushController();let now=100;
+  const frame=scale=>c.step({now:now+=50,tracking:true,depth:{scale,fingerDepth:.2,shape:[1,1,1,1],indexExtended:true},pointing:true,mode:'navigation',target:findGestureTarget(150,125),point:{x:150,y:125}});
+  for(let i=0;i<8;i++)frame(1);frame(1.2);const click=frame(1.2);
   if(click.activation&&canActivateTarget(click.activation,150,125))click.activation.click();
-  for(let i=0;i<5;i++){const r=frame(.4);if(r.activation)r.activation.click();}
+  for(let i=0;i<5;i++){const r=frame(1.2);if(r.activation)r.activation.click();}
   const cover=document.createElement('div');cover.id='cover';document.body.append(cover);
   const covered=!canActivateTarget(button,150,125);cover.remove();
   button.disabled=true;const disabled=!findGestureTarget(150,125);button.disabled=false;

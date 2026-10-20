@@ -5,9 +5,10 @@ import AirKeyboard from './AirKeyboard';
 import {AirTypingEngine} from '../lib/AirTypingEngine';
 import type{AirFrame,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 
-import {getHand,pinchRatio} from '../lib/gesture/pose';
+import {getHand} from '../lib/gesture/pose';
 import type {Landmark,HandSample} from '../lib/gesture/pose';
-import {PointerController} from '../lib/gesture/PointerController';
+import {ForwardPushController} from '../lib/gesture/ForwardPushController';
+import {measureForwardDepth} from '../lib/gesture/forwardDepth';
 import {findGestureTarget,canActivateTarget} from '../lib/gesture/targets';
 import {FrameBudget,GestureDiagnostics} from '../lib/gesture/diagnostics';
 import {newPalmScroll,palmScrollDelta} from '../lib/gesture/palmScroll';
@@ -58,7 +59,7 @@ export default function HoloNavigator(){
   if(value){node.style.left=(value.x*100)+'%';node.style.top=(value.y*100)+'%';
    node.style.setProperty('--holo-progress',(value.progress*360)+'deg');node.classList.toggle('pressed',value.press);}
  },[]);
- const controllerRef=useRef(new PointerController<HTMLElement>());
+ const controllerRef=useRef(new ForwardPushController<HTMLElement>());
  const debugEnabled=new URLSearchParams(location.search).get('gestureDebug')==='1';
  const diagnostics=useRef(new GestureDiagnostics(debugEnabled));
  diagnostics.current.enabled=debugEnabled;
@@ -72,17 +73,17 @@ export default function HoloNavigator(){
  },[debugEnabled]);
  const [handCount,setHandCount]=useState(0);
  const [stateLabel,setStateLabel]=useState('SHOW YOUR HAND');
- const [pinchSignal,setPinchSignal]=useState('OPEN');
+ const [pressSignal,setPressSignal]=useState('AIM');
  const [targetName,setTargetName]=useState('');
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
  const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
  const [airCalibrationMessage,setAirCalibrationMessage]=useState('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
  const autoCalibrationRef=useRef<AutoCalibration>(freshAutoCalibration());
- const [airMode,setAirMode]=useState<AirTypingMode>('pinch');
+ const [airMode,setAirMode]=useState<AirTypingMode>('push');
  const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('easy');
  const [airReach,setAirReach]=useState(1.3);
- const airModeRef=useRef<AirTypingMode>('pinch');
+ const airModeRef=useRef<AirTypingMode>('push');
  const airSensitivityRef=useRef<AirSensitivity>('easy');
  const airReachRef=useRef(1.3);
  const airEngineRef=useRef(new AirTypingEngine());
@@ -144,7 +145,7 @@ export default function HoloNavigator(){
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};
   controlHandRef.current=null;pointerRef.current={x:.5,y:.5};
-  clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');setPinchSignal('OPEN');
+  clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');setPressSignal('OPEN');
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
  },[clearHover,setLabel]);
  const stopRef=useRef(stop);stopRef.current=stop;
@@ -272,7 +273,7 @@ export default function HoloNavigator(){
    if(mobile)setMobilePanelExpanded(false);
    setStatus('ready');
    missedRef.current=0;controllerRef.current.reset();
-   setLabel('PALM: SCROLL · INDEX: AIM · PINCH: CLICK');
+   setLabel('PALM: SCROLL · INDEX: AIM · PUSH FORWARD: CLICK');
    const budget=new FrameBudget();
    const metrics=diagnostics.current;
    metrics.values={browser:navigator.userAgent,viewport:[innerWidth,innerHeight],dpr:devicePixelRatio,
@@ -326,13 +327,13 @@ export default function HoloNavigator(){
       controlHandRef.current=null;
       zoomGestureRef.current.active=false;zoomGestureRef.current.frames=0;
       if(targetRef.current)clearHover();
-      setCursor(null);setPinchSignal('NO HAND');setLabel('SHOW YOUR INDEX FINGER');return;
+      setCursor(null);setPressSignal('NO HAND');setLabel('SHOW YOUR INDEX FINGER');return;
      }
      if(!hadHand)metrics.count('handAcquisition');hadHand=true;
      missedRef.current=0;
      if(keyboardRef.current){
       controllerRef.current.reset();metrics.values.suppression='mode-switch';
-      // Keyboard is exclusive: one index + pinch, or opt-in ten-finger research.
+      // Keyboard is exclusive: forward index touch, or opt-in ten-finger research.
       // Full key geometry is only needed while calibrating the finger experiment.
       const root=airKeysRef.current;
       const box=root?.getBoundingClientRect();
@@ -394,8 +395,9 @@ export default function HoloNavigator(){
        }
       }
       const frame=airEngineRef.current.process(samples,keyAt,now,{
-       reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current
+       reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current,aspect:video.videoWidth/video.videoHeight
       });
+      if(frame.control){metrics.values.pose='keyboard-forward-touch';metrics.values.press=frame.control;}
       setAirFrame(frame);
       if(frame.presses.length){
        for(const press of frame.presses)insertText(press.key);
@@ -425,11 +427,11 @@ export default function HoloNavigator(){
      const actionHands=[control];
      // Two-finger V gesture: spread index + middle to zoom the site's content.
      // A short pose debounce avoids resizing when passing through an intermediate hand shape.
-     // Recognize explicit press gestures BEFORE palm/zoom classification.
-     // Pinching or bending the index can otherwise appear as an open palm and block clicks.
-     // Aimed controls stay eligible while fingers transition into a pinch.
-     const ratio=pinchRatio(control);
-     const pressHand=ratio<(controllerRef.current.down?.88:.62)?control:null;
+     // Advance the forward-touch controller before palm/zoom returns.
+     // An advancing fingertip may shift screen position as it approaches the virtual surface.
+     // Keep its aimed control during the forward stroke.
+     const depth=measureForwardDepth(control.landmarks,video.videoWidth/video.videoHeight);
+     const pressHand=controllerRef.current.pending?control:null;
      const spread=pressHand?null:actionHands.find(item=>item.spread);
      const rawPose=pressHand?'press':spread?'zoom':control.open?'scroll':control.pointing?'point':'idle';
      const p=pointerRef.current,tip=control.landmarks[8];
@@ -442,20 +444,20 @@ export default function HoloNavigator(){
      const hitStart=performance.now();
      const aimed=control.pointing&&!pressHand?findGestureTarget(point.x*innerWidth,point.y*innerHeight):null;
      metrics.record('hitTestMs',performance.now()-hitStart);
-     const click=controllerRef.current.step({now,tracking:true,ratio,pointing:control.pointing,
+     const click=controllerRef.current.step({now,tracking:true,depth,pointing:control.pointing||!!pressHand,
       mode:rawPose==='scroll'?'scroll':rawPose==='zoom'?'zoom':'navigation',target:aimed,point});
      metrics.record('classifyMs',performance.now()-classifyStart);
      metrics.values.rawCursor={x:rawX,y:rawY};metrics.values.filteredCursor=click.point;
-     metrics.values.pose=rawPose;metrics.values.pinch={ratio,down:controllerRef.current.down,frames:controllerRef.current.frames,phase:click.phase};
+     metrics.values.pose=rawPose;metrics.values.press={depth,progress:click.progress,down:controllerRef.current.down,frames:controllerRef.current.frames,phase:click.phase};
      metrics.values.suppression=click.reason;
      metrics.values.targetAgeMs=click.targetAgeMs;
      if(click.reason!=='none')metrics.count('suppressed:'+click.reason);
-     setPinchSignal(controllerRef.current.down?'CLOSED':click.pending?'CLOSING':'OPEN');
+     setPressSignal(click.reason==='stale-target'?'WITHDRAW TO RESET':controllerRef.current.down?'TOUCH · WITHDRAW':click.pending?('PUSH '+Math.round(click.progress*100)+'%'):controllerRef.current.ready?'READY · PUSH FORWARD':'AIM · POSITIONING PLANE');
      if(click.activation){
       const target=click.activation;
       if(canActivateTarget(target,click.point.x*innerWidth,click.point.y*innerHeight)){
        metrics.count('clicks');metrics.record('sampleToActionMs',performance.now()-frameStart);
-       if(click.confirmationMs!==undefined)metrics.record('pinchConfirmationMs',click.confirmationMs);
+       if(click.confirmationMs!==undefined)metrics.record('pushConfirmationMs',click.confirmationMs);
        clickFeedbackRef.current={at:now,label:'CLICK ✓ '+nameOf(target)};
        activateRef.current(target);
        if(metrics.enabled)requestAnimationFrame(()=>{
@@ -515,8 +517,8 @@ export default function HoloNavigator(){
      }
      if(metrics.enabled)metrics.values.target=target?{tag:target.tagName,rect:target.getBoundingClientRect().toJSON(),method:'direct'}:null;
      if(now-clickFeedbackRef.current.at<650&&clickFeedbackRef.current.label)setLabel(clickFeedbackRef.current.label);
-     else setLabel(click.pending?'PINCH · RELEASE TO RE-ARM':'INDEX · AIM AT A LINK OR BUTTON');
-     setCursor(control.pointing||click.pending?{...click.point,progress:target?1:0,press:controllerRef.current.down}:null);
+     else setLabel(click.reason==='stale-target'?'WITHDRAW TO REPOSITION THE TOUCH PLANE':click.pending?'PUSH INDEX FORWARD · WITHDRAW TO RELEASE':controllerRef.current.ready?'TOUCH PLANE READY · PUSH FORWARD':'AIM BRIEFLY TO POSITION THE TOUCH PLANE');
+     setCursor(control.pointing||click.pending?{...click.point,progress:click.progress,press:controllerRef.current.down}:null);
     }catch{
      controllerRef.current.reset();clearHover();setCursor(null);metrics.count('frameErrors');
     }finally{
@@ -568,17 +570,17 @@ export default function HoloNavigator(){
    </div>
    {status==='loading'&&<p className="holo-camera-progress" role="status">Connecting camera and loading hand tracking…</p>}
    {status==='ready'?<>
-    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · 1 CONTROL · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PINCH: <b>{pinchSignal}</b></span></div>
+    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · 1 CONTROL · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PUSH: <b>{pressSignal}</b></span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     {!mobileView&&location.pathname==='/gesture-lab'?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
      airEngineRef.current.clearCalibration();
      autoCalibrationRef.current=keyboardRef.current&&airModeRef.current==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
-     if(keyboardRef.current)setAirCalibrationMessage(airModeRef.current==='pinch'?'ONE HAND · AIM WITH INDEX, PINCH TO PRESS, RELEASE TO REPEAT. NO ALIGNMENT NEEDED.':'HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
+     if(keyboardRef.current)setAirCalibrationMessage(airModeRef.current==='push'?'AIM WITH INDEX, PUSH FORWARD TO TOUCH, WITHDRAW TO RELEASE. THE TOUCH PLANE ALIGNS AUTOMATICALLY.':'HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
      setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'WAITING FOR TWO HANDS'});
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
-     setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PINCH':'AIR KEYBOARD OFF');
+     setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PUSH FORWARD':'AIR KEYBOARD OFF');
     }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'EXPERIMENTAL AIR KEYBOARD'}</button>:<p className="holo-mobile-note">{mobileView?'MOBILE MODE: one hand for scrolling and pointing. Experimental Air Type requires desktop Gesture Lab.':'Experimental Air Type is available separately in Gesture Lab.'}</p>}
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:status==='preview'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA · RETRY AFTER</button>
@@ -587,7 +589,7 @@ export default function HoloNavigator(){
    {(status==='error'||status==='preview')&&<p className="holo-natural-error" role="alert">{error}</p>}
    {status==='error'&&<p className="holo-mobile-note">If you are opening the site inside an app, try opening it directly in Chrome or Safari and allow camera permission.</p>}
    {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".7" max="4" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
-   <p className="holo-natural-legend">{mobileView?'MOBILE · OPEN PALM: SCROLL · INDEX + THUMB: CLICK. HOLD PHONE STEADY.':'CLICK = AIM WITH INDEX → TOUCH THUMB + INDEX → RELEASE. OPEN PALM = SCROLL. V = ZOOM.'}</p>
+   <p className="holo-natural-legend">{mobileView?'MOBILE · PALM: SCROLL · PUSH INDEX FORWARD: TOUCH · WITHDRAW: RELEASE.':'TOUCH = AIM WITH INDEX → PUSH FORWARD → WITHDRAW. OPEN PALM = SCROLL. V = ZOOM.'}</p>
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
   {status==='ready'&&<div ref={cursorNode} className="holo-gesture-pointer" style={{display:'none'}} aria-hidden="true"><i/>{targetName&&<small>{targetName}</small>}</div>}
@@ -605,7 +607,7 @@ export default function HoloNavigator(){
    onMode={v=>{
     airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();
     autoCalibrationRef.current=v==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
-    setAirCalibrationMessage(v==='pinch'?'ONE HAND · AIM WITH INDEX, PINCH TO PRESS, RELEASE TO REPEAT. NO ALIGNMENT NEEDED.':'SHOW BOTH HANDS AND HOLD STILL TO ALIGN EXPERIMENTAL FINGER TAPS.');
+    setAirCalibrationMessage(v==='push'?'AIM WITH INDEX, PUSH FORWARD TO TOUCH, WITHDRAW TO RELEASE. THE TOUCH PLANE ALIGNS AUTOMATICALLY.':'SHOW BOTH HANDS AND HOLD STILL TO ALIGN EXPERIMENTAL FINGER TAPS.');
    }}
    onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
    onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
