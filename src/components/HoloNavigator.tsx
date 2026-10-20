@@ -287,6 +287,10 @@ export default function HoloNavigator(){
      if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      if(!samples.length){
       missedRef.current++;
+      if(keyboardRef.current&&missedRef.current>=3){
+       airEngineRef.current.reset();
+       setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+      }
       // Preserve pinch state through brief tracking gaps; reset after sustained loss.
       if(missedRef.current<3)return;
       pinchRef.current={down:false,candidate:false,frames:0};
@@ -549,6 +553,8 @@ export default function HoloNavigator(){
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     <button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
+     airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+     controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();pinchRef.current={down:false,candidate:false,frames:0};
      tapRef.current={down:false,candidate:false,frames:0};clickLatchRef.current=false;
      setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PINCH':'AIR KEYBOARD OFF');
@@ -573,8 +579,8 @@ export default function HoloNavigator(){
    onMode={v=>{airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();}}
    onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
    onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
-   onReset={()=>{airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'RECALIBRATING'});}}
-   onClose={()=>{keyboardRef.current=false;setKeyboard(false);airEngineRef.current.reset();clearHover();}}
+   onReset={()=>{airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'TRACKING RESET'});}}
+   onClose={()=>{keyboardRef.current=false;setKeyboard(false);airEngineRef.current.reset();controlHandRef.current=null;clearHover();}}
    onKey={insertText}
   />}
  </>;
