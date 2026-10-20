@@ -43,7 +43,7 @@ async function hands(page,poses,{reverse=false,frames=3}={}){
    const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
    const base=makeHand({x,y,palm:true}),dx=x-base[finger].x,dy=y-base[finger].y;
    const landmarks=base.map(p=>({...p,x:p.x+dx,y:p.y+dy}));
-   return {side,landmarks:tap?tapFinger(landmarks,finger,.09):landmarks};
+   return {side,landmarks:tap?tapFinger(landmarks,finger,.23):landmarks};
   });
   window.__tracked=reverse?tracked.reverse():tracked;window.__poseStart=window.__inferences||0;
  },{poses,reverse});
