@@ -2790,3 +2790,7 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
  .holo-gesture-pointer>small{top:43px;font-size:8px}
 }
 @media(prefers-reduced-motion:reduce){.holo-gesture-pointer{transition:none}}
+
+/* Keep the camera video mounted and decodable during initialization. */
+.holo-natural-preview{display:block;position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.holo-natural-preview.on{position:relative;display:block;width:100%;height:auto;opacity:1;pointer-events:none}
