@@ -30,3 +30,24 @@
  .holo-scroll-config>span{font-size:8px}
  .holo-natural-privacy{font-size:7px}
 }
+
+/* Hands-free click diagnostics: a true DOM button that can be activated with pinch. */
+.holo-natural-status .holo-target-readout{
+ font-size:10px;letter-spacing:.2px;line-height:1.4;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap;color:#a6f6ea
+}
+.holo-gesture-test{
+ min-height:43px;width:100%;padding:10px 12px;border-radius:9px;
+ display:flex;align-items:center;justify-content:space-between;gap:9px;
+ background:#81f4d51c;color:#effffb;border:1px solid #81f4d5a8;
+ font:850 10px Manrope,sans-serif;letter-spacing:.6px;
+ transition:background .15s ease,border-color .15s ease
+}
+.holo-gesture-test strong{color:#8dfedc;font-size:13px}
+.holo-gesture-test:hover,.holo-gesture-test.holo-focused-target{
+ background:#81f4d556;border-color:#b8fff2;box-shadow:0 0 20px #81f4d53d;
+}
+@media(max-width:760px){
+ .holo-natural-status .holo-target-readout{font-size:8px}
+ .holo-gesture-test{min-height:36px;font-size:8px}
+}
