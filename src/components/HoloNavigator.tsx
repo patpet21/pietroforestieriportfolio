@@ -587,28 +587,43 @@ export default function HoloNavigator(){
 
  return <>
   <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")} aria-label="Natural gesture control">
-   <div className="holo-natural-title"><Scan size={17}/><strong>SPATIAL CONTROL</strong>{status==='ready'&&<i/>}{status==='ready'&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}</div>
-   <div className={'holo-vision-preview '+(status==='ready'?'on':'')}>
-    <video ref={videoRef} muted playsInline autoPlay className={'holo-natural-preview '+(status==='ready'?'on':'')} aria-hidden="true"/>
-    <canvas ref={overlayRef} className="holo-hand-overlay" aria-hidden="true"/>
-    {status==='ready'&&<span className="holo-vision-chip">21 LANDMARKS · LIVE</span>}
+   <div className="holo-natural-title">
+    <Scan size={17}/><strong>SPATIAL CONTROL{mobileView?' · MOBILE':''}</strong>
+    {status==='ready'&&<i/>}
+    {(status==='ready'||status==='preview')&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}
+    {mobileView&&(status==='ready'||status==='preview')&&<button type="button" className="holo-mobile-stop-title" onClick={stop} aria-label="Stop mobile camera"><CameraOff size={15}/></button>}
    </div>
+   <div className={'holo-vision-preview '+(['ready','loading','preview'].includes(status)?'on ':'')+(cameraPlaying?'playing':'')}>
+    <video ref={videoRef} muted playsInline autoPlay onPlaying={()=>{setCameraPlaying(true);setCameraNeedsTap(false);}} onPause={()=>setCameraPlaying(false)}
+     className={'holo-natural-preview '+(['ready','loading','preview'].includes(status)?'on':'')} aria-label="Live front-camera preview"/>
+    <canvas ref={overlayRef} className="holo-hand-overlay" aria-hidden="true"/>
+    {!cameraPlaying&&<div className="holo-camera-placeholder" role="status">
+      <Camera size={21}/>
+      <strong>{status==='off'?'CAMERA OFF':status==='error'?'CAMERA UNAVAILABLE':status==='loading'?'CONNECTING FRONT CAMERA':'WAITING FOR VIDEO'}</strong>
+      <small>{status==='loading'?'Allow camera access when asked.':status==='error'?'Check browser camera permission.':'Tap ENABLE GESTURES to start.'}</small>
+    </div>}
+    {cameraNeedsTap&&<button type="button" className="holo-camera-resume" onClick={resumeCamera}>▶ PLAY CAMERA VIDEO</button>}
+    {cameraPlaying&&<span className="holo-vision-chip">{status==='ready'?'21 LANDMARKS · LIVE':'FRONT CAMERA · LIVE'}</span>}
+   </div>
+   {status==='loading'&&<p className="holo-camera-progress" role="status">Connecting camera and loading hand tracking…</p>}
    {status==='ready'?<>
     <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · 1 CONTROL · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PINCH: <b>{pinchSignal}</b></span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
-    <button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
+    {!mobileView?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
      airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS'});
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();pinchRef.current={down:false,candidate:false,frames:0};
      tapRef.current={down:false,candidate:false,frames:0};clickLatchRef.current=false;
      setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PINCH':'AIR KEYBOARD OFF');
-    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'OPEN AIR KEYBOARD'}</button>
+    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'OPEN AIR KEYBOARD'}</button>:<p className="holo-mobile-note">MOBILE MODE: one hand for scrolling and pointing. Ten-finger Air Type requires desktop.</p>}
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
-   </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
-   {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
+   </>:status==='preview'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA · RETRY AFTER</button>
+   :<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'CONNECTING…':'ENABLE GESTURES'}</button>}
+   {(status==='error'||status==='preview')&&<p className="holo-natural-error" role="alert">{error}</p>}
+   {status==='error'&&<p className="holo-mobile-note">If you are opening the site inside an app, try opening it directly in Chrome or Safari and allow camera permission.</p>}
    {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".7" max="4" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
-   <p className="holo-natural-legend">CLICK = AIM WITH INDEX → TOUCH THUMB + INDEX → RELEASE. OPEN PALM = SCROLL. V = ZOOM.</p>
+   <p className="holo-natural-legend">{mobileView?'MOBILE · OPEN PALM: SCROLL · INDEX + THUMB: CLICK. HOLD PHONE STEADY.':'CLICK = AIM WITH INDEX → TOUCH THUMB + INDEX → RELEASE. OPEN PALM = SCROLL. V = ZOOM.'}</p>
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
   {status==='ready'&&cursor&&<div className={'holo-gesture-pointer '+(cursor.press?'pressed':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/>{targetName&&<small>{targetName}</small>}</div>}
