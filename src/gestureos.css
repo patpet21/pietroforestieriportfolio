@@ -80,3 +80,14 @@
  .holo-air-console .holo-air-row button{min-height:36px;font-size:12px}
  .holo-air-foot{font-size:7px}
 }
+
+/* V3 explicit thumb/index click feedback. */
+.holo-natural-status .holo-pinch-readout{
+ font:850 10px Manrope,sans-serif;letter-spacing:.35px;
+ color:#bdd4f0;
+}
+.holo-pinch-readout b{color:#acffda}
+.holo-natural-legend{font-size:9px;line-height:1.65}
+@media(max-width:760px){
+ .holo-natural-status .holo-pinch-readout,.holo-natural-legend{font-size:8px}
+}
