@@ -1,7 +1,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
 import {ArrowDown,ArrowUp,CameraOff,ChevronDown,ChevronUp,Hand,Keyboard,MousePointer2,Scan,X} from 'lucide-react';
-import {useLocation} from 'react-router-dom';
+import {useLocation,useNavigate} from 'react-router-dom';
 
 type Landmark={x:number;y:number;z:number};
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][]};close:()=>void};
@@ -13,6 +13,7 @@ type Cursor={x:number;y:number;progress:number;pinch:boolean};
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const ROWS=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
+const NAV_ROUTES=[['/','HOME'],['/about','ABOUT'],['/projects','PROJECTS'],['/services','SERVICES'],['/gesture-lab','GESTURE LAB'],['/contact','CONTACT']] as const;
 const VALID='a[href],button:not(:disabled),[role="button"],input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[data-air-key]';
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const distance=(a:Landmark,b:Landmark)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -22,6 +23,7 @@ function editable(element:Element|null):element is HTMLInputElement|HTMLTextArea
 }
 export default function HoloNavigator(){
  const location=useLocation();
+ const navigate=useNavigate();
  const [status,setStatus]=useState<Status>('off');
  const [error,setError]=useState('');
  const [minimized,setMinimized]=useState(false);
@@ -32,7 +34,7 @@ export default function HoloNavigator(){
  const [cursor,setCursor]=useState<Cursor|null>(null);
  const [targetName,setTargetName]=useState('LOOK AT YOUR HAND');
  const [backend,setBackend]=useState('');
- const [sensitivity,setSensitivity]=useState(1);
+ const [sensitivity,setSensitivity]=useState(1.65);
  const [hoverKey,setHoverKey]=useState('');
  const videoRef=useRef<HTMLVideoElement|null>(null);
  const streamRef=useRef<MediaStream|null>(null);
@@ -52,6 +54,8 @@ export default function HoloNavigator(){
  const keyboardRef=useRef(keyboard);
  const sensitivityRef=useRef(sensitivity);
  const noteRef=useRef(note);
+ const latestHandRef=useRef({x:.5,y:.5});
+ const calibrationRef=useRef({x:0,y:0});
  modeRef.current=mode;activationRef.current=activation;keyboardRef.current=keyboard;
  sensitivityRef.current=sensitivity;noteRef.current=note;
  const clearTarget=useCallback(()=>{
@@ -157,8 +161,10 @@ export default function HoloNavigator(){
      }
      const tip=hand[8],thumb=hand[4],indexKnuckle=hand[5],pinkyKnuckle=hand[17];
      const scaled=sensitivityRef.current;
-     const xx=clamp((1-tip.x-.5)*scaled+.5,0,1);
-     const yy=clamp((tip.y-.5)*scaled+.5,0,1);
+     latestHandRef.current={x:1-tip.x,y:tip.y};
+     const offset=calibrationRef.current;
+     const xx=clamp((1-tip.x+offset.x-.5)*scaled+.5,0,1);
+     const yy=clamp((tip.y+offset.y-.5)*scaled+.5,0,1);
      const previous=smoothRef.current;
      const x=previous.x=previous.x*.34+xx*.66;
      const y=previous.y=previous.y*.34+yy*.66;
@@ -174,17 +180,21 @@ export default function HoloNavigator(){
       started=pinching&&!old;
       pinchedRef.current=pinching;
      }
-     if(modeRef.current==='scroll'&&!keyboardRef.current){
+     const ray=document.elementFromPoint(x*window.innerWidth,y*window.innerHeight) as HTMLElement|null;
+     const overCommand=!!ray?.closest('[data-holo-action]');
+     if(modeRef.current==='scroll'&&!keyboardRef.current&&!overCommand){
       clearTarget();
-      const diff=y<.38?y-.38:y>.62?y-.62:0;
-      if(Math.abs(diff)>.025)window.scrollBy(0,clamp(diff*125,-44,44));
+      // Larger neutral center and faster scroll; both on-screen arrow controls remain available.
+      const diff=y<.46?y-.46:y>.54?y-.54:0;
+      const direction=Math.sign(diff);
+      if(Math.abs(diff)>.02)window.scrollBy(0,Math.round(direction*Math.min(47,Math.abs(diff)*180)));
       setCursor({x,y,progress:Math.abs(diff)*2,pinch:pinching});
       return;
      }
      const px=x*window.innerWidth,py=y*window.innerHeight;
      const hit=document.elementFromPoint(px,py) as HTMLElement|null;
      let candidate:HTMLElement|null=hit?.closest(VALID) as HTMLElement|null;
-     if(candidate?.closest('.holo-control')&&!candidate.closest('[data-holo-key]'))candidate=null;
+     if(candidate?.closest('.holo-control')&&!candidate.closest('[data-holo-key]')&&!candidate.closest('[data-holo-action]'))candidate=null;
      // Only UI controls and links are activatable; never click random page content.
      // 14px target hysteresis prevents a shaky index fingertip from restarting dwell at edges.
      if(targetRef.current&&candidate!==targetRef.current){
@@ -219,6 +229,8 @@ export default function HoloNavigator(){
    setError(name==='NotAllowedError'?'Camera permission denied. You can continue using the site normally.':name==='NotFoundError'?'No webcam was detected.':e instanceof Error?e.message:'Unable to start camera.');
   }
  };
+ const scrollByStep=(amount:number)=>window.scrollBy({top:amount,behavior:'smooth'});
+ const recenter=()=>{const hand=latestHandRef.current;calibrationRef.current={x:.5-hand.x,y:.5-hand.y};clearTarget();};
  const switchMode=(next:Mode)=>{modeRef.current=next;setMode(next);if(next==='scroll'){keyboardRef.current=false;setKeyboard(false);}clearTarget();};
  const switchKeyboard=(next:boolean)=>{keyboardRef.current=next;setKeyboard(next);clearTarget();if(next){modeRef.current='point';setMode('point');setMinimized(true);}};
  return <>
