@@ -84,6 +84,9 @@ export default function HoloNavigator(){
  const rafRef=useRef(0);
  const tokenRef=useRef(0);
  const pointerRef=useRef({x:.5,y:.5,wristX:.5,wristY:.5,lastPoint:0});
+ // Track both hands visually but use one persistent control hand to avoid
+ // the second hand accidentally clicking, scrolling or typing.
+ const controlHandRef=useRef<{x:number;y:number;at:number}|null>(null);
  const swipeRef=useRef({armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0});
  const zoomGestureRef=useRef({frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0});
  const zoomValueRef=useRef(1);
@@ -126,7 +129,7 @@ export default function HoloNavigator(){
   clickLatchRef.current=false;clickFeedbackRef.current={at:0,label:''};
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
-  pointerAimRef.current={x:.5,y:.5};
+  pointerAimRef.current={x:.5,y:.5};controlHandRef.current=null;
   clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
  },[clearHover,setLabel]);
@@ -247,6 +250,7 @@ export default function HoloNavigator(){
       pinchRef.current={down:false,candidate:false,frames:0};
       clickLatchRef.current=false;
       palmScrollRef.current=newPalmScroll();
+      controlHandRef.current=null;
       swipeRef.current.armed=false;swipeRef.current.active=false;
       zoomGestureRef.current.active=false;zoomGestureRef.current.frames=0;
       tapRef.current={down:false,candidate:false,frames:0};
@@ -254,20 +258,35 @@ export default function HoloNavigator(){
       setCursor(null);setLabel('SHOW YOUR INDEX FINGER');return;
      }
      missedRef.current=0;
+     // One stable control hand; the webcam overlay still renders BOTH hands.
+     // The same hand drives pointer, press, zoom and scroll.
+     const lastControl=controlHandRef.current;
+     const byDistance=samples.slice().sort((a,b)=>{
+      const da=lastControl?dist(a.wrist,lastControl):Math.hypot(a.wrist.x-.5,a.wrist.y-.5);
+      const db=lastControl?dist(b.wrist,lastControl):Math.hypot(b.wrist.x-.5,b.wrist.y-.5);
+      return da-db;
+     });
+     const control=lastControl?byDistance[0]:(samples.find(hand=>hand.pointing)||byDistance[0]);
+     if(lastControl&&now-lastControl.at<700&&dist(control.wrist,lastControl)>.28){
+      setLabel('CONTROL HAND LOST · KEEP ONE HAND IN VIEW');
+      setCursor(null);return;
+     }
+     controlHandRef.current={x:control.wrist.x,y:control.wrist.y,at:now};
+     const actionHands=[control];
      // Two-finger V gesture: spread index + middle to zoom the site's content.
      // A short pose debounce avoids resizing when passing through an intermediate hand shape.
      // Recognize explicit press gestures BEFORE palm/zoom classification.
      // Pinching or bending the index can otherwise appear as an open palm and block clicks.
      // Aimed controls stay eligible while fingers transition into a pinch.
      const recentAim=now-pointerRef.current.lastPoint<3000&&!!targetRef.current;
-     const pressHand=samples.find(item=>{
+     const pressHand=actionHands.find(item=>{
       const h=item.landmarks;
       const gap=dist(h[4],h[8])/Math.max(.065,dist(h[5],h[17]));
       const bend=dist(h[8],h[5])/Math.max(.045,dist(h[6],h[5]));
       return gap<(pinchRef.current.down ? .78 : .61)||(recentAim&&bend<(tapRef.current.down ? 2.18 : 1.85));
      });
-     const spread=pressHand?null:samples.find(item=>item.spread);
-     const rawPose=pressHand?'press':spread?'zoom':samples.some(item=>item.open)?'scroll':samples.some(item=>item.pointing)?'point':'idle';
+     const spread=pressHand?null:actionHands.find(item=>item.spread);
+     const rawPose=pressHand?'press':spread?'zoom':actionHands.some(item=>item.open)?'scroll':actionHands.some(item=>item.pointing)?'point':'idle';
      if(poseRef.current.kind!==rawPose)poseRef.current={kind:rawPose,since:now};
      const poseStable=now-poseRef.current.since>=160;
      const zg=zoomGestureRef.current;
@@ -299,7 +318,7 @@ export default function HoloNavigator(){
       zg.active=false;zg.frames=0;zg.missed=0;
      }
      // Separate the open-palm scroll state from index-based pointing and clicking.
-     const palm=pressHand||samples.some(item=>item.pointing)?null:samples.find(item=>item.open&&!item.spread);
+     const palm=pressHand||actionHands.some(item=>item.pointing)?null:actionHands.find(item=>item.open&&!item.spread);
      if(palm&&rawPose==='scroll'&&!keyboardRef.current){
       const scroll=palmScrollRef.current,y=clamp(palm.palm.y,0,1);
       if(!poseStable){
@@ -329,7 +348,7 @@ export default function HoloNavigator(){
       setLabel('OPEN PALM · SMOOTH SCROLL');return;
      }
      palmScrollRef.current=newPalmScroll();
-     const candidates=pressHand?[pressHand]:samples.filter(item=>!item.open&&!item.spread);
+     const candidates=pressHand?[pressHand]:actionHands.filter(item=>!item.open&&!item.spread);
      const pointer=candidates.sort((a,b)=>{
       const previous=pointerRef.current;
       const d1=Math.hypot(1-a.wrist.x-previous.wristX,a.wrist.y-previous.wristY);
@@ -457,7 +476,7 @@ export default function HoloNavigator(){
     {status==='ready'&&<span className="holo-vision-chip">21 LANDMARKS · LIVE</span>}
    </div>
    {status==='ready'?<>
-    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span></div>
+    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · 1 CONTROL · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     <button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
