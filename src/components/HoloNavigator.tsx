@@ -11,6 +11,26 @@ type HandSample={landmarks:Landmark[];wrist:Landmark;palm:{x:number;y:number};op
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const ROWS=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
+const HAND_BONES:number[][]=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function paintHandSkeleton(canvas:HTMLCanvasElement|null,video:HTMLVideoElement,hands:Landmark[][]){
+ if(!canvas)return;
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ if(!w||!h||!video.videoWidth||!video.videoHeight)return;
+ const dpr=Math.min(window.devicePixelRatio||1,2),pw=Math.round(w*dpr),ph=Math.round(h*dpr);
+ if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph;}
+ const ctx=canvas.getContext('2d');if(!ctx)return;
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const scale=Math.max(w/video.videoWidth,h/video.videoHeight),ox=(w-video.videoWidth*scale)/2,oy=(h-video.videoHeight*scale)/2;
+ const pos=(p:Landmark)=>({x:ox+(1-p.x)*video.videoWidth*scale,y:oy+p.y*video.videoHeight*scale});
+ hands.forEach((hand,handIndex)=>{
+  if(hand.length<21)return;
+  const color=handIndex?'#ffce94':'#81f4d5';
+  ctx.strokeStyle=color;ctx.lineWidth=Math.max(1.5,w/150);ctx.lineCap='round';ctx.shadowColor=color;ctx.shadowBlur=5;
+  for(const [a,b] of HAND_BONES){const u=pos(hand[a]),v=pos(hand[b]);ctx.beginPath();ctx.moveTo(u.x,u.y);ctx.lineTo(v.x,v.y);ctx.stroke();}
+  ctx.shadowBlur=0;
+  hand.forEach((p,i)=>{const u=pos(p),tip=[4,8,12,16,20].includes(i);ctx.beginPath();ctx.arc(u.x,u.y,tip?Math.max(3,w/75):Math.max(2,w/120),0,Math.PI*2);ctx.fillStyle=tip?'#fff':color;ctx.fill();});
+ });
+}
 const CLICKABLE='a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[role="button"],[data-holo-key]';
 const clamp=(v:number,a:number,b:number)=>Math.min(b,Math.max(a,v));
 const dist=(a:Landmark,b:Landmark)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -48,6 +68,8 @@ export default function HoloNavigator(){
  const [backend,setBackend]=useState('');
  const [zoomLevel,setZoomLevel]=useState(1);
  const videoRef=useRef<HTMLVideoElement|null>(null);
+ const overlayRef=useRef<HTMLCanvasElement|null>(null);
+ const [previewLarge,setPreviewLarge]=useState(false);
  const streamRef=useRef<MediaStream|null>(null);
  const modelRef=useRef<Landmarker|null>(null);
  const rafRef=useRef(0);
@@ -198,7 +220,9 @@ export default function HoloNavigator(){
     if(document.hidden||now-lastFrame<(cpu?68:47)||!video.videoWidth||video.currentTime===lastVideo)return;
     lastFrame=now;lastVideo=video.currentTime;
     try{
-     const samples=(landmarker.detectForVideo(video,now).landmarks||[]).map(getHand).filter((item):item is HandSample=>!!item);
+     const landmarks=landmarker.detectForVideo(video,now).landmarks||[];
+     paintHandSkeleton(overlayRef.current,video,landmarks);
+     const samples=landmarks.map(getHand).filter((item):item is HandSample=>!!item);
      if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      if(!samples.length){
       missedRef.current++;
@@ -386,9 +410,13 @@ export default function HoloNavigator(){
  };
 
  return <>
-  <aside className="holo-natural-control" aria-label="Natural gesture control">
-   <div className="holo-natural-title"><Scan size={17}/><strong>SPATIAL CONTROL</strong>{status==='ready'&&<i/>}</div>
-   <video ref={videoRef} muted playsInline autoPlay className={'holo-natural-preview '+(status==='ready'?'on':'')} aria-hidden="true"/>
+  <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")} aria-label="Natural gesture control">
+   <div className="holo-natural-title"><Scan size={17}/><strong>SPATIAL CONTROL</strong>{status==='ready'&&<i/>}{status==='ready'&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}</div>
+   <div className={'holo-vision-preview '+(status==='ready'?'on':'')}>
+    <video ref={videoRef} muted playsInline autoPlay className={'holo-natural-preview '+(status==='ready'?'on':'')} aria-hidden="true"/>
+    <canvas ref={overlayRef} className="holo-hand-overlay" aria-hidden="true"/>
+    {status==='ready'&&<span className="holo-vision-chip">21 LANDMARKS · LIVE</span>}
+   </div>
    {status==='ready'?<>
     <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span></div>
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
