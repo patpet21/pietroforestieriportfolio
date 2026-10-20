@@ -27,7 +27,7 @@ export default function AirKeyboard({
  const control=(value:string,text:string,extra='')=><button type="button" key={value}
   data-holo-key={value}
   className={(hover.has(value)?'air-key-hover ':'')+(pressed.has(value)?'air-key-pressed ':'')+extra}
-  onClick={()=>onKey(value)}>{text}</button>;
+  onClick={()=>value==='SITE'?onClose():onKey(value)}>{text}</button>;
  return <section className="holo-air-console holo-control air-desk" aria-label="Multi-finger air keyboard">
   <div className="air-desk-header">
    <div className="air-desk-brand"><ScanFace size={19}/><div><b>GESTUREOS / AIR TYPE LAB</b><small>{mode==='push'?'TEN-FINGER TOUCH · SMALL FORWARD TAPS':'FINGER BEND · EXPERIMENT'}</small></div></div>
@@ -38,7 +38,7 @@ export default function AirKeyboard({
    <div className="air-desk-finger-legend"><span className="left">L · LEFT HAND</span><span className="right">R · RIGHT HAND</span></div>
   </div>
   <p className="air-calibration-note" role="status">
-   <strong>{mode==='push'?'Show both hands: all ten fingertips follow you. Tap a finger forward slightly, then relax. No waiting or progress ring.':calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
+   <strong>{mode==='push'?'Show both hands, aim at one key, then make a deliberate short forward touch. The key needs to stay highlighted before it can type.':calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
    {mode==='tap'&&<span> No simultaneous clicking and hand positioning. This is only an approximate camera-based alignment, not a touch keyboard.</span>}
   </p>
   <div className="air-desk-output"><small>LIVE TYPING · SELECTED FIELD / DEMO BUFFER</small><output aria-live="off">{text||(mode==='push'?'Use small forward taps with any finger.':'Align both hands, then use experimental finger bends.')}</output></div>
@@ -63,7 +63,7 @@ export default function AirKeyboard({
    </div>)}
    <div className="air-desk-keyrow air-desk-actions">
     {control('CLEAR','CLEAR','utility')}{control('BACK','⌫ BACK','utility')}{control('SPACE','SPACE','wide')}
-    {control('ENTER','↵ ENTER','utility')}
+    {control('ENTER','↵ ENTER','utility')}{control('SITE','↗ SITE','utility exit-site')}
    </div>
    {fingers.filter(f=>f.pending&&f.contact).map(f=><div key={f.id+'-contact'} className={'air-contact-dot '+(f.hand==='L'?'left':'right')+(f.pressed?' down':'')}
     data-contact-for={f.id} style={{left:(f.contact!.x*100)+'%',top:(f.contact!.y*100)+'%'}} aria-hidden="true"/>)}
@@ -75,7 +75,7 @@ export default function AirKeyboard({
   <div className="air-desk-footer">
    {mode==='tap'
     ?<span><Keyboard size={14}/> Automatic alignment begins when two steady hands are visible. Finger TAP is experimental; press/release may be inaccurate.</span>
-    :<span><Keyboard size={14}/> All ten fingers work independently. A short forward tap presses the highlighted key; relaxing releases it.</span>}
+    :<span><Keyboard size={14}/> Only deliberate forward taps type. Touch ↗ SITE to return to full gesture navigation; Esc also closes the keyboard.</span>}
    {mode==='tap'&&<span><RefreshCw size={13}/> If alignment drifts, use RESTART before positioning your hands</span>}
   </div>
   <p className="air-desk-disclaimer">A webcam estimates finger movements; this experimental mode cannot replicate the reliability of physical keyboard contact. Mouse and normal keyboard remain available.</p>
