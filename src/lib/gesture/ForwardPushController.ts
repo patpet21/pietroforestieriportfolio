@@ -22,7 +22,10 @@ export class ForwardPushController<T>{
  private active:'finger'|'palm'='finger';private peak=0;
  private candidateAt:number|null=null;private candidate:'finger'|'palm'|null=null;
  private cooldownUntil=0;
- constructor(private minTravel=FORWARD_TOUCH_POLICY.fingerTravel,private profile:'navigation'|'keyboard'='navigation'){}
+ private minTravel:number;private profile:'navigation'|'keyboard';
+ constructor(minTravel=FORWARD_TOUCH_POLICY.fingerTravel,profile:'navigation'|'keyboard'='navigation'){
+  this.minTravel=minTravel;this.profile=profile;
+ }
  get ready(){return !!this.rest&&this.target!==null&&!this.down&&
   this.lastAt-this.targetSince >= (this.profile==='keyboard'?FORWARD_TOUCH_POLICY.keyboardAimMs:FORWARD_TOUCH_POLICY.aimMs)&&this.lastAt>=this.cooldownUntil;}
  reset(){this.phase='IDLE';this.down=false;this.pending=false;this.progress=0;this.frames=0;
