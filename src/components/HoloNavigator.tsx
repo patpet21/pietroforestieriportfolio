@@ -2,6 +2,9 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
 import {Camera,CameraOff,Hand,Keyboard,Scan,X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
+import AirKeyboard from './AirKeyboard';
+import {AirTypingEngine} from '../lib/AirTypingEngine';
+import type{AirFrame,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 
 type Landmark={x:number;y:number;z:number};
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][]};close:()=>void};
@@ -95,6 +98,15 @@ export default function HoloNavigator(){
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
  const [hoverKey,setHoverKey]=useState('');
+ const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+ const [airMode,setAirMode]=useState<AirTypingMode>('tap');
+ const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('balanced');
+ const [airReach,setAirReach]=useState(1.3);
+ const airModeRef=useRef<AirTypingMode>('tap');
+ const airSensitivityRef=useRef<AirSensitivity>('balanced');
+ const airReachRef=useRef(1.3);
+ const airEngineRef=useRef(new AirTypingEngine());
+ const airKeysRef=useRef<HTMLDivElement|null>(null);
  const [scratch,setScratch]=useState('');
  const [backend,setBackend]=useState('');
  const [zoomLevel,setZoomLevel]=useState(1);
@@ -154,6 +166,7 @@ export default function HoloNavigator(){
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
   pinchRef.current={down:false,candidate:false,frames:0};
+  airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
   clickLatchRef.current=false;clickFeedbackRef.current={at:0,label:''};
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
@@ -190,6 +203,7 @@ export default function HoloNavigator(){
  useEffect(()=>{
   clearHover();focusRef.current=null;
   keyboardRef.current=false;setKeyboard(false);
+  airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
   swipeRef.current.armed=false;swipeRef.current.active=false;
   pinchRef.current={down:false,candidate:false,frames:0};
   clickLatchRef.current=false;
@@ -209,7 +223,7 @@ export default function HoloNavigator(){
    at=start===end?Math.max(0,start-1):start;
    next=old.slice(0,at)+old.slice(end);
   }else{
-   const typed=value==='SPACE'?' ':value;
+   const typed=value==='SPACE'?' ':value==='ENTER'?'\n':value;
    next=old.slice(0,start)+typed+old.slice(end);at=start+typed.length;
   }
   const proto=field instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
@@ -286,6 +300,33 @@ export default function HoloNavigator(){
       setCursor(null);setLabel('SHOW YOUR INDEX FINGER');return;
      }
      missedRef.current=0;
+     if(keyboardRef.current){
+      // Exclusive keyboard mode: all fingertips from BOTH tracked hands.
+      // The existing navigator is suspended while air typing is active.
+      const keyAt=(nx:number,ny:number):string|null=>{
+       const root=airKeysRef.current;if(!root)return null;
+       const box=root.getBoundingClientRect();if(!box.width||!box.height)return null;
+       const px=box.left+nx*box.width,py=box.top+ny*box.height;
+       if(px<box.left||px>box.right||py<box.top||py>box.bottom)return null;
+       const buttons=root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]');
+       for(const button of buttons){
+        const rect=button.getBoundingClientRect();
+        if(px>=rect.left&&px<=rect.right&&py>=rect.top&&py<=rect.bottom)return button.dataset.holoKey||null;
+       }
+       return null;
+      };
+      const frame=airEngineRef.current.process(samples,keyAt,now,{
+       reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current
+      });
+      setAirFrame(frame);
+      if(frame.presses.length){
+       for(const press of frame.presses)insertText(press.key);
+       setLabel('AIR TYPED · '+frame.presses.map(p=>p.key).join(' '));
+      }else setLabel(frame.status+' · '+airModeRef.current.toUpperCase());
+      if(targetRef.current)clearHover();
+      setCursor(null);
+      return;
+     }
      // One stable control hand; the webcam overlay still renders BOTH hands.
      // The same hand drives pointer, press, zoom and scroll.
      const lastControl=controlHandRef.current;
@@ -520,11 +561,21 @@ export default function HoloNavigator(){
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
   {status==='ready'&&cursor&&<div className={'holo-gesture-pointer '+(cursor.press?'pressed':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/>{targetName&&<small>{targetName}</small>}</div>}
-  {status==='ready'&&keyboard&&<section className="holo-air-console holo-control" aria-label="Air keyboard for active text field">
-   <div className="holo-air-head"><div><Keyboard size={18}/><strong>AIR KEYBOARD</strong></div><button type="button" onClick={()=>{keyboardRef.current=false;setKeyboard(false);clearHover();}}><X size={16}/> CLOSE</button></div>
-   <div className="holo-air-input"><span>{focusRef.current&&document.contains(focusRef.current)?'TEXT FIELD · '+(focusRef.current.getAttribute('placeholder')||focusRef.current.getAttribute('name')||'MESSAGE'):'DEMO TEXT'}</span><output>{focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-60):scratch.slice(-60)}</output></div>
-   <div className="holo-air-keys">{ROWS.map((row,i)=><div className="holo-air-row" key={i}>{row.split('').map(letter=><button type="button" key={letter} data-holo-key={letter} className={hoverKey===letter?'selected':''} onClick={()=>insertText(letter)}>{letter}</button>)}</div>)}<div className="holo-air-row holo-air-utils"><button data-holo-key="BACK" className={hoverKey==='BACK'?'selected':''} onClick={()=>insertText('BACK')}>BACKSPACE</button><button data-holo-key="SPACE" className={hoverKey==='SPACE'?'selected':''} onClick={()=>insertText('SPACE')}>SPACE</button><button data-holo-key="CLEAR" className={hoverKey==='CLEAR'?'selected':''} onClick={()=>insertText('CLEAR')}>CLEAR</button></div></div>
-   <p className="holo-air-foot">POINT AT A KEY · HOLD AIM BRIEFLY · PINCH TO TYPE · RELEASE BETWEEN KEYS. INDEX BEND IS DISABLED HERE.</p>
-  </section>}
+  {status==='ready'&&keyboard&&<AirKeyboard
+   keysRef={airKeysRef}
+   fingers={airFrame.fingers}
+   hands={airFrame.hands}
+   status={airFrame.status}
+   text={focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-110):scratch.slice(-110)}
+   mode={airMode}
+   sensitivity={airSensitivity}
+   reach={airReach}
+   onMode={v=>{airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();}}
+   onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
+   onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
+   onReset={()=>{airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'RECALIBRATING'});}}
+   onClose={()=>{keyboardRef.current=false;setKeyboard(false);airEngineRef.current.reset();clearHover();}}
+   onKey={insertText}
+  />}
  </>;
 }
