@@ -235,6 +235,28 @@ export default function GestureLab(){
      let px=x,py=y,dwell=0;
      const activeMode=modeRef.current;
      if(activeMode==='keyboard'){
+      // Index finger bends toward the palm to emulate pressing a physical key.
+      // A webcam estimates finger geometry, not contact with a real surface.
+      const knuckle=hand[5],middleJoint=hand[6];
+      let tapStarted=false;
+      if(knuckle&&middleJoint){
+       const ratio=distance(finger,knuckle)/Math.max(.04,distance(middleJoint,knuckle));
+       const old=airTapRef.current.down;
+       const candidate=old?ratio<2.14:ratio<1.76;
+       const t=airTapRef.current;
+       if(t.candidate!==candidate){t.candidate=candidate;t.frames=1;}else t.frames++;
+       const down=t.frames>=2?candidate:old;
+       tapStarted=down&&!old;t.down=down;
+       if(inputMethodRef.current==='tap'){
+        setTapMessage(down?'INDEX PRESSED · RELEASE TO RESET':ratio>2.14?'FINGER EXTENDED · READY':'STRAIGHTEN YOUR INDEX');
+       }
+      }
+      // Trigger from the previously highlighted key, before bending moves the tip.
+      if(inputMethodRef.current==='tap'&&tapStarted){
+       const key=lastAimRef.current.key;
+       if(key&&time-lastActionRef.current>380){keyAction(key);lastActionRef.current=time;}
+       else if(!key)setHint('Aim at a highlighted letter, then bend your index.');
+      }
       const keys=keyboardKeysRef.current,stage=stageRef.current;
       if(keys&&stage){
        const sr=stage.getBoundingClientRect();
@@ -243,8 +265,12 @@ export default function GestureLab(){
        const nativeW=video.videoWidth,nativeH=video.videoHeight;
        const cover=Math.max(sr.width/nativeW,sr.height/nativeH);
        const visibleW=nativeW*cover,visibleH=nativeH*cover;
-       const targetX=sr.left+((x*visibleW)-(visibleW-sr.width)/2);
-       const targetY=sr.top+((y*visibleH)-(visibleH-sr.height)/2);
+       const gain=reachRef.current;
+       const projectedX=sr.left+(((clamp((x-.5)*gain+.5,0,1))*visibleW)-(visibleW-sr.width)/2);
+       const projectedY=sr.top+(((clamp((y-.5)*gain+.5,0,1))*visibleH)-(visibleH-sr.height)/2);
+       const locked=inputMethodRef.current==='tap'&&airTapRef.current.down&&lastAimRef.current.key;
+       const targetX=locked?lastAimRef.current.x:projectedX;
+       const targetY=locked?lastAimRef.current.y:projectedY;
        px=clamp((targetX-sr.left)/sr.width,0,1);
        py=clamp((targetY-sr.top)/sr.height,0,1);
        let key='',nearest=Infinity;
@@ -266,6 +292,7 @@ export default function GestureLab(){
         dwellRef.current={key,since:time,locked:false};
        }
        const activeKey=hoveredKeyRef.current;
+       if(!airTapRef.current.down)lastAimRef.current={x:targetX,y:targetY,key:activeKey||''};
        if(inputMethodRef.current==='dwell'&&activeKey){
         const state=dwellRef.current;
         if(state.key!==activeKey){state.key=activeKey;state.since=time;state.locked=false;}
@@ -303,6 +330,7 @@ export default function GestureLab(){
  const chooseMode=(next:Mode)=>{
   modeRef.current=next;setMode(next);
   pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};
+  airTapRef.current={down:false,candidate:false,frames:0};
   handGrabRef.current=null;cubeMotionRef.current=null;
   hoveredKeyRef.current=null;setHoveredKey(null);
   keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
