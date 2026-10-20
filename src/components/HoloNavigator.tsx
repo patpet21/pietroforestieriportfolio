@@ -7,7 +7,7 @@ type Landmark={x:number;y:number;z:number};
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][]};close:()=>void};
 type Status='off'|'loading'|'ready'|'error';
 type Mode='point'|'scroll';
-type Activation='dwell'|'pinch';
+type Activation='tap'|'dwell'|'pinch';
 type Target=HTMLElement&{href?:string};
 type Cursor={x:number;y:number;progress:number;pinch:boolean};
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
@@ -28,7 +28,7 @@ export default function HoloNavigator(){
  const [error,setError]=useState('');
  const [minimized,setMinimized]=useState(false);
  const [mode,setMode]=useState<Mode>('point');
- const [activation,setActivation]=useState<Activation>('dwell');
+ const [activation,setActivation]=useState<Activation>('tap');
  const [keyboard,setKeyboard]=useState(false);
  const [note,setNote]=useState('');
  const [cursor,setCursor]=useState<Cursor|null>(null);
@@ -46,6 +46,8 @@ export default function HoloNavigator(){
  const lastHoverRef=useRef(0);
  const smoothRef=useRef({x:.5,y:.5});
  const pinchedRef=useRef(false);
+ const tapRef=useRef({down:false,candidate:false,frames:0});
+ const aimRef=useRef({x:.5,y:.5});
  const pinchPendingRef=useRef({state:false,frames:0});
  const lastClickRef=useRef(0);
  const focusRef=useRef<HTMLInputElement|HTMLTextAreaElement|null>(null);
@@ -72,6 +74,7 @@ export default function HoloNavigator(){
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
   clearTarget();pinchedRef.current=false;pinchPendingRef.current={state:false,frames:0};
+  tapRef.current={down:false,candidate:false,frames:0};
   setCursor(null);setStatus('off');setBackend('');setError('');
  },[clearTarget]);
  const stopRef=useRef(stop);stopRef.current=stop;
@@ -157,7 +160,8 @@ export default function HoloNavigator(){
     try{
      const hand=tracker.detectForVideo(video,now).landmarks?.[0];
      if(!hand||!hand[8]){
-      clearTarget();setCursor(null);pinchedRef.current=false;pinchPendingRef.current={state:false,frames:0};return;
+      clearTarget();setCursor(null);pinchedRef.current=false;pinchPendingRef.current={state:false,frames:0};
+      tapRef.current={down:false,candidate:false,frames:0};return;
      }
      const tip=hand[8],thumb=hand[4],indexKnuckle=hand[5],pinkyKnuckle=hand[17];
      const scaled=sensitivityRef.current;
@@ -166,8 +170,22 @@ export default function HoloNavigator(){
      const xx=clamp((1-tip.x+offset.x-.5)*scaled+.5,0,1);
      const yy=clamp((tip.y+offset.y-.5)*scaled+.5,0,1);
      const previous=smoothRef.current;
-     const x=previous.x=previous.x*.34+xx*.66;
-     const y=previous.y=previous.y*.34+yy*.66;
+     let x=previous.x=previous.x*.34+xx*.66;
+     let y=previous.y=previous.y*.34+yy*.66;
+     let tapStarted=false;
+     const indexJoint=hand[6],indexBase=hand[5];
+     if(indexJoint&&indexBase){
+      const ratio=distance(tip,indexBase)/Math.max(.04,distance(indexJoint,indexBase));
+      const t=tapRef.current,old=t.down,candidate=old?ratio<2.14:ratio<1.76;
+      if(t.candidate!==candidate){t.candidate=candidate;t.frames=1;}else t.frames++;
+      const next=t.frames>=2?candidate:old;
+      tapStarted=next&&!old;t.down=next;
+     }
+     if(activationRef.current==='tap'&&tapRef.current.down&&targetRef.current){
+      x=aimRef.current.x;y=aimRef.current.y;
+     }else if(!tapRef.current.down){
+      aimRef.current={x,y};
+     }
      let pinching=false,started=false;
      if(thumb&&indexKnuckle&&pinkyKnuckle){
       const ratio=distance(tip,thumb)/Math.max(.065,distance(indexKnuckle,pinkyKnuckle));
@@ -214,7 +232,7 @@ export default function HoloNavigator(){
      const duration=keyboardRef.current&&candidate?.dataset.holoKey?850:1100;
      const elapsed=clamp((now-held.started)/duration,0,1);
      const progressed=candidate&&!held.fired?elapsed:0;
-     if(candidate&&!held.fired&&now-lastHoverRef.current>120&&((activationRef.current==='dwell'&&elapsed>=1)||(activationRef.current==='pinch'&&started))&&now-lastClickRef.current>350){
+     if(candidate&&!held.fired&&now-lastHoverRef.current>120&&((activationRef.current==='dwell'&&elapsed>=1)||(activationRef.current==='pinch'&&started)||(activationRef.current==='tap'&&tapStarted))&&now-lastClickRef.current>350){
       held.fired=true;lastClickRef.current=now;
       activateRef.current(candidate as Target);
      }
@@ -243,8 +261,8 @@ export default function HoloNavigator(){
    <div className="holo-console-modes" role="group" aria-label="Gesture navigation mode"><button aria-pressed={mode==='point'} className={mode==='point'?'active':''} onClick={()=>switchMode('point')}><MousePointer2 size={14}/> POINT / CLICK</button><button aria-pressed={mode==='scroll'} className={mode==='scroll'?'active':''} onClick={()=>switchMode('scroll')}><ArrowDown size={14}/> SCROLL</button></div>
    <button className={'holo-keyboard-toggle '+(keyboard?'active':'')} onClick={()=>switchKeyboard(!keyboard)}><Keyboard size={15}/> {keyboard?'CLOSE AIR KEYBOARD':'OPEN AIR KEYBOARD'}</button>
    <div className="holo-calibration"><label>POINTER REACH <span>{sensitivity.toFixed(1)}×</span><input aria-label="Pointer movement range" type="range" min="0.8" max="2.5" step="0.1" value={sensitivity} onChange={e=>setSensitivity(Number(e.target.value))}/></label><button className="holo-recenter" type="button" onClick={recenter}>RECENTER HAND POSITION</button><small>Hold your index in the center of the camera view, then press Recenter once.</small></div>
-   <div className="holo-console-info"><span><Hand size={14}/> ONE HAND ONLY</span><span>HOVER {activation==='dwell'?'1 SEC':'THEN PINCH'} TO CLICK</span></div>
-   <div className="holo-method" role="group" aria-label="How to click"><button className={activation==='dwell'?'active':''} onClick={()=>setActivation('dwell')} aria-pressed={activation==='dwell'}>AUTO CLICK</button><button className={activation==='pinch'?'active':''} onClick={()=>setActivation('pinch')} aria-pressed={activation==='pinch'}>PINCH</button></div>
+   <div className="holo-console-info"><span><Hand size={14}/> ONE HAND ONLY</span><span>HOVER {activation==='tap'?'BEND INDEX':activation==='dwell'?'1 SEC':'THEN PINCH'} TO CLICK</span></div>
+   <div className="holo-method" role="group" aria-label="How to click"><button className={activation==='tap'?'active':''} onClick={()=>{setActivation('tap');tapRef.current={down:false,candidate:false,frames:0};}} aria-pressed={activation==='tap'}>INDEX TAP</button><button className={activation==='dwell'?'active':''} onClick={()=>setActivation('dwell')} aria-pressed={activation==='dwell'}>AUTO CLICK</button><button className={activation==='pinch'?'active':''} onClick={()=>setActivation('pinch')} aria-pressed={activation==='pinch'}>PINCH</button></div>
    <div className="holo-state"><span>TARGET</span><strong>{targetName}</strong></div>
    <button className="holo-power" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    <p>Webcam starts on demand. Video is processed on your device. The MediaPipe model downloads from third parties, and the SDK may transmit usage metrics.</p>
@@ -256,7 +274,7 @@ export default function HoloNavigator(){
     <button data-holo-action="scroll-up" type="button" onClick={()=>scrollByStep(-650)}><ArrowUp size={18}/> PAGE UP</button>
     <button data-holo-action="scroll-down" type="button" onClick={()=>scrollByStep(650)}><ArrowDown size={18}/> PAGE DOWN</button>
    </div>
-   <div className="holo-nav-help">Point and hold for a second on any command. Or select SCROLL mode to scroll by moving your hand vertically.</div>
+   <div className="holo-nav-help">Point at a command, bend your index to click. Choose AUTO CLICK for one-second dwell, or use PAGE UP/DOWN buttons to scroll.</div>
   </nav>}
   {status==='error'&&<div className="holo-error holo-control" role="alert">{error}<button onClick={()=>setError('')} aria-label="Dismiss error"><X size={14}/></button></div>}
   {status==='ready'&&cursor&&<div className={'holo-hand-pointer '+(cursor.pinch?'pinch':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/><span>{mode==='scroll'?'SCROLL':keyboard?'TYPE':'HOLD'}</span></div>}
