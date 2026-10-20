@@ -404,14 +404,18 @@ export default function HoloNavigator(){
       clickLatchRef.current=true;
       if(target&&now-lastPressRef.current>270){
        lastPressRef.current=now;
-       const label=nameOf(target);
-       clickFeedbackRef.current={at:now,label};
+       clickFeedbackRef.current={at:now,label:'CLICK ✓ '+nameOf(target)};
        activateRef.current(target);
+      }else{
+       clickFeedbackRef.current={
+        at:now,
+        label:target?'GESTURE DETECTED · RELEASE TO CLICK AGAIN':'GESTURE DETECTED · AIM AT A BUTTON'
+       };
       }
      }
      if(!pendingPress&&!pinching&&!down)clickLatchRef.current=false;
-     if(now-clickFeedbackRef.current.at<460&&clickFeedbackRef.current.label){
-      setLabel('CLICK ✓ '+clickFeedbackRef.current.label);
+     if(now-clickFeedbackRef.current.at<650&&clickFeedbackRef.current.label){
+      setLabel(clickFeedbackRef.current.label);
      }else{
       setLabel(pendingPress?'PINCH / AIR TAP · CLICK':'INDEX · AIM AT A LINK OR BUTTON');
      }
