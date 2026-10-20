@@ -169,6 +169,14 @@ test('GestureOS settings are shared with the one global camera and floating keyb
   await page.evaluate(()=>document.getElementById('fixture-target').remove());
   assert.equal(await page.locator('.gsl-keyboard-panel,.gsl-camera-panel,.gsl-camera-btn').count(),0);
   assert.equal(await page.locator('.gsl-settings-grid').count(),1);
+  assert.equal(await page.locator('.gsl-experiments-grid').count(),1);
+  const cube=page.locator('.gsl-3d-object');
+  const originalRotation=await cube.getAttribute('style');
+  await page.getByRole('button',{name:'Rotate cube right'}).click();
+  assert.notEqual(await cube.getAttribute('style'),originalRotation);
+  await page.locator('[data-task-id="A"]').click();
+  await page.locator('[data-task-id="C"]').click();
+  assert.equal(await page.locator('.gsl-wbs-wires line').count(),2);
   assert.equal(await page.locator('.holo-natural-control video').count(),1);
   assert.equal(await page.locator('.air-desk-plane').count(),0);
   assert.equal(await page.locator('.gsl-settings-page video').count(),0);
