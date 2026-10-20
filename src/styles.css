@@ -2794,3 +2794,16 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 /* Keep the camera video mounted and decodable during initialization. */
 .holo-natural-preview{display:block;position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .holo-natural-preview.on{position:relative;display:block;width:100%;height:auto;opacity:1;pointer-events:none}
+
+
+/* V17 — Mobile single-index gesture physics and two-finger content zoom.
+   Only the existing site's main content is scaled; the global controls and camera aren't. */
+main{zoom:var(--spatial-site-zoom,1)}
+.holo-natural-status>span:first-child{font-variant-numeric:tabular-nums;color:#b9ffe2}
+.holo-natural-status>span:last-child{min-height:14px;line-height:1.4}
+.holo-gesture-pointer{transition:box-shadow .12s ease}
+@media(max-width:760px){
+ .holo-natural-control{max-height:48dvh;overflow:auto;overscroll-behavior:contain}
+ .holo-natural-preview.on{aspect-ratio:3/2;object-position:center}
+ .holo-natural-status>span:last-child{font-size:8px;letter-spacing:0}
+}
