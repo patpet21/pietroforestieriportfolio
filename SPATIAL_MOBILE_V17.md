@@ -6,7 +6,7 @@ On a vertically mounted phone, the earlier open-palm implementation used immedia
 ## New unified interaction
 
 - **One extended index — navigate and scroll**: Holding an extended index still aims a cursor at existing site links, buttons and inputs. Move the same index vertically by a deliberate distance to initiate a touch-like swipe of the content, with no Point/Scroll toggle.
-- **Air click**: Aim at a target and bend the index briefly. A target-lock, two-frame press hysteresis, cooldown and minimum hover duration prevent accidental adjacent clicks. Holding a steady target approximately 1.55 seconds activates as a fallback if the camera does not recognize the bend.
+- **Air click**: Aim at a target and bend the index briefly. A target-lock, two-frame press hysteresis, cooldown and minimum hover duration prevent accidental adjacent clicks. Holding a steady target approximately 1.25 seconds activates as a fallback if the camera does not recognize the bend.
 - **Two extended fingers (index+middle) — zoom**: Extend index and middle with the other fingers folded, hold the pose for at least four frames, then spread or close the pair to scale **only the website's main content** from 85% to 140%. The webcam panel and controls remain unscaled. Stop Camera resets website zoom.
 - **On mobile, MediaPipe tracks one hand at a time** to reduce model workload and pointer switching. A two-finger zoom uses the index and middle fingers of that same hand. Desktop can track up to two hands.
 - **No custom navigation buttons or modes**. The normal site's controls remain the targets. Webcam is opt-in and can always be stopped.
@@ -32,7 +32,7 @@ On a vertically mounted phone, the earlier open-palm implementation used immedia
 ## Mobile QA after deployment
 1. With the phone on a holder while stationary, open the site and enable gestures.
 2. Index only: hold steady near a link. The page should not drift. Move the finger up/down deliberately; the page should follow, then stop on its own when the finger stops.
-3. Navigate to a normal menu link by holding for about 1.55 seconds, or aim and curl your index. Watch for a click only on the highlighted target.
+3. Navigate to a normal menu link by holding for about 1.25 seconds, or aim and curl your index. Watch for a click only on the highlighted target.
 4. Try the V pose (index+middle) and open/close the fingers: site content should zoom within 85–140%, without page scroll. Stop Camera should restore 100%.
 5. Test portrait rotation, phone distance/lighting, temporary finger occlusion and permission denial.
 6. Verify the actual production build and webcam on device. No code-only test certifies live accuracy.
