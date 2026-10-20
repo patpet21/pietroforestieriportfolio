@@ -53,6 +53,7 @@ export default function HoloNavigator(){
  const tokenRef=useRef(0);
  const pointerRef=useRef({x:.5,y:.5,wristX:.5,wristY:.5,lastPoint:0});
  const palmRef=useRef<{x:number;y:number;last:number}|null>(null);
+ const pointerAimRef=useRef({x:.5,y:.5});
  const targetRef=useRef<HTMLElement|null>(null);
  const hoverRef=useRef({target:null as HTMLElement|null,since:0,fired:false});
  const tapRef=useRef({down:false,candidate:false,frames:0});
@@ -79,6 +80,7 @@ export default function HoloNavigator(){
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
   palmRef.current=null;tapRef.current={down:false,candidate:false,frames:0};
+  pointerAimRef.current={x:.5,y:.5};
   clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
  },[clearHover,setLabel]);
@@ -234,7 +236,7 @@ export default function HoloNavigator(){
      const x=prev.x=prev.x*.38+xTarget*.62;
      const y=prev.y=prev.y*.38+yTarget*.62;
      prev.wristX=1-pointer.wrist.x;prev.wristY=pointer.wrist.y;
-     if(pointer.pointing)prev.lastPoint=now;
+     if(pointer.pointing){prev.lastPoint=now;if(!tapRef.current.down)pointerAimRef.current={x,y};}
      const ratio=dist(tip,base)/Math.max(.04,dist(middle,base));
      const tap=tapRef.current;
      const next=tap.down?ratio<2.25:ratio<1.91;
@@ -247,8 +249,8 @@ export default function HoloNavigator(){
       setLabel(scrolling?'OPEN PALM · SCROLLING':'POINT YOUR INDEX TO SELECT');
       return;
      }
-     const px=(down&&targetRef.current?prev.x:x)*window.innerWidth;
-     const py=(down&&targetRef.current?prev.y:y)*window.innerHeight;
+     const px=(down&&targetRef.current?pointerAimRef.current.x:x)*window.innerWidth;
+     const py=(down&&targetRef.current?pointerAimRef.current.y:y)*window.innerHeight;
      const element=document.elementFromPoint(px,py) as HTMLElement|null;
      let target=element?.closest<HTMLElement>(CLICKABLE)||null;
      if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]'))target=null;
