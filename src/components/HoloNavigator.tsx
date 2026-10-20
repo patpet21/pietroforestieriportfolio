@@ -619,7 +619,8 @@ export default function HoloNavigator(){
     }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'OPEN AIR KEYBOARD'}</button>:<p className="holo-mobile-note">MOBILE MODE: one hand for scrolling and pointing. Ten-finger Air Type requires desktop.</p>}
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:status==='preview'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA · RETRY AFTER</button>
-   :<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'CONNECTING…':'ENABLE GESTURES'}</button>}
+   :status==='loading'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> CANCEL CAMERA START</button>
+   :<button type="button" className="holo-natural-start" onClick={start}><Camera size={16}/> ENABLE GESTURES</button>}
    {(status==='error'||status==='preview')&&<p className="holo-natural-error" role="alert">{error}</p>}
    {status==='error'&&<p className="holo-mobile-note">If you are opening the site inside an app, try opening it directly in Chrome or Safari and allow camera permission.</p>}
    {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".7" max="4" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
