@@ -2721,3 +2721,72 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 .holo-nav-modes button.active{color:#092a3b;background:#afeaff}
 .holo-nav-modes button.holo-focused-target{background:#c9fcff;color:#062438;outline-offset:1px!important;box-shadow:0 0 23px #a8f4ffbd!important}
 @media(max-width:620px){.holo-nav-modes{gap:4px;margin-top:7px}.holo-nav-modes button{font-size:7px;min-height:30px}.holo-method button{font-size:7px;padding:6px 2px}}
+
+
+/* V16 – unified hands-free control. No route remote, mode switch or page buttons. */
+.holo-natural-control{
+ position:fixed;left:16px;bottom:16px;z-index:1190;
+ width:min(238px,calc(100vw - 32px));padding:12px 13px 11px;
+ display:flex;flex-direction:column;gap:9px;
+ background:linear-gradient(140deg,#102f47ed,#0b172bf5);
+ backdrop-filter:blur(17px);
+ border:1px solid #9beaffba;border-radius:16px;
+ box-shadow:0 12px 48px #000a,0 0 36px #49dfff30;
+ color:#e0faff;
+}
+.holo-natural-title{display:flex;align-items:center;gap:9px;font:850 10px Manrope,sans-serif;letter-spacing:1px}
+.holo-natural-title>svg{color:#a5edff}
+.holo-natural-title i{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#aef4ba;box-shadow:0 0 13px #9effc4}
+.holo-natural-preview{display:none;width:100%;aspect-ratio:16/9;object-fit:cover;transform:scaleX(-1);border-radius:9px;border:1px solid #acddf785;background:#061d30}
+.holo-natural-preview.on{display:block}
+.holo-natural-status{display:flex;flex-direction:column;gap:5px;font:800 9px Manrope,sans-serif;letter-spacing:.3px;color:#d2f5ff}
+.holo-natural-status>span:first-child{color:#aeffcd}
+.holo-natural-start,.holo-natural-stop{
+ width:100%;min-height:40px;border-radius:9px;padding:9px 12px;
+ display:flex;align-items:center;justify-content:center;gap:10px;
+ font:850 10px Manrope,sans-serif;letter-spacing:.5px;
+ border:1px solid #aff3ffb0;
+ background:linear-gradient(130deg,#23617e,#12354e);color:#f0fbff
+}
+.holo-natural-stop{background:#371e33;border-color:#f8a7bf8e}
+.holo-natural-start:disabled{opacity:.72;cursor:wait}
+.holo-natural-privacy{margin:0;color:#9abbce;font:500 8px/1.55 Manrope,sans-serif}
+.holo-natural-error{margin:0;font:700 10px/1.4 Manrope,sans-serif;color:#ffc5d1}
+.holo-gesture-pointer{
+ pointer-events:none!important;position:fixed;z-index:1299;
+ transform:translate(-50%,-50%);
+ width:49px;height:49px;border-radius:50%;
+ display:grid;place-items:center;
+ border:1px solid #e7ffff;
+ background:conic-gradient(#b8ffe1 var(--holo-progress),#60d0f978 var(--holo-progress));
+ box-shadow:0 0 0 5px #4edaff24,0 0 31px #64deffba;
+ will-change:top,left;
+}
+.holo-gesture-pointer:before{content:"";position:absolute;inset:8px;border:1px solid #c7efff99;background:#143247c7;border-radius:50%}
+.holo-gesture-pointer>i{position:relative;z-index:1;width:8px;height:8px;background:#fff;border-radius:50%;box-shadow:0 0 11px #fff}
+.holo-gesture-pointer.pressed{background:#a7ffcbdc;border-color:#fff;box-shadow:0 0 0 7px #7effb329,0 0 32px #97ffce}
+.holo-gesture-pointer>small{
+ position:absolute;top:59px;left:50%;transform:translateX(-50%);
+ white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;
+ border-radius:7px;padding:5px 8px;
+ background:#06233ceb;color:#e3ffff;
+ border:1px solid #9beaffad;font:850 9px Manrope,sans-serif;letter-spacing:.4px
+}
+/* Keyboard opens automatically when pointing at a text field. */
+.holo-air-console{z-index:1230}
+.holo-air-console [data-holo-key].holo-focused-target{
+ color:#072735!important;background:linear-gradient(145deg,#d8ffff,#81e4ff)!important;
+ box-shadow:0 0 30px #abf5ffb1!important
+}
+@media(max-width:760px){
+ .holo-natural-control{left:7px;bottom:7px;width:min(190px,calc(100vw - 14px));padding:8px 9px;gap:6px}
+ .holo-natural-title{font-size:8px}
+ .holo-natural-preview{aspect-ratio:2/1}
+ .holo-natural-status{font-size:8px}
+ .holo-natural-privacy{font-size:7px}
+ .holo-natural-start,.holo-natural-stop{min-height:34px;font-size:8px}
+ .holo-gesture-pointer{width:37px;height:37px}
+ .holo-gesture-pointer:before{inset:6px}
+ .holo-gesture-pointer>small{top:43px;font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){.holo-gesture-pointer{transition:none}}
