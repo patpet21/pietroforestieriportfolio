@@ -49,3 +49,23 @@
 @media(min-width:1100px){.gsl-settings-page>.wrap{padding-left:max(245px,calc((100vw - 1320px)/2 + 245px))}}
 @media(max-width:820px){.gsl-single-system,.gsl-settings-grid{grid-template-columns:1fr}.gsl-settings-help{grid-template-columns:1fr}.gsl-settings-intro h1{font-size:clamp(40px,9vw,66px)}.gsl-setting-card{padding:19px}.gsl-setting-card>p{min-height:0}.gsl-settings-bottom,.gsl-settings-footer{flex-wrap:wrap}}
 @media(max-width:450px){.gsl-setting-choices{gap:5px}.gsl-setting-choice{padding:12px 3px}.gsl-setting-choice strong{font-size:9px}.gsl-setting-choice small{font-size:8px}}
+
+/* The original cube and WBS demonstrations remain, driven by ordinary targets
+   so global GestureOS can activate them without another webcam session. */
+.gsl-experiments{margin:36px 0 25px}
+.gsl-experiments-intro{display:flex;align-items:end;justify-content:space-between;gap:22px;margin:0 0 17px}
+.gsl-experiments-intro small{font:850 9px Manrope,sans-serif;letter-spacing:1.2px;color:#a4ffe3}
+.gsl-experiments-intro h2{font:850 clamp(24px,3vw,36px) Manrope,sans-serif;letter-spacing:-.045em;color:#f7fbff;margin:7px 0 0}
+.gsl-experiments-intro p{max-width:380px;font:500 11px/1.6 Manrope,sans-serif;color:#a9bed0;margin:0}
+.gsl-experiments-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.gsl-experiments-grid .gsl-interactive{padding:16px;min-width:0}
+.gsl-experiments-grid .gsl-stage{min-height:415px}
+.gsl-experiments-grid .gsl-cube-panel{min-height:415px}
+.gsl-experiments-grid .gsl-cube-scene{height:290px}
+.gsl-experiments-grid .gsl-cube-orbit{max-width:85%}
+.gsl-experiments-grid .gsl-stage-top span{display:flex;align-items:center;gap:8px}
+.gsl-experiments-grid .gsl-wbs-node{cursor:pointer}
+.gsl-experiment-status{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:45px;margin-top:10px;color:#a5cbd3;font:750 10px/1.4 Manrope,sans-serif}
+.gsl-experiment-status button{display:flex;align-items:center;gap:7px;border:1px solid #80bbbf5a;border-radius:8px;background:#20424d;color:#e6fefe;padding:10px;font:850 10px Manrope,sans-serif;white-space:nowrap;cursor:pointer}
+@media(max-width:1080px){.gsl-experiments-grid{grid-template-columns:1fr}}
+@media(max-width:750px){.gsl-experiments-intro{display:block}.gsl-experiments-intro p{max-width:none;margin-top:12px}.gsl-experiments-grid .gsl-stage{min-height:380px}}
