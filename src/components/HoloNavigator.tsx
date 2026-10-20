@@ -316,7 +316,7 @@ export default function HoloNavigator(){
         const desired=Math.abs(raw)>1.6?clamp(raw,-120,120):0;
         scroll.velocity=scroll.velocity*.28+desired*.72;
         const amount=scroll.velocity*(elapsed/50);
-        if(Math.abs(amount)>1.3)window.scrollBy(0,amount);
+        if(Math.abs(amount)>1.3)window.scrollBy({top:amount,left:0,behavior:'instant'});
        }
       }
       if(targetRef.current)clearHover();setCursor(null);
