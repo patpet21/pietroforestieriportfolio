@@ -186,7 +186,7 @@ export default function HoloNavigator(){
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
    swipeRef.current.armed=false;swipeRef.current.active=false;missedRef.current=0;
-   setLabel('OPEN PALM = SCROLL · INDEX = POINT');
+   setLabel('INDEX: SWIPE OR PRESS · TWO FINGERS: ZOOM');
    let lastFrame=0,lastVideo=-1,lastCount=-1;
    const tick=(now:number)=>{
     if(session!==tokenRef.current)return;
@@ -377,6 +377,7 @@ export default function HoloNavigator(){
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
+   <p className="holo-natural-legend">1 INDEX: SWIPE TO SCROLL · BEND TO CLICK · 2 FINGERS: ZOOM</p>
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
   {status==='ready'&&cursor&&<div className={'holo-gesture-pointer '+(cursor.press?'pressed':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/>{targetName&&<small>{targetName}</small>}</div>}
@@ -384,7 +385,7 @@ export default function HoloNavigator(){
    <div className="holo-air-head"><div><Keyboard size={18}/><strong>AIR KEYBOARD</strong></div><button type="button" onClick={()=>{keyboardRef.current=false;setKeyboard(false);clearHover();}}><X size={16}/> CLOSE</button></div>
    <div className="holo-air-input"><span>{focusRef.current&&document.contains(focusRef.current)?'TEXT FIELD · '+(focusRef.current.getAttribute('placeholder')||focusRef.current.getAttribute('name')||'MESSAGE'):'DEMO TEXT'}</span><output>{focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-60):scratch.slice(-60)}</output></div>
    <div className="holo-air-keys">{ROWS.map((row,i)=><div className="holo-air-row" key={i}>{row.split('').map(letter=><button type="button" key={letter} data-holo-key={letter} className={hoverKey===letter?'selected':''} onClick={()=>insertText(letter)}>{letter}</button>)}</div>)}<div className="holo-air-row holo-air-utils"><button data-holo-key="BACK" className={hoverKey==='BACK'?'selected':''} onClick={()=>insertText('BACK')}>BACKSPACE</button><button data-holo-key="SPACE" className={hoverKey==='SPACE'?'selected':''} onClick={()=>insertText('SPACE')}>SPACE</button><button data-holo-key="CLEAR" className={hoverKey==='CLEAR'?'selected':''} onClick={()=>insertText('CLEAR')}>CLEAR</button></div></div>
-   <p className="holo-air-foot">POINT AT A KEY · BEND INDEX OR HOLD · OPEN PALM SCROLLS THE SITE WHEN NOT TYPING</p>
+   <p className="holo-air-foot">POINT AT A KEY · BEND INDEX OR HOLD · ONE INDEX SWIPES THE SITE WHEN NOT TYPING</p>
   </section>}
  </>;
 }
