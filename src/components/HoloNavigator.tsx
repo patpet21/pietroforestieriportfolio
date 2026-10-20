@@ -283,8 +283,15 @@ export default function HoloNavigator(){
    video.muted=true;video.playsInline=true;video.setAttribute('playsinline','');
    video.srcObject=stream;
    setLabel('FRONT CAMERA CONNECTED · STARTING VIDEO');
-   try{await video.play();setCameraPlaying(true);}
-   catch{setCameraNeedsTap(true);setLabel('TAP PLAY VIDEO TO CONTINUE');}
+   try{
+    await video.play();
+    if(session!==tokenRef.current)return;
+    setCameraPlaying(true);
+   }catch{
+    if(session===tokenRef.current){
+     setCameraNeedsTap(true);setLabel('TAP PLAY VIDEO TO CONTINUE');
+    }
+   }
    const {FilesetResolver,HandLandmarker}=await import('@mediapipe/tasks-vision');
    if(session!==tokenRef.current)return;
    const fileset=await FilesetResolver.forVisionTasks(WASM);
@@ -602,7 +609,7 @@ export default function HoloNavigator(){
       <strong>{status==='off'?'CAMERA OFF':status==='error'?'CAMERA UNAVAILABLE':status==='loading'?'CONNECTING FRONT CAMERA':'WAITING FOR VIDEO'}</strong>
       <small>{status==='loading'?'Allow camera access when asked.':status==='error'?'Check browser camera permission.':'Tap ENABLE GESTURES to start.'}</small>
     </div>}
-    {cameraNeedsTap&&<button type="button" className="holo-camera-resume" onClick={resumeCamera}>▶ PLAY CAMERA VIDEO</button>}
+    {(cameraNeedsTap||(!cameraPlaying&&(status==='ready'||status==='preview')))&&<button type="button" className="holo-camera-resume" onClick={resumeCamera}>▶ PLAY CAMERA VIDEO</button>}
     {cameraPlaying&&<span className="holo-vision-chip">{status==='ready'?'21 LANDMARKS · LIVE':'FRONT CAMERA · LIVE'}</span>}
    </div>
    {status==='loading'&&<p className="holo-camera-progress" role="status">Connecting camera and loading hand tracking…</p>}
