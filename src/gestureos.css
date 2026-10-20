@@ -179,3 +179,65 @@
  .holo-natural-title{font-size:9px}
  .holo-camera-placeholder strong{font-size:10px}
 }
+
+/* GestureOS V21: camera remains active but never obstructs the mobile website. */
+@media(max-width:760px){
+ .holo-natural-control.holo-mobile-compact{
+  left:max(7px,env(safe-area-inset-left))!important;
+  bottom:max(7px,env(safe-area-inset-bottom))!important;
+  width:min(244px,calc(100vw - 16px))!important;
+  height:48px!important;min-height:0!important;max-height:48px!important;
+  padding:7px 9px!important;margin:0!important;
+  overflow:hidden!important;gap:0!important;
+  background:linear-gradient(135deg,#08212ff7,#11263af7)!important;
+  border-color:#8cf7d298!important;box-shadow:0 5px 18px #0008!important;
+ }
+ .holo-mobile-compact>.holo-natural-title{
+  margin:0!important;padding:0!important;min-height:32px!important;
+  position:relative!important;top:auto!important;z-index:3!important;
+  background:transparent!important;gap:7px!important;
+  display:flex!important;align-items:center!important;
+ }
+ .holo-mobile-compact>.holo-natural-title strong{
+  font-size:9px!important;white-space:nowrap!important;
+  letter-spacing:.25px!important;
+ }
+ .holo-mobile-compact>.holo-natural-title i{width:6px!important;height:6px!important}
+ .holo-mobile-compact>.holo-vision-preview{
+  /* Keep the actual <video> mounted/decoding for MediaPipe, but hide it.
+     display:none would risk suspending mobile video decoding. */
+  position:absolute!important;top:-5000px!important;left:0!important;
+  width:1px!important;height:1px!important;min-width:1px!important;
+  min-height:1px!important;max-width:1px!important;max-height:1px!important;
+  opacity:0!important;visibility:hidden!important;overflow:hidden!important;
+  pointer-events:none!important;aspect-ratio:auto!important;z-index:-1!important;
+ }
+ .holo-mobile-compact>.holo-natural-status,
+ .holo-mobile-compact>.holo-gesture-test,
+ .holo-mobile-compact>.holo-mobile-note,
+ .holo-mobile-compact>.holo-natural-stop,
+ .holo-mobile-compact>.holo-scroll-config,
+ .holo-mobile-compact>.holo-natural-legend,
+ .holo-mobile-compact>.holo-natural-privacy,
+ .holo-mobile-compact>.holo-natural-error,
+ .holo-mobile-compact>.holo-camera-progress{
+  display:none!important;
+ }
+ .holo-mobile-compact .holo-preview-toggle{
+  flex:0 0 auto!important;padding:6px 7px!important;font-size:9px!important;
+ }
+ .holo-mobile-compact .holo-mobile-stop-title{
+  display:flex!important;width:27px!important;height:27px!important;
+ }
+ .holo-natural-control.holo-mobile-idle{
+  width:min(225px,calc(100vw - 16px))!important;
+  max-height:120px!important;gap:6px!important;padding:9px 10px!important;
+ }
+ .holo-mobile-idle>.holo-vision-preview,
+ .holo-mobile-idle>.holo-natural-legend,
+ .holo-mobile-idle>.holo-natural-privacy{display:none!important}
+ .holo-mobile-idle .holo-natural-title{
+  position:relative!important;top:auto!important;background:transparent!important;
+  margin:0!important;padding:0!important;
+ }
+}
