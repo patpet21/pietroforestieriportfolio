@@ -32,10 +32,10 @@ async function keyboard(){
  assert.equal(await page.evaluate(()=>window.__modelOptions.numHands),2);return page;
 }
 const pair=(l=false,r=false)=>[{side:'L',key:'F',tap:l},{side:'R',key:'J',tap:r}];
-async function hands(page,poses,{reverse=false,frames=3}={}){
+async function hands(page,poses,{reverse=false,frames=6}={}){
  await page.evaluate(async({poses,reverse})=>{
   const plane=document.querySelector('.air-desk-plane').getBoundingClientRect();
-  const reach=Number(document.querySelector('[aria-label="Typing hand movement range"]').value);
+  const reach=Number(document.querySelector('.air-desk-plane').dataset.keyboardReach);
   const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
   const tracked=poses.map(({side,key,finger=8,tap=false})=>{
    const target=document.querySelector('[data-holo-key="'+key+'"]').getBoundingClientRect();
@@ -86,8 +86,15 @@ test('simultaneous contacts insert both characters once, including a selected na
   await hands(page,pair());await hands(page,pair(true,true),{reverse:true});assert.equal(await output(page),'FJ');
   await hands(page,pair(true,true));assert.equal(await output(page),'FJ');
   await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
-  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});await field.fill('');
-  await field.evaluate(el=>{window.__nativeInputs=[];el.addEventListener('input',()=>window.__nativeInputs.push(el.value));});
+  await page.evaluate(()=>{
+   const el=document.createElement('textarea');
+   el.setAttribute('aria-label','Test native gesture field');
+   el.id='native-gesture-field';
+   Object.assign(el.style,{position:'fixed',top:'80px',left:'40%',width:'250px',height:'60px',zIndex:'9999'});
+   document.body.append(el);window.__nativeInputs=[];
+   el.addEventListener('input',()=>window.__nativeInputs.push(el.value));el.focus();
+  });
+  const field=page.getByRole('textbox',{name:'Test native gesture field',exact:true});
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
   await hands(page,pair());await hands(page,pair(true,true),{reverse:true});
   assert.equal(await field.inputValue(),'FJ');assert.deepEqual(await page.evaluate(()=>window.__nativeInputs),['F','FJ']);
