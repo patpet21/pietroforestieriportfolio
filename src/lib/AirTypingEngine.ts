@@ -33,7 +33,8 @@ export class AirTypingEngine{
  private states=new Map<string,FingerState>();
  private pinches=new Map<string,PinchState>();
  private lastGlobalPress=0;
- reset(){this.states.clear();this.pinches.clear();this.lastGlobalPress=0;}
+ private singleHandSide:'L'|'R'|null=null;
+ reset(){this.states.clear();this.pinches.clear();this.lastGlobalPress=0;this.singleHandSide=null;}
  process(hands:AirHand[],keyAt:KeyLocator,now:number,options:AirTypingSettings):AirFrame{
   const reach=clamp(options.reach,.75,2.3);
   const shown:AirFinger[]=[],presses:AirKeyPress[]=[];
@@ -41,9 +42,13 @@ export class AirTypingEngine{
   const sorted=hands.filter(h=>h.landmarks.length>=21).slice(0,2)
    .sort((a,b)=>(1-a.landmarks[0].x)-(1-b.landmarks[0].x));
   const alive=new Set<string>();
+  if(sorted.length===1&&!this.singleHandSide){
+   this.singleHandSide=1-sorted[0].landmarks[0].x<.5?'L':'R';
+  }
+  if(sorted.length===2)this.singleHandSide=null;
   sorted.forEach((hand,handIndex)=>{
    const handName:'L'|'R'=sorted.length===2?(handIndex===0?'L':'R'):
-    (1-hand.landmarks[0].x<.5?'L':'R');
+    (this.singleHandSide||'L');
    const index=hand.landmarks[8],thumb=hand.landmarks[4];
    const palmWidth=Math.max(.06,d(hand.landmarks[5],hand.landmarks[17]));
    const pinchRatio=d(index,thumb)/palmWidth;
