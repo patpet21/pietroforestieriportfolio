@@ -57,6 +57,9 @@ export default function HoloNavigator(){
  const zoomGestureRef=useRef({frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0});
  const zoomValueRef=useRef(1);
  const missedRef=useRef(0);
+ const poseRef=useRef({kind:'idle',since:0});
+ const scrollVelocityRef=useRef(0);
+ const lastScrollAtRef=useRef(0);
  const pointerAimRef=useRef({x:.5,y:.5});
  const targetRef=useRef<HTMLElement|null>(null);
  const hoverRef=useRef({target:null as HTMLElement|null,since:0,fired:false});
@@ -88,6 +91,7 @@ export default function HoloNavigator(){
   zoomValueRef.current=1;setZoomLevel(1);
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
+  poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
   pointerAimRef.current={x:.5,y:.5};
   clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
@@ -210,8 +214,11 @@ export default function HoloNavigator(){
      // Two-finger V gesture: spread index + middle to zoom the site's content.
      // A short pose debounce avoids resizing when passing through an intermediate hand shape.
      const spread=samples.find(item=>item.spread);
+     const rawPose=spread?'zoom':samples.some(item=>item.pointing)?'point':samples.some(item=>item.open)?'pause':'idle';
+     if(poseRef.current.kind!==rawPose)poseRef.current={kind:rawPose,since:now};
+     const poseStable=now-poseRef.current.since>=160;
      const zg=zoomGestureRef.current;
-     if(spread&&!keyboardRef.current){
+     if(spread&&!keyboardRef.current&&poseStable){
       const fingerGap=dist(spread.landmarks[8],spread.landmarks[12]);
       const width=Math.max(.04,dist(spread.landmarks[5],spread.landmarks[17]));
       const gap=clamp(fingerGap/width,.15,2.8);
@@ -239,6 +246,11 @@ export default function HoloNavigator(){
       zg.active=false;zg.frames=0;zg.missed=0;
      }
      const candidates=samples.filter(item=>!item.open&&!item.spread);
+     if(rawPose==='pause'&&poseStable){
+      swipeRef.current.armed=false;swipeRef.current.active=false;scrollVelocityRef.current=0;
+      tapRef.current={down:false,candidate:false,frames:0};
+      if(targetRef.current)clearHover();setCursor(null);setLabel('PALM OPEN · PAUSED');return;
+     }
      const pointer=candidates.sort((a,b)=>{
       const previous=pointerRef.current;
       const d1=Math.hypot(1-a.wrist.x-previous.wristX,a.wrist.y-previous.wristY);
@@ -264,8 +276,10 @@ export default function HoloNavigator(){
      const rawX=clamp((1-tip.x-.5)*1.48+.5,0,1);
      const rawY=clamp((tip.y-.5)*1.48+.5,0,1);
      // Temporal smoothing makes a slight hand tremor move the cursor only slightly.
-     const x=p.x=p.x*.46+rawX*.54;
-     const y=p.y=p.y*.46+rawY*.54;
+     const motion=Math.hypot(rawX-p.x,rawY-p.y);
+     const smoothing=motion<.015?.17:motion<.055?.34:.57;
+     const x=p.x=p.x*(1-smoothing)+rawX*smoothing;
+     const y=p.y=p.y*(1-smoothing)+rawY*smoothing;
      p.wristX=1-pointer.wrist.x;p.wristY=pointer.wrist.y;
      const curledRatio=dist(tip,base)/Math.max(.045,dist(joint,base));
      const tap=tapRef.current;
@@ -279,7 +293,7 @@ export default function HoloNavigator(){
      }
      const eligible=pointer.pointing||(down&&now-p.lastPoint<600);
      const swipe=swipeRef.current;
-     if(eligible&&!keyboardRef.current&&!down){
+     if(eligible&&!keyboardRef.current&&!down&&poseStable){
       if(!swipe.armed){
        swipe.armed=true;swipe.active=false;swipe.anchorX=x;swipe.anchorY=y;
        swipe.lastY=y;swipe.startFrames=0;swipe.stillFrames=0;swipe.reverse=0;
@@ -290,6 +304,7 @@ export default function HoloNavigator(){
         swipe.startFrames++;
         if(swipe.startFrames>=2){
          swipe.active=true;swipe.lastY=y;swipe.direction=Math.sign(dy);
+          scrollVelocityRef.current=0;lastScrollAtRef.current=now;
          swipe.reverse=0;swipe.stillFrames=0;
          if(targetRef.current)clearHover();
         }
@@ -309,20 +324,22 @@ export default function HoloNavigator(){
          if(swipe.reverse>.036){swipe.direction=sign;swipe.reverse=0;}
         }else{
          swipe.reverse=0;
-         const pixels=clamp(-dy*window.innerHeight*.92,-43,43);
-         // At 20fps a small step threshold prevents jitter scrolling.
-         if(Math.abs(pixels)>4)window.scrollBy(0,pixels);
+         const pixels=clamp(-dy*window.innerHeight*.72,-32,32);
+          const target=Math.abs(pixels)>5?pixels:0;
+          scrollVelocityRef.current=scrollVelocityRef.current*.65+target*.35;
+          const elapsed=clamp(now-lastScrollAtRef.current,20,110);lastScrollAtRef.current=now;
+          if(Math.abs(scrollVelocityRef.current)>3.5)window.scrollBy(0,scrollVelocityRef.current*elapsed/50);
         }
        }
        if(swipe.stillFrames>=5){
-        swipe.active=false;swipe.armed=false;swipe.stillFrames=0;
+        swipe.active=false;swipe.armed=false;swipe.stillFrames=0;scrollVelocityRef.current=0;
        }else{
         setCursor({x,y,progress:0,press:false});
         setLabel('INDEX SWIPE · SCROLLING');return;
        }
       }
      }else if(!eligible||down){
-      swipe.armed=false;swipe.active=false;swipe.startFrames=0;
+      swipe.armed=false;swipe.active=false;swipe.startFrames=0;scrollVelocityRef.current=0;
      }
      if(!eligible){
       if(targetRef.current)clearHover();
@@ -347,9 +364,9 @@ export default function HoloNavigator(){
       setTargetName(target?nameOf(target):'');
      }
      const hover=hoverRef.current;
-     const holdMs=keyboardRef.current&&target?.dataset.holoKey?950:1250;
+     const holdMs=keyboardRef.current&&target?.dataset.holoKey?950:1450;
      const progress=target&&!hover.fired?clamp((now-hover.since)/holdMs,0,1):0;
-     const stableTarget=target&&now-hover.since>150;
+     const stableTarget=target&&now-hover.since>220&&poseStable&&!swipe.active;
      if(stableTarget&&!hover.fired&&now-lastPressRef.current>460&&
        ((tapStarted&&now-p.lastPoint<600)||(pointer.pointing&&progress>=1))){
       hover.fired=true;lastPressRef.current=now;
