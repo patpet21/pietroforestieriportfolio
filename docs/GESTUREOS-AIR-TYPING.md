@@ -13,18 +13,18 @@ These references informed our *approach*, not a direct code copy:
 
 The code in `AirTypingEngine.ts` and `AirKeyboard.tsx` is written for this React/TypeScript project; Python/PyAutoGUI projects cannot be pasted into a web app.
 
-## V3 calibration (required)
-The previous direct mapping of webcam X/Y to the keyboard was inherently unsynchronized: the hand camera frame is not the screen/key plane. This version does **not** type until you align your hands.
+## V4: hands-free alignment, experimental keyboard
+The uncalibrated webcam coordinates cannot be mapped directly onto an on-screen keyboard with physical-keyboard precision. This section is explicitly a **research prototype** and should not be described as reliable ten-finger typing.
 
-1. Start Spatial Control, open AIR KEYBOARD and show **both hands fully in frame**. Their palms and fingertips should not overlap. The webcam status must say **2 HANDS**; a visible hand without a skeleton is not being tracked.
-2. Arrange fingers as if hovering over a physical QWERTY keyboard (left A S D F, right J K L ;, thumbs near SPACE), fingers relaxed and extended.
-3. Press **ALIGN HANDS** using the mouse. The next MediaPipe frame records each fingertip relative to its own wrist and aligns it to its home key.
-4. Move individual fingertips up, down or sideways *relative to your hand* to reach nearby keys. The calibrated reference moves with the wrist, reducing drift from moving your hand slightly.
-5. The engine only types if the fingertip settles on one key for 180 ms, then bends, and reopens. Each finger has independent hysteresis. Easy/Balanced/Precise tunes how much bend triggers a press.
-6. Use **PINCH FALLBACK** after calibration if finger tap is not reliably detected. Air Keyboard and normal site navigation run in separate interaction modes.
-7. Recalibrate if your posture/camera framing changes or a hand is lost for a prolonged time.
+- Open **OPEN AIR KEYBOARD** on desktop. Automatic calibration is already armed: there is **no need to click another button** while posing with both hands.
+- Show **both hands separated, with relaxed fingers**, in view of the camera. When two hands are reliably detected and their wrists/index fingertips remain steady for approximately 2.4 seconds, the engine captures a home-row reference automatically (ASDF / JKL; and SPACE).
+- If the camera only detects one hand, the interface tells you explicitly; automatic two-hand alignment waits for both. A hand shown in the video without a landmark skeleton is not being recognized by the model.
+- The button **RESTART AUTO-ALIGN** clears calibration and re-arms the hands-free process; you may press it *before* positioning your hands.
+- Input defaults to **PINCH FALLBACK**, a deliberate thumb/index confirmation that is less likely to emit random letters. **FINGER TAP** remains an experimental mode, not the default.
+- This approach cannot sense actual touch or accurately infer finger-to-key contact from a single RGB webcam. Do not claim physical-keyboard parity.
 
-If only one hand is detected, the keyboard indicates that. A single camera still cannot guarantee reliable natural 10-finger typing, especially when fingers overlap.
+## V4 mobile behavior
+On a phone, enable gestures once and the panel collapses to a small **GESTURES ON** pill when tracking is ready. The camera preview is an **optional debug view** behind the **CAMERA** button. When camera playback or permissions fail, the expanded panel shows recovery actions. Mobile intentionally uses single-hand palm scrolling and pointing. The ten-finger typing experiment is desktop-only. The camera stream continues while the visual preview is hidden; touching **STOP** releases it.
 
 ### Normal site click (different from Air Typing)
 Extend your index finger and aim at a button (the TARGET label must show its name), **touch the tip of your thumb to the tip of the index finger once**, then separate them. The status panel shows PINCH OPEN / CLOSING / CLOSED. Bending the index alone no longer clicks, and the old hold-to-click countdown is removed. Palm-open vertical motion retains the existing scroll feature.
@@ -32,9 +32,9 @@ Extend your index finger and aim at a button (the TARGET label must show its nam
 ## Actual interaction
 
 - Activate Spatial Control, then choose **OPEN AIR KEYBOARD**. Normal navigation and palm scrolling are suspended while the keyboard is open.
-- **FINGER TAP** (default): after ALIGN HANDS, 10 independent calibrated home-row pointers can be tracked. Green dots indicate the left hand, purple dots the right. Settle a fingertip on a key, bend it toward the palm to activate, straighten before another press.
-- **PINCH FALLBACK**: hover the index fingertip over a key and pinch index + thumb. Use this if finger-curl recognition is unreliable.
-- **RANGE**, **sensitivity** and **ALIGN HANDS** support recalibration for changing camera framing, hand size, posture and lighting.
+- **FINGER TAP** (experimental option): after automatic hands-free alignment, 10 independent calibrated home-row pointers can be tracked. Green dots indicate the left hand, purple dots the right. Settle a fingertip on a key, bend it toward the palm to activate, straighten before another press.
+- **PINCH FALLBACK** (default): hover the index fingertip over a key and pinch index + thumb. Use this if finger-curl recognition is unreliable.
+- **RANGE**, **sensitivity** and **RESTART AUTO-ALIGN** support recalibration for changing camera framing, hand size, posture and lighting.
 - The virtual keys can also be clicked with a physical mouse or touch device.
 - If an editable text field was previously focused, typing inserts into that field; otherwise it uses a demo buffer.
 - **CLOSE** returns to the normal Spatial Control gestures.
@@ -47,7 +47,7 @@ The per-finger press detector uses landmark geometry, stable hover, down/up hyst
 
 ## Verification checklist (webcam)
 
-1. Open keyboard and verify one/two-hand counter and up to five/ten dots.
+1. Open keyboard, hold both hands visible, and verify hands-free auto alignment completes without clicking anything.
 2. Confirm left/right finger dots follow hand motion and each dot is projected into the keyboard area.
 3. Keep a fingertip steady over a key; check that key highlights.
 4. Bend and release the fingertip; exactly one character should be typed. Try two different fingers.
