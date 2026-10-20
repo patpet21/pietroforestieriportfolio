@@ -263,7 +263,7 @@ export default function HoloNavigator(){
       const h=item.landmarks;
       const gap=dist(h[4],h[8])/Math.max(.065,dist(h[5],h[17]));
       const bend=dist(h[8],h[5])/Math.max(.045,dist(h[6],h[5]));
-      return gap<(pinchRef.current.down ? .78 : .61)||(recentAim&&bend<(tapRef.current.down ? 2.36 : 2.08));
+      return gap<(pinchRef.current.down ? .78 : .61)||(recentAim&&bend<(tapRef.current.down ? 2.18 : 1.85));
      });
      const spread=pressHand?null:samples.find(item=>item.spread);
      const rawPose=pressHand?'press':spread?'zoom':samples.some(item=>item.open)?'scroll':samples.some(item=>item.pointing)?'point':'idle';
@@ -363,7 +363,7 @@ export default function HoloNavigator(){
      p.wristX=1-pointer.wrist.x;p.wristY=pointer.wrist.y;
      const curledRatio=dist(tip,base)/Math.max(.045,dist(joint,base));
      const tap=tapRef.current;
-     const tapCandidate=tap.down?curledRatio<2.36:curledRatio<2.08;
+     const tapCandidate=tap.down?curledRatio<2.18:curledRatio<1.85;
      if(tap.candidate!==tapCandidate){tap.candidate=tapCandidate;tap.frames=1;}else tap.frames++;
      const down=tap.frames>=2?tapCandidate:tap.down;
      const tapStarted=down&&!tap.down;tap.down=down;
@@ -412,15 +412,17 @@ export default function HoloNavigator(){
      // Both gestures share one latch, preventing double-click when a pinch also bends the index.
      const clickedNow=(tapStarted||pinchStarted)&&!clickLatchRef.current;
      if(clickedNow){
-      clickLatchRef.current=true;
       if(target&&now-lastPressRef.current>270){
+       // Arm the latch ONLY when a real control was activated.
+       // A premature air-tap without a target must not block a subsequent pinch.
+       clickLatchRef.current=true;
        lastPressRef.current=now;
        clickFeedbackRef.current={at:now,label:'CLICK ✓ '+nameOf(target)};
        activateRef.current(target);
       }else{
        clickFeedbackRef.current={
         at:now,
-        label:target?'GESTURE DETECTED · RELEASE TO CLICK AGAIN':'GESTURE DETECTED · AIM AT A BUTTON'
+        label:target?'GESTURE DETECTED · RELEASE TO TRY AGAIN':'GESTURE DETECTED · AIM AT A BUTTON'
        };
       }
      }
