@@ -290,12 +290,12 @@ export default function HoloNavigator(){
      // The same hand drives pointer, press, zoom and scroll.
      const lastControl=controlHandRef.current;
      const byDistance=samples.slice().sort((a,b)=>{
-      const da=lastControl?dist(a.wrist,lastControl):Math.hypot(a.wrist.x-.5,a.wrist.y-.5);
-      const db=lastControl?dist(b.wrist,lastControl):Math.hypot(b.wrist.x-.5,b.wrist.y-.5);
+      const da=lastControl?Math.hypot(a.wrist.x-lastControl.x,a.wrist.y-lastControl.y):Math.hypot(a.wrist.x-.5,a.wrist.y-.5);
+      const db=lastControl?Math.hypot(b.wrist.x-lastControl.x,b.wrist.y-lastControl.y):Math.hypot(b.wrist.x-.5,b.wrist.y-.5);
       return da-db;
      });
      const control=lastControl?byDistance[0]:(samples.find(hand=>hand.pointing)||byDistance[0]);
-     if(lastControl&&now-lastControl.at<700&&dist(control.wrist,lastControl)>.28){
+     if(lastControl&&now-lastControl.at<700&&Math.hypot(control.wrist.x-lastControl.x,control.wrist.y-lastControl.y)>.28){
       setLabel('CONTROL HAND LOST · KEEP ONE HAND IN VIEW');
       setCursor(null);return;
      }
