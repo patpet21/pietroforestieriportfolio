@@ -1,6 +1,6 @@
 import{useLayoutEffect}from 'react';
 import type{RefObject}from 'react';
-import{Keyboard,ScanFace,RefreshCw,Hand,MousePointer2,X,RotateCcw}from 'lucide-react';
+import{Keyboard,ScanFace,RefreshCw,X}from 'lucide-react';
 import type{AirFinger,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 const rows=['QWERTYUIOP','ASDFGHJKL;','ZXCVBNM'];
 type Props={
@@ -42,22 +42,11 @@ export default function AirKeyboard({
    {mode==='tap'&&<span> No simultaneous clicking and hand positioning. This is only an approximate camera-based alignment, not a touch keyboard.</span>}
   </p>
   <div className="air-desk-output"><small>LIVE TYPING · SELECTED FIELD / DEMO BUFFER</small><output aria-live="off">{text||(mode==='push'?'Use small forward taps with any finger.':'Align both hands, then use experimental finger bends.')}</output></div>
-  <div className="air-desk-settings">
-   <div className="air-choice" role="group" aria-label="Air keyboard actuation mode">
-    <button type="button" className={mode==='push'?'active':''} onClick={()=>onMode('push')}><MousePointer2 size={13}/> TEN-FINGER TOUCH</button>
-    <button type="button" className={mode==='tap'?'active':''} onClick={()=>onMode('tap')}><Hand size={13}/> BEND · EXPERIMENT</button>
-   </div>
-   <div className="air-choice air-sensitivity" role="group" aria-label="Finger touch sensitivity">
-    {(['easy','balanced','precise'] as AirSensitivity[]).map(v=><button type="button" key={v}
-      className={sensitivity===v?'active':''} onClick={()=>onSensitivity(v)}>{({easy:'LIGHT',balanced:'BALANCED',precise:'FIRM'})[v]}</button>)}
-   </div>
-   <label className="air-reach" title="Expand your hand movements across the virtual keyboard">
-    RANGE <strong>{reach.toFixed(1)}×</strong>
-    <input type="range" aria-label="Typing hand movement range" min=".8" max="2" step=".1" value={reach} onChange={e=>onReach(Number(e.target.value))}/>
-   </label>
-   {mode==='tap'&&<button type="button" className="air-calibrate" onClick={onCalibrate} title="Restart automatic hands-free calibration"><RotateCcw size={13}/> RESTART AUTO-ALIGN</button>}
+  <div className="air-desk-current" aria-label="Current typing configuration">
+   <span>ACTIVE · {({easy:'LIGHT',balanced:'BALANCED',precise:'FIRM'})[sensitivity]} TOUCH</span>
+   <span>RANGE {reach.toFixed(1)}× · ADJUST IN GESTUREOS SETTINGS</span>
   </div>
-  <div className="air-desk-plane" ref={keysRef} data-sample-id={sampleId} aria-label="Virtual QWERTY keyboard and ten tracked fingertip pointers">
+  <div className="air-desk-plane" ref={keysRef} data-keyboard-reach={reach} data-sample-id={sampleId} aria-label="Virtual QWERTY keyboard and ten tracked fingertip pointers">
    {rows.map((row,i)=><div className={'air-desk-keyrow air-desk-keyrow-'+i} key={row}>
     {row.split('').map(v=>control(v,v))}
    </div>)}
