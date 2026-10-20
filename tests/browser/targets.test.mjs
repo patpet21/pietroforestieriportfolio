@@ -2,11 +2,13 @@ import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {createServer} from 'vite';
+import {mockRemoteFonts} from './environment.mjs';
 let server,browser,page,origin;
 before(async()=>{
  server=await createServer({server:{port:0,host:'127.0.0.1'}});await server.listen();
  origin=server.resolvedUrls.local[0];
  browser=await chromium.launch({headless:true});page=await browser.newPage();
+ await mockRemoteFonts(page);
 });
 after(async()=>{await browser?.close();await server?.close();});
 test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links and stale nodes',async()=>{

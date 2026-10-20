@@ -1,14 +1,16 @@
 import {measureForwardDepth} from './gesture/forwardDepth.ts';
 import {KeyboardPointer} from './gesture/KeyboardPointer.ts';
+import {HandIdentityTracker} from './gesture/HandIdentityTracker.ts';
 /**
  * Forward index touch uses the shared virtual-plane lifecycle.
  * Ten-finger tap remains an independently calibrated research mode.
  */
 export type AirPoint={x:number;y:number;z:number};
-export type AirHand={landmarks:AirPoint[]};
-export type AirFinger={id:string;hand:'L'|'R';name:string;x:number;y:number;key:string|null;pressed:boolean;armed:boolean;ratio:number;progress?:number};
+export type AirHand={landmarks:AirPoint[];handedness?:{categoryName:string;score:number}};
+export type AirFinger={id:string;hand:'L'|'R';name:string;x:number;y:number;key:string|null;pressed:boolean;armed:boolean;ratio:number;progress?:number;pending?:boolean;contact?:{x:number;y:number}};
 export type AirKeyPress={key:string;fingerId:string};
-export type AirFrame={fingers:AirFinger[];presses:AirKeyPress[];hands:number;calibrated:number;status:string;control?:{progress:number;phase:string;reason:string;confirmationMs?:number}};
+export type AirControl={id:string;hand:'L'|'R';progress:number;phase:string;reason:string;identityReset:boolean;confirmationMs?:number};
+export type AirFrame={fingers:AirFinger[];presses:AirKeyPress[];hands:number;calibrated:number;status:string;control?:AirControl;controls?:AirControl[]};
 export type AirTypingMode='tap'|'push';
 export type AirSensitivity='easy'|'balanced'|'precise';
 export type AirTypingSettings={reach:number;mode:AirTypingMode;sensitivity:AirSensitivity;aspect?:number};
@@ -38,13 +40,13 @@ const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));
 const pressFactors:Record<AirSensitivity,number>={easy:.83,balanced:.75,precise:.67};
 export class AirTypingEngine{
  private states=new Map<string,FingerState>();
- private keyboardPointer=new KeyboardPointer();
- private control:{x:number;y:number;at:number}|null=null;
+ private pushPointers=new Map<Side,KeyboardPointer>();
+ private handIdentities=new HandIdentityTracker();
  private calibration=new Map<Side,Calibration>();
  private lastGlobalPress=0;
  private singleHandSide:Side|null=null;
  private statusMessage='';
- reset(){this.states.clear();this.keyboardPointer.reset();this.control=null;this.lastGlobalPress=0;this.singleHandSide=null;}
+ reset(){this.states.clear();this.pushPointers.clear();this.handIdentities.reset();this.lastGlobalPress=0;this.singleHandSide=null;}
  clearCalibration(){this.reset();this.calibration.clear();this.statusMessage='';}
  calibratedHands(){return this.calibration.size;}
  private assignHands(hands:AirHand[]):{side:Side;hand:AirHand}[]{
@@ -100,24 +102,36 @@ export class AirTypingEngine{
  }
  private processPush(hands:AirHand[],keyAt:KeyLocator,now:number,reach:number,aspect=1):AirFrame{
   const valid=hands.filter(h=>h.landmarks.length===21&&h.landmarks.every(p=>[p.x,p.y,p.z].every(Number.isFinite)));
-  if(!valid.length){this.keyboardPointer.reset();this.control=null;return {fingers:[],presses:[],hands:0,calibrated:0,status:'SHOW ONE HAND · INDEX TO AIM'};}
-  const previous=this.control;
-  const hand=valid.slice().sort((a,b)=>{
-   const origin=previous||{x:.5,y:.5};
-   return dist(a.landmarks[0],origin)-dist(b.landmarks[0],origin);
-  })[0];
-  const wrist=hand.landmarks[0],tip=hand.landmarks[8];
-  if(previous&&(now-previous.at>320||Math.hypot(wrist.x-previous.x,wrist.y-previous.y)>.28))this.keyboardPointer.reset();
-  this.control={x:wrist.x,y:wrist.y,at:now};
-  const depth=measureForwardDepth(hand.landmarks,aspect);
-  const result=this.keyboardPointer.process({x:clamp((1-tip.x-.5)*reach+.5,0,1),y:clamp((tip.y-.5)*reach+.5,0,1)},depth,now,keyAt);
-  const side:Side=wrist.x>.5?'L':'R';
-  const id=side+'-INDEX';
-  return {fingers:[{id,hand:side,name:'INDEX',x:result.point.x,y:result.point.y,key:result.key,
-    pressed:result.down,armed:result.armed,ratio:result.progress,progress:result.progress}],
-   presses:result.activation?[{key:result.activation,fingerId:id}]:[],hands:valid.length,calibrated:0,
-   control:{progress:result.progress,phase:result.phase,reason:result.reason,confirmationMs:result.confirmationMs},
-   status:result.reason==='stale-target'?'WITHDRAW TO REPOSITION THE SURFACE':result.activation?'TOUCH ✓ · WITHDRAW TO RELEASE':result.pending?'PUSH · '+Math.round(result.progress*100)+'% · WITHDRAW TO RELEASE':result.armed?'PUSH INDEX FORWARD TO TOUCH':result.key?'HOLD AIM BRIEFLY · POSITIONING TOUCH PLANE':'MOVE INDEX OVER A KEY'};
+  const assigned=this.handIdentities.update(valid,now);
+  const alive=new Set(assigned.map(item=>item.side));
+  // A missing hand loses its contact immediately. The other hand keeps its own
+  // reference and release latch; reacquisition starts with a fresh controller.
+  for(const side of this.pushPointers.keys())if(!alive.has(side))this.pushPointers.delete(side);
+  const fingers:AirFinger[]=[],presses:AirKeyPress[]=[],controls:AirControl[]=[];
+  for(const {side,hand,reset} of assigned){
+   let pointer=this.pushPointers.get(side);
+   if(!pointer){pointer=new KeyboardPointer();this.pushPointers.set(side,pointer);}
+   if(reset)pointer.reset();
+   const tip=hand.landmarks[8];
+   const depth=measureForwardDepth(hand.landmarks,aspect);
+   const result=pointer.process({x:clamp((1-tip.x-.5)*reach+.5,0,1),y:clamp((tip.y-.5)*reach+.5,0,1)},depth,now,keyAt);
+   const id=side+'-INDEX';
+   fingers.push({id,hand:side,name:'INDEX',x:result.livePoint.x,y:result.livePoint.y,key:result.key,
+    pressed:result.down,armed:result.armed,ratio:result.progress,progress:result.progress,pending:result.pending,
+    contact:result.pending?{...result.point}:undefined});
+   if(result.activation)presses.push({key:result.activation,fingerId:id});
+   controls.push({id,hand:side,progress:result.progress,phase:result.phase,reason:result.reason,identityReset:reset,confirmationMs:result.confirmationMs});
+  }
+  const count=assigned.length,prefix=count+' HAND'+(count===1?'':'S')+' · ';
+  const pending=fingers.filter(f=>f.pending),ready=fingers.filter(f=>f.armed);
+  const status=!count?'SHOW YOUR HANDS · INDEX FINGERS TO AIM':
+   controls.some(c=>c.reason==='stale-target')?prefix+'WITHDRAW HELD INDEX TO REPOSITION ITS SURFACE':
+   presses.length?prefix+'TOUCH ✓ · WITHDRAW PRESSED INDEX TO RELEASE':
+   pending.length?prefix+'PUSH '+Math.round(Math.max(...pending.map(f=>f.progress||0))*100)+'% · WITHDRAW TO RELEASE':
+   ready.length===count?prefix+'TOUCH PLANE'+(count===1?'':'S')+' READY · PUSH '+(count===1?'INDEX':'EITHER INDEX')+' FORWARD':
+   fingers.some(f=>f.key)?prefix+'HOLD EACH INDEX BRIEFLY · POSITIONING TOUCH PLANE'+(count===1?'':'S'):
+   prefix+'MOVE INDEX FINGER'+(count===1?'':'S')+' OVER KEYS';
+  return {fingers,presses,hands:count,calibrated:0,controls,control:controls[0],status};
  }
  process(hands:AirHand[],keyAt:KeyLocator,now:number,options:AirTypingSettings):AirFrame{
   const reach=clamp(options.reach,.8,2.0);

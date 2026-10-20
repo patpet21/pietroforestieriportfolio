@@ -72,6 +72,9 @@ export class ForwardPushController<T>{
    this.pending=true;this.held=this.target;this.heldPoint={...this.aim};this.startedAt=now;this.phase='PRESSING';
   }
   if(travel<=FORWARD_TOUCH_POLICY.release){
+   // A neutral sample breaks contact confirmation even before release itself
+   // has enough samples. Separate depth spikes must never count as a touch.
+   this.frames=0;
    if(++this.releaseFrames>=FORWARD_TOUCH_POLICY.confirmFrames){this.pending=false;this.down=false;this.frames=0;this.releaseFrames=0;this.held=null;this.phase='RELEASED';}
    return result();
   }

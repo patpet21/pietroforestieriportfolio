@@ -2130,7 +2130,7 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 .gsl-guide>button{display:flex;align-items:center;gap:8px;border:1px solid #bfd9ee61;background:#ffffff0d;color:#d2e8f8;padding:11px;margin-top:14px;border-radius:7px;font-size:10px;font-weight:800;letter-spacing:.6px}
 .gsl-footer{display:flex;justify-content:space-between;align-items:center;gap:16px;border-top:1px solid #b7d3e942;margin-top:35px;padding:20px 0;font-size:10px;letter-spacing:1px;color:#98b5cc}
 .gsl-footer a{display:inline-flex;gap:9px;align-items:center;white-space:nowrap;color:#b9edff;font-weight:850}
-.gsl-hand-cursor{pointer-events:none;position:absolute;width:34px;height:34px;z-index:40;transform:translate(-50%,-50%);border:2px solid #c8faff;border-radius:50%;box-shadow:0 0 0 7px #9beaff24,0 0 28px #99e9ffbb;transition:left .06s linear,top .06s linear;display:grid;place-items:center}
+.gsl-hand-cursor{pointer-events:none;position:absolute;width:34px;height:34px;z-index:40;transform:translate(-50%,-50%);border:2px solid #c8faff;border-radius:50%;box-shadow:0 0 0 7px #9beaff24,0 0 28px #99e9ffbb;display:grid;place-items:center}
 .gsl-hand-cursor>span{width:7px;height:7px;background:#f0ffff;border-radius:50%}
 .gsl-hand-cursor.pinching{background:#a6ffc977;border-color:#b8ffbb;box-shadow:0 0 0 10px #9fff9f21,0 0 25px #9fffc1;transform:translate(-50%,-50%) scale(.8)}
 .gsl-keyboard-panel{min-height:455px;display:flex;flex-direction:column;align-items:center;justify-content:space-around;gap:14px;position:relative;z-index:1;padding:23px 17px}
