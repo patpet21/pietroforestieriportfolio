@@ -21,9 +21,9 @@ test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links
   const nested=findGestureTarget(150,125)===button;
   const c=new ForwardPushController();let now=100;
   const frame=scale=>c.step({now:now+=50,tracking:true,depth:{scale,fingerDepth:.2,shape:[1,1,1,1],indexExtended:true},pointing:true,mode:'navigation',target:findGestureTarget(150,125),point:{x:150,y:125}});
-  frame(1);const click=frame(1.02);
+  for(let i=0;i<6;i++)frame(1);frame(1.08);const click=frame(1.08);
   if(click.activation&&canActivateTarget(click.activation,150,125))click.activation.click();
-  for(let i=0;i<5;i++){const r=frame(1.02);if(r.activation)r.activation.click();}
+  for(let i=0;i<5;i++){const r=frame(1.08);if(r.activation)r.activation.click();}
   const cover=document.createElement('div');cover.id='cover';document.body.append(cover);
   const covered=!canActivateTarget(button,150,125);cover.remove();
   button.disabled=true;const disabled=!findGestureTarget(150,125);button.disabled=false;
