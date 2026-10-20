@@ -48,7 +48,7 @@ async function pose(page,kind){
   const x=.5-((rect.left+rect.width/2)/innerWidth-.5)/1.48;
   const y=.5+((rect.top+rect.height/2)/innerHeight-.5)/1.48;
   const {makeHand}=await import('/tests/fixtures/hand.mjs');
-  const p=makeHand({x,y,scale:kind==='push'?1.02:1,pinch:kind==='pinch',palm:kind==='palm'});
+  const p=makeHand({x,y,scale:kind==='push'?1.08:1,pinch:kind==='pinch',palm:kind==='palm'});
   window.__hands=kind==='lost'?[]:[p];window.__poseStart=window.__inferences||0;
  },kind);
  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
@@ -119,7 +119,7 @@ async function keyboardPose(page,key,closed=false){
   const reach=Number(document.querySelector('[aria-label="Typing hand movement range"]').value);
   const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
   const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
-  const base=makeHand({x,y}),p=closed?tapFinger(base,8,.09):base;
+  const base=makeHand({x,y}),p=closed?tapFinger(base,8,.23):base;
   window.__hands=[p];window.__poseStart=window.__inferences||0;
  },{key,closed});
  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=6);
@@ -174,7 +174,7 @@ test('in-page Gesture Lab keyboard uses the same forward touch instead of pinch 
     const x=1-(.5+(vx-.5)/gain),y=.5+(vy-.5)/gain;
     const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
     const base=makeHand({x,y,pinch});
-    window.__hands=[scale>1?tapFinger(base,8,.09):base];window.__poseStart=window.__inferences;
+    window.__hands=[scale>1?tapFinger(base,8,.23):base];window.__poseStart=window.__inferences;
    },{scale,pinch});
    await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
    if(scale===1)await page.waitForFunction(()=>document.querySelector('[data-air-key="A"]')?.classList.contains('gsl-key-target'),null,{timeout:5000});
