@@ -8,7 +8,7 @@ On a vertically mounted phone, the earlier open-palm implementation used immedia
 - **One extended index — navigate and scroll**: Holding an extended index still aims a cursor at existing site links, buttons and inputs. Move the same index vertically by a deliberate distance to initiate a touch-like swipe of the content, with no Point/Scroll toggle.
 - **Air click**: Aim at a target and bend the index briefly. A target-lock, two-frame press hysteresis, cooldown and minimum hover duration prevent accidental adjacent clicks. Holding a steady target approximately 1.55 seconds activates as a fallback if the camera does not recognize the bend.
 - **Two extended fingers (index+middle) — zoom**: Extend index and middle with the other fingers folded, hold the pose for at least four frames, then spread or close the pair to scale **only the website's main content** from 85% to 140%. The webcam panel and controls remain unscaled. Stop Camera resets website zoom.
-- **Up to two hands** are detected, but mobile interactions prioritize one stable pointing hand at a time rather than simultaneously applying open-palm and pointer actions.
+- **On mobile, MediaPipe tracks one hand at a time** to reduce model workload and pointer switching. A two-finger zoom uses the index and middle fingers of that same hand. Desktop can track up to two hands.
 - **No custom navigation buttons or modes**. The normal site's controls remain the targets. Webcam is opt-in and can always be stopped.
 
 ## Stability safeguards
