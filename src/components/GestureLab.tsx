@@ -1,8 +1,9 @@
 import {useEffect,useState} from 'react';
+import '../gesture-settings.css';
 import {Link} from 'react-router-dom';
 import {ArrowLeft,ArrowUpRight,Camera,Keyboard,MousePointer2,RotateCcw,Settings2,Hand,SlidersHorizontal} from 'lucide-react';
 import {
- DEFAULT_GESTURE_SETTINGS,GESTURE_SETTINGS_EVENT,
+ GESTURE_SETTINGS_EVENT,
  navigationTouchTravel,readGestureSettings,resetGestureSettings,saveGestureSettings
 } from '../lib/gesture/userSettings';
 import type {GestureSettings} from '../lib/gesture/userSettings';
