@@ -71,9 +71,11 @@ export default function HoloNavigator(){
  const [zoomLevel,setZoomLevel]=useState(1);
  const videoRef=useRef<HTMLVideoElement|null>(null);
  const pinchRef=useRef({down:false,candidate:false,frames:0});
+ const clickLatchRef=useRef(false);
+ const clickFeedbackRef=useRef({at:0,label:''});
  const palmScrollRef=useRef<PalmScroll>(newPalmScroll());
- const [scrollSpeed,setScrollSpeed]=useState(1);
- const scrollSpeedRef=useRef(1);
+ const [scrollSpeed,setScrollSpeed]=useState(2);
+ const scrollSpeedRef=useRef(2);
  const overlayRef=useRef<HTMLCanvasElement|null>(null);
  const [previewLarge,setPreviewLarge]=useState(false);
  const streamRef=useRef<MediaStream|null>(null);
@@ -120,6 +122,7 @@ export default function HoloNavigator(){
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
   pinchRef.current={down:false,candidate:false,frames:0};
+  clickLatchRef.current=false;clickFeedbackRef.current={at:0,label:''};
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
   pointerAimRef.current={x:.5,y:.5};
@@ -155,6 +158,9 @@ export default function HoloNavigator(){
   clearHover();focusRef.current=null;
   keyboardRef.current=false;setKeyboard(false);
   swipeRef.current.armed=false;swipeRef.current.active=false;
+  pinchRef.current={down:false,candidate:false,frames:0};
+  clickLatchRef.current=false;
+  palmScrollRef.current=newPalmScroll();
  },[location.pathname,clearHover]);
 
  const insertText=useCallback((value:string)=>{
@@ -234,9 +240,11 @@ export default function HoloNavigator(){
      if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      if(!samples.length){
       missedRef.current++;
-      pinchRef.current={down:false,candidate:false,frames:0};
-      // Ignore up to two dropped frames; mobile landmark tracking sometimes misses a single frame.
+      // Preserve pinch state through brief tracking gaps; reset after sustained loss.
       if(missedRef.current<3)return;
+      pinchRef.current={down:false,candidate:false,frames:0};
+      clickLatchRef.current=false;
+      palmScrollRef.current=newPalmScroll();
       swipeRef.current.armed=false;swipeRef.current.active=false;
       zoomGestureRef.current.active=false;zoomGestureRef.current.frames=0;
       tapRef.current={down:false,candidate:false,frames:0};
@@ -246,8 +254,17 @@ export default function HoloNavigator(){
      missedRef.current=0;
      // Two-finger V gesture: spread index + middle to zoom the site's content.
      // A short pose debounce avoids resizing when passing through an intermediate hand shape.
-     const spread=samples.find(item=>item.spread);
-     const rawPose=spread?'zoom':samples.some(item=>item.open)?'scroll':samples.some(item=>item.pointing)?'point':'idle';
+     // Recognize explicit press gestures BEFORE palm/zoom classification.
+     // Pinching or bending the index can otherwise appear as an open palm and block clicks.
+     const recentAim=now-pointerRef.current.lastPoint<1400&&!!targetRef.current;
+     const pressHand=samples.find(item=>{
+      const h=item.landmarks;
+      const gap=dist(h[4],h[8])/Math.max(.065,dist(h[5],h[17]));
+      const bend=dist(h[8],h[5])/Math.max(.045,dist(h[6],h[5]));
+      return gap<(pinchRef.current.down?.78:.61)||(recentAim&&bend<(tapRef.current.down?2.36:2.08));
+     });
+     const spread=pressHand?null:samples.find(item=>item.spread);
+     const rawPose=pressHand?'press':spread?'zoom':samples.some(item=>item.open)?'scroll':samples.some(item=>item.pointing)?'point':'idle';
      if(poseRef.current.kind!==rawPose)poseRef.current={kind:rawPose,since:now};
      const poseStable=now-poseRef.current.since>=160;
      const zg=zoomGestureRef.current;
@@ -273,13 +290,13 @@ export default function HoloNavigator(){
        setCursor(null);setLabel('TWO FINGERS · ZOOM '+Math.round(zoomValueRef.current*100)+'%');
        return;
       }
-     }else if(zg.active&&zg.missed<2){
+     }else if(zg.active&&zg.missed<2&&!pressHand){
       zg.missed++;return; // tolerate brief classification dropouts
      }else{
       zg.active=false;zg.frames=0;zg.missed=0;
      }
      // Separate the open-palm scroll state from index-based pointing and clicking.
-     const palm=samples.some(item=>item.pointing)?null:samples.find(item=>item.open&&!item.spread);
+     const palm=pressHand||samples.some(item=>item.pointing)?null:samples.find(item=>item.open&&!item.spread);
      if(palm&&rawPose==='scroll'&&!keyboardRef.current){
       const scroll=palmScrollRef.current,y=clamp(palm.palm.y,0,1);
       if(!poseStable){
@@ -295,11 +312,11 @@ export default function HoloNavigator(){
        const elapsed=clamp(now-scroll.lastAt,25,110);scroll.lastAt=now;
        if(jump){scroll.velocity=0;scroll.smoothedY=y;}
        else{
-        const raw=-((scroll.smoothedY-previous)*window.innerHeight*1.48*scrollSpeedRef.current);
-        const desired=Math.abs(raw)>2.2?clamp(raw,-54,54):0;
-        scroll.velocity=scroll.velocity*.38+desired*.62;
+        const raw=-((scroll.smoothedY-previous)*window.innerHeight*2.8*scrollSpeedRef.current);
+        const desired=Math.abs(raw)>1.6?clamp(raw,-120,120):0;
+        scroll.velocity=scroll.velocity*.28+desired*.72;
         const amount=scroll.velocity*(elapsed/50);
-        if(Math.abs(amount)>1.8)window.scrollBy(0,amount);
+        if(Math.abs(amount)>1.3)window.scrollBy(0,amount);
        }
       }
       if(targetRef.current)clearHover();setCursor(null);
@@ -308,7 +325,7 @@ export default function HoloNavigator(){
       setLabel('OPEN PALM · SMOOTH SCROLL');return;
      }
      palmScrollRef.current=newPalmScroll();
-     const candidates=samples.filter(item=>!item.open&&!item.spread);
+     const candidates=pressHand?[pressHand]:samples.filter(item=>!item.open&&!item.spread);
      const pointer=candidates.sort((a,b)=>{
       const previous=pointerRef.current;
       const d1=Math.hypot(1-a.wrist.x-previous.wristX,a.wrist.y-previous.wristY);
@@ -318,6 +335,8 @@ export default function HoloNavigator(){
      if(!pointer){
       swipeRef.current.armed=false;swipeRef.current.active=false;
       tapRef.current={down:false,candidate:false,frames:0};
+      pinchRef.current={down:false,candidate:false,frames:0};
+      clickLatchRef.current=false;
       if(targetRef.current)clearHover();
       setCursor(null);setLabel('INDEX = AIM · PALM = SCROLL');
       return;
@@ -341,25 +360,29 @@ export default function HoloNavigator(){
      p.wristX=1-pointer.wrist.x;p.wristY=pointer.wrist.y;
      const curledRatio=dist(tip,base)/Math.max(.045,dist(joint,base));
      const tap=tapRef.current;
-     const tapCandidate=tap.down?curledRatio<2.25:curledRatio<1.88;
+     const tapCandidate=tap.down?curledRatio<2.36:curledRatio<2.08;
      if(tap.candidate!==tapCandidate){tap.candidate=tapCandidate;tap.frames=1;}else tap.frames++;
      const down=tap.frames>=2?tapCandidate:tap.down;
      const tapStarted=down&&!tap.down;tap.down=down;
      const pinch=pinchRef.current;
      const ratio=dist(tip,thumb)/Math.max(.065,dist(pointer.landmarks[5],pointer.landmarks[17]));
-     const close=pinch.down?ratio<.62:ratio<.43;
+     const close=pinch.down?ratio<.78:ratio<.61;
      if(close!==pinch.candidate){pinch.candidate=close;pinch.frames=1;}else pinch.frames++;
      const pinching=pinch.frames>=2?close:pinch.down;
      const pinchStarted=pinching&&!pinch.down;pinch.down=pinching;
      const pressing=down||pinching;
-     if(pointer.pointing&&!pressing){p.lastPoint=now;pointerAimRef.current={x,y};}
-     const eligible=pointer.pointing||(pressing&&now-p.lastPoint<900);
-     if(!eligible){if(targetRef.current)clearHover();setCursor(null);setLabel('EXTEND INDEX TO AIM · PALM TO SCROLL');return;}
-     const pointX=pressing&&targetRef.current?pointerAimRef.current.x:x;
-     const pointY=pressing&&targetRef.current?pointerAimRef.current.y:y;
+     // Keep the last real target while the hand moves into a pinch/tap pose.
+     // Crucially, this also applies to the FIRST press-candidate frame.
+     const pendingPress=close||tapCandidate||pressing;
+     if(pointer.pointing&&!pendingPress){p.lastPoint=now;pointerAimRef.current={x,y};}
+     const aimFresh=now-p.lastPoint<1400&&!!targetRef.current;
+     const eligible=pointer.pointing||(pendingPress&&aimFresh);
+     if(!eligible){if(!pendingPress&&targetRef.current)clearHover();setCursor(null);setLabel('EXTEND INDEX TO AIM · PALM TO SCROLL');return;}
+     const pointX=pendingPress&&aimFresh?pointerAimRef.current.x:x;
+     const pointY=pendingPress&&aimFresh?pointerAimRef.current.y:y;
      const px=pointX*window.innerWidth,py=pointY*window.innerHeight;
      const element=document.elementFromPoint(px,py) as HTMLElement|null;
-     let target=pressing&&targetRef.current&&document.contains(targetRef.current)?targetRef.current:element?.closest<HTMLElement>(CLICKABLE)||null;
+     let target=pendingPress&&aimFresh&&targetRef.current&&document.contains(targetRef.current)?targetRef.current:element?.closest<HTMLElement>(CLICKABLE)||null;
      if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]'))target=null;
      if(targetRef.current&&target!==targetRef.current){
       const rect=targetRef.current.getBoundingClientRect();
@@ -373,13 +396,25 @@ export default function HoloNavigator(){
       setHoverKey(target?.dataset.holoKey||'');
       setTargetName(target?nameOf(target):'');
      }
-     const hover=hoverRef.current;
-     const ready=!!target&&now-hover.since>70;
-     // Explicit gesture click, without any dwell-triggered activation.
-     if(ready&&(tapStarted||pinchStarted)&&now-lastPressRef.current>330&&now-p.lastPoint<900){
-      lastPressRef.current=now;activateRef.current(target);
-      setLabel('CLICK ✓ '+nameOf(target));
-     }else setLabel(pressing?'PINCH / AIR TAP · CLICK':'INDEX · AIM AT A LINK OR BUTTON');
+     const ready=!!target;
+     // A click is an explicit pinch / index-tap edge, never a dwell countdown.
+     // Both gestures share one latch, preventing double-click when a pinch also bends the index.
+     const clickedNow=(tapStarted||pinchStarted)&&!clickLatchRef.current;
+     if(clickedNow){
+      clickLatchRef.current=true;
+      if(ready&&now-lastPressRef.current>270){
+       lastPressRef.current=now;
+       const label=nameOf(target);
+       clickFeedbackRef.current={at:now,label};
+       activateRef.current(target);
+      }
+     }
+     if(!pendingPress&&!pinching&&!down)clickLatchRef.current=false;
+     if(now-clickFeedbackRef.current.at<460&&clickFeedbackRef.current.label){
+      setLabel('CLICK ✓ '+clickFeedbackRef.current.label);
+     }else{
+      setLabel(pendingPress?'PINCH / AIR TAP · CLICK':'INDEX · AIM AT A LINK OR BUTTON');
+     }
      setCursor({x:pointX,y:pointY,progress:ready?1:0,press:pressing});
     }catch(e){console.warn('Gesture frame skipped:',e);}
    };
@@ -405,7 +440,7 @@ export default function HoloNavigator(){
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
-   {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".6" max="2" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
+   {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".7" max="4" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
    <p className="holo-natural-legend">OPEN PALM: SCROLL · INDEX: AIM · PINCH / BEND: CLICK · V: ZOOM</p>
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
