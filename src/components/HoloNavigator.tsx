@@ -7,7 +7,7 @@ type Landmark={x:number;y:number;z:number};
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][]};close:()=>void};
 type Status='off'|'loading'|'ready'|'error';
 type Cursor={x:number;y:number;progress:number;press:boolean};
-type HandSample={landmarks:Landmark[];wrist:Landmark;palm:{x:number;y:number};open:boolean;pointing:boolean};
+type HandSample={landmarks:Landmark[];wrist:Landmark;palm:{x:number;y:number};open:boolean;pointing:boolean;spread:boolean};
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const ROWS=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
@@ -31,7 +31,7 @@ function getHand(points:Landmark[]):HandSample|null{
   extended(points,16,14,13),
   extended(points,20,18,17)
  ];
- return {landmarks:points,wrist:points[0],palm,open:fingers.filter(Boolean).length>=3,pointing:fingers[0]&&fingers.slice(1).filter(Boolean).length<2};
+ return {landmarks:points,wrist:points[0],palm,open:fingers.filter(Boolean).length>=3,pointing:fingers[0]&&!fingers[1]&&!fingers[2]&&!fingers[3],spread:fingers[0]&&fingers[1]&&!fingers[2]&&!fingers[3]};
 }
 
 export default function HoloNavigator(){
@@ -46,13 +46,17 @@ export default function HoloNavigator(){
  const [hoverKey,setHoverKey]=useState('');
  const [scratch,setScratch]=useState('');
  const [backend,setBackend]=useState('');
+ const [zoomLevel,setZoomLevel]=useState(1);
  const videoRef=useRef<HTMLVideoElement|null>(null);
  const streamRef=useRef<MediaStream|null>(null);
  const modelRef=useRef<Landmarker|null>(null);
  const rafRef=useRef(0);
  const tokenRef=useRef(0);
  const pointerRef=useRef({x:.5,y:.5,wristX:.5,wristY:.5,lastPoint:0});
- const palmRef=useRef<{x:number;y:number;last:number}|null>(null);
+ const swipeRef=useRef({armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0});
+ const zoomGestureRef=useRef({frames:0,active:false,baseGap:0,baseZoom:1,gap:0});
+ const zoomValueRef=useRef(1);
+ const missedRef=useRef(0);
  const pointerAimRef=useRef({x:.5,y:.5});
  const targetRef=useRef<HTMLElement|null>(null);
  const hoverRef=useRef({target:null as HTMLElement|null,since:0,fired:false});
@@ -79,7 +83,11 @@ export default function HoloNavigator(){
   modelRef.current?.close();modelRef.current=null;
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
-  palmRef.current=null;tapRef.current={down:false,candidate:false,frames:0};
+  swipeRef.current={armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0};
+  zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0};
+  zoomValueRef.current=1;setZoomLevel(1);
+  document.documentElement.style.removeProperty('--spatial-site-zoom');
+  tapRef.current={down:false,candidate:false,frames:0};
   pointerAimRef.current={x:.5,y:.5};
   clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
@@ -112,7 +120,7 @@ export default function HoloNavigator(){
  useEffect(()=>{
   clearHover();focusRef.current=null;
   keyboardRef.current=false;setKeyboard(false);
-  palmRef.current=null;
+  swipeRef.current.armed=false;swipeRef.current.active=false;
  },[location.pathname,clearHover]);
 
  const insertText=useCallback((value:string)=>{
@@ -176,6 +184,7 @@ export default function HoloNavigator(){
    }
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
+   swipeRef.current.armed=false;swipeRef.current.active=false;missedRef.current=0;
    setLabel('OPEN PALM = SCROLL · INDEX = POINT');
    let lastFrame=0,lastVideo=-1,lastCount=-1;
    const tick=(now:number)=>{
