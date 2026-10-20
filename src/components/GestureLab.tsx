@@ -8,7 +8,7 @@ type CameraStatus='off'|'loading'|'ready'|'error';
 type Point={x:number;y:number;z:number};
 type Tracker={detectForVideo:(video:HTMLVideoElement,timestamp:number)=>{landmarks:Point[][]};close:()=>void};
 type Cursor={x:number;y:number;pinching:boolean;dwell:number};
-type InputMethod='pinch'|'dwell';
+type InputMethod='tap'|'pinch'|'dwell';
 type Sensitivity='easy'|'balanced'|'precise';
 type Task={id:string;name:string;detail:string;x:number;y:number;done:boolean};
 const wasmUrl='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
@@ -56,9 +56,11 @@ export default function GestureLab(){
  const pointerGrabRef=useRef<{id:string;moved:boolean}|null>(null);
  const [gpuStatus,setGpuStatus]=useState('');
  const [hoveredKey,setHoveredKey]=useState<string|null>(null);
- const [inputMethod,setInputMethod]=useState<InputMethod>('dwell');
+ const [inputMethod,setInputMethod]=useState<InputMethod>('tap');
  const [sensitivity,setSensitivity]=useState<Sensitivity>('easy');
  const [pinchMeter,setPinchMeter]=useState(0);
+ const [tapMessage,setTapMessage]=useState('EXTEND INDEX TO AIM');
+ const [reach,setReach]=useState(1.0);
  const [rotationSpeed,setRotationSpeed]=useState(1.25);
  const keyboardKeysRef=useRef<HTMLDivElement|null>(null);
  const hoveredKeyRef=useRef<string|null>(null);
@@ -69,9 +71,13 @@ export default function GestureLab(){
  const sensitivityRef=useRef(sensitivity);
  const rotationSpeedRef=useRef(rotationSpeed);
  const cubeMotionRef=useRef<{x:number;y:number}|null>(null);
+ const airTapRef=useRef({down:false,candidate:false,frames:0});
+ const lastAimRef=useRef({x:0,y:0,key:''});
+ const reachRef=useRef(reach);
  inputMethodRef.current=inputMethod;
  sensitivityRef.current=sensitivity;
  rotationSpeedRef.current=rotationSpeed;
+ reachRef.current=reach;
  modeRef.current=mode;
  tasksRef.current=tasks;
  const keyAction=useCallback((value:string)=>{
@@ -140,6 +146,7 @@ export default function GestureLab(){
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
   pinchRef.current=false;
   pinchCandidateRef.current={value:false,frames:0};
+  airTapRef.current={down:false,candidate:false,frames:0};
   cubeMotionRef.current=null;
   handGrabRef.current=null;
   hoveredKeyRef.current=null;
@@ -203,6 +210,7 @@ export default function GestureLab(){
       cubeMotionRef.current=null;handGrabRef.current=null;
       hoveredKeyRef.current=null;setHoveredKey(null);
       keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
+      airTapRef.current={down:false,candidate:false,frames:0};
       return;
      }
      setTracking(true);
