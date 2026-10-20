@@ -98,3 +98,8 @@
  .air-calibration-note{font-size:9px;padding:8px 9px}
  .air-calibrate{min-height:32px;font-size:9px!important}
 }
+
+/* Read-only status. Full controls live exclusively on the GestureOS Settings page. */
+.air-desk-current{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:9px 4px 11px;color:#a3ffe4;font:850 10px Manrope,sans-serif;letter-spacing:.55px}
+.air-desk-current span:last-child{color:#a3c7d7}
+@media(max-width:820px){.air-desk-current{font-size:8px;padding:7px 2px}}
