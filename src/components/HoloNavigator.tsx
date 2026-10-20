@@ -96,10 +96,10 @@ export default function HoloNavigator(){
  const [airCalibrationMessage,setAirCalibrationMessage]=useState('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
  const autoCalibrationRef=useRef<AutoCalibration>(freshAutoCalibration());
  const [airMode,setAirMode]=useState<AirTypingMode>('push');
- const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('easy');
+ const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('precise');
  const [airReach,setAirReach]=useState(1.3);
  const airModeRef=useRef<AirTypingMode>('push');
- const airSensitivityRef=useRef<AirSensitivity>('easy');
+ const airSensitivityRef=useRef<AirSensitivity>('precise');
  const airReachRef=useRef(1.3);
  const airEngineRef=useRef(new AirTypingEngine());
  const airKeysRef=useRef<HTMLDivElement|null>(null);
@@ -223,7 +223,7 @@ export default function HoloNavigator(){
  },[]);
  const activate=useCallback((target:HTMLElement)=>{
   const key=target.closest<HTMLElement>('[data-holo-key]');
-  if(key){insertText(key.dataset.holoKey||'');return;}
+  if(key){if(key.dataset.holoKey==='SITE')return;insertText(key.dataset.holoKey||'');return;}
   if(target.closest('.holo-natural-control')&&!target.closest('[data-holo-test]'))return;
   if(isEditable(target)){
    focusRef.current=target;
@@ -439,7 +439,14 @@ export default function HoloNavigator(){
       }
       setAirFrame({...frame,sampleId,sampledAt:frameStart});
       if(frame.presses.length){
-       for(const press of frame.presses){insertText(press.key);metrics.count('keyboardPresses');}
+       for(const press of frame.presses){
+         if(press.key==='SITE'){
+          keyboardRef.current=false;setKeyboard(false);airEngineRef.current.clearCalibration();
+          controllerRef.current.reset();controlHandRef.current=null;clearHover();
+          setLabel('SITE NAVIGATION RESTORED · PALM SCROLL · INDEX CLICK');break;
+         }
+         insertText(press.key);metrics.count('keyboardPresses');
+        }
        metrics.record('sampleToKeyboardActionMs',performance.now()-frameStart);
        for(const control of frame.controls||[])if(control.confirmationMs!==undefined)metrics.record('keyboardConfirmationMs',control.confirmationMs);
        setLabel('AIR TYPED · '+frame.presses.map(p=>p.key).join(' '));
@@ -612,16 +619,16 @@ export default function HoloNavigator(){
    {status==='ready'?<>
     <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {keyboard?airFrame.fingers.length+' POINTERS':'1 CONTROL'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PUSH: <b>{pressSignal}</b></span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
-    {!mobileView&&location.pathname==='/gesture-lab'?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
+    {!mobileView?<button type="button" data-holo-ui className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
      airEngineRef.current.clearCalibration();
      autoCalibrationRef.current=keyboardRef.current&&airModeRef.current==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
-     if(keyboardRef.current)setAirCalibrationMessage(airModeRef.current==='push'?'AIM WITH INDEX, PUSH FORWARD TO TOUCH, WITHDRAW TO RELEASE. THE TOUCH PLANE ALIGNS AUTOMATICALLY.':'HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
+     if(keyboardRef.current)setAirCalibrationMessage(airModeRef.current==='push'?'TEN FINGERS READY · AIM, THEN MAKE A DELIBERATE FORWARD TOUCH.':'HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
      setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'WAITING FOR TWO HANDS'});
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
      setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PUSH FORWARD':'AIR KEYBOARD OFF');
-    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'EXPERIMENTAL AIR KEYBOARD'}</button>:<p className="holo-mobile-note">{mobileView?'MOBILE MODE: one hand for scrolling and pointing. Experimental Air Type requires desktop Gesture Lab.':'Experimental Air Type is available separately in Gesture Lab.'}</p>}
+    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'EXPERIMENTAL AIR KEYBOARD'}</button>:<p className="holo-mobile-note">{mobileView?'MOBILE MODE: one hand for scrolling and pointing. Experimental Air Type requires desktop Gesture Lab.':'Air Type is available from the GestureOS panel on any page.'}</p>}
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:status==='preview'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA · RETRY AFTER</button>
    :status==='loading'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> CANCEL CAMERA START</button>
@@ -650,7 +657,7 @@ export default function HoloNavigator(){
    onMode={v=>{
     airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();
     autoCalibrationRef.current=v==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
-    setAirCalibrationMessage(v==='push'?'AIM WITH INDEX, PUSH FORWARD TO TOUCH, WITHDRAW TO RELEASE. THE TOUCH PLANE ALIGNS AUTOMATICALLY.':'SHOW BOTH HANDS AND HOLD STILL TO ALIGN EXPERIMENTAL FINGER TAPS.');
+    setAirCalibrationMessage(v==='push'?'TEN FINGERS READY · AIM, THEN MAKE A DELIBERATE FORWARD TOUCH.':'SHOW BOTH HANDS AND HOLD STILL TO ALIGN EXPERIMENTAL FINGER TAPS.');
    }}
    onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
    onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
