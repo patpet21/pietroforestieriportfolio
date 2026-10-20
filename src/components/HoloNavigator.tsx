@@ -43,6 +43,9 @@ function paintHandSkeleton(canvas:HTMLCanvasElement|null,video:HTMLVideoElement,
 }
 const clamp=(v:number,a:number,b:number)=>Math.min(b,Math.max(a,v));
 const dist=(a:Landmark,b:Landmark)=>Math.hypot(a.x-b.x,a.y-b.y);
+// Two fists provide a camera-only exit if virtual key touches are unreliable.
+const closedFist=(points:Landmark[])=>[[8,5,6],[12,9,10],[16,13,14],[20,17,18]].every(([tip,mcp,pip])=>
+ dist(points[tip],points[mcp])<dist(points[pip],points[mcp])*1.5);
 const isEditable=(element:Element|null):element is HTMLInputElement|HTMLTextAreaElement=>
  (element instanceof HTMLInputElement&&['text','search','email','url','tel','number'].includes(element.type))||element instanceof HTMLTextAreaElement;
 const nameOf=(el:HTMLElement)=>el.getAttribute('aria-label')||el.getAttribute('title')||el.getAttribute('placeholder')||el.getAttribute('name')||el.textContent?.trim().replace(/\s+/g,' ').slice(0,33)||'SELECT';
@@ -129,6 +132,7 @@ export default function HoloNavigator(){
  const targetRef=useRef<HTMLElement|null>(null);
  const focusRef=useRef<HTMLInputElement|HTMLTextAreaElement|null>(null);
  const keyboardRef=useRef(false);
+ const keyboardExitFistAt=useRef(0);
  const lastUiRef=useRef('');
  keyboardRef.current=keyboard;
 
@@ -163,6 +167,14 @@ export default function HoloNavigator(){
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
  },[clearHover,setLabel]);
  const stopRef=useRef(stop);stopRef.current=stop;
+ const leaveKeyboard=useCallback(()=>{
+  keyboardRef.current=false;setKeyboard(false);keyboardExitFistAt.current=0;
+  airEngineRef.current.clearCalibration();autoCalibrationRef.current=freshAutoCalibration();
+  keyboardOverlays.current.clear();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
+  controlHandRef.current=null;clearHover();setCursor(null);
+  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'NAVIGATION ACTIVE'});
+  setLabel('SITE NAVIGATION · OPEN PALM TO SCROLL · INDEX TO CLICK');
+ },[clearHover,setCursor,setLabel]);
  useEffect(()=>{
   const competingCamera=()=>stopRef.current();
   window.addEventListener('pf-lab-camera-start',competingCamera);
@@ -175,7 +187,7 @@ export default function HoloNavigator(){
   };
   const onKey=(event:KeyboardEvent)=>{
    if(event.key==='Escape'){
-    if(keyboardRef.current){keyboardRef.current=false;setKeyboard(false);controllerRef.current.reset();clearHover();}
+    if(keyboardRef.current)leaveKeyboard();
     else stopRef.current();
    }
   };
@@ -187,7 +199,7 @@ export default function HoloNavigator(){
    window.removeEventListener('keydown',onKey);
    stopRef.current();
   };
- },[]);
+ },[leaveKeyboard]);
  useEffect(()=>{
   clearHover();focusRef.current=null;
   keyboardRef.current=false;setKeyboard(false);
@@ -363,6 +375,15 @@ export default function HoloNavigator(){
      missedRef.current=0;
      if(keyboardRef.current){
       controllerRef.current.reset();metrics.values.suppression='mode-switch';
+       if(samples.length===2&&samples.every(item=>closedFist(item.landmarks))){
+        if(!keyboardExitFistAt.current)keyboardExitFistAt.current=now;
+        if(now-keyboardExitFistAt.current>=750){leaveKeyboard();return;}
+        airEngineRef.current.reset();
+        setLabel('TWO CLOSED FISTS · KEEP STILL TO RETURN TO SITE');
+        setAirFrame({fingers:[],presses:[],hands:2,calibrated:0,status:'TWO FISTS · RETURNING TO SITE',sampleId,sampledAt:frameStart});
+        return;
+       }
+       keyboardExitFistAt.current=0;
       // Keyboard is exclusive: ten small forward touches, or bend research.
       // Full key geometry is only needed while calibrating the finger experiment.
       const root=airKeysRef.current;
@@ -439,14 +460,8 @@ export default function HoloNavigator(){
       }
       setAirFrame({...frame,sampleId,sampledAt:frameStart});
       if(frame.presses.length){
-       for(const press of frame.presses){
-         if(press.key==='SITE'){
-          keyboardRef.current=false;setKeyboard(false);airEngineRef.current.clearCalibration();
-          controllerRef.current.reset();controlHandRef.current=null;clearHover();
-          setLabel('SITE NAVIGATION RESTORED · PALM SCROLL · INDEX CLICK');break;
-         }
-         insertText(press.key);metrics.count('keyboardPresses');
-        }
+       if(frame.presses.some(press=>press.key==='SITE')){leaveKeyboard();return;}
+       for(const press of frame.presses){insertText(press.key);metrics.count('keyboardPresses');}
        metrics.record('sampleToKeyboardActionMs',performance.now()-frameStart);
        for(const control of frame.controls||[])if(control.confirmationMs!==undefined)metrics.record('keyboardConfirmationMs',control.confirmationMs);
        setLabel('AIR TYPED · '+frame.presses.map(p=>p.key).join(' '));
@@ -667,11 +682,7 @@ export default function HoloNavigator(){
     autoCalibrationRef.current={enabled:true,since:0,last:null,hint:''};
     setAirCalibrationMessage('AUTO-ALIGN RESTARTED · SHOW BOTH HANDS. HOLD STILL FOR 3 SECONDS.');
    }}
-   onClose={()=>{
-    keyboardRef.current=false;setKeyboard(false);
-    autoCalibrationRef.current=freshAutoCalibration();
-    airEngineRef.current.clearCalibration();controlHandRef.current=null;controllerRef.current.reset();clearHover();
-   }}
+   onClose={leaveKeyboard}
    onKey={insertText}
   />}
  </Profiler>;
