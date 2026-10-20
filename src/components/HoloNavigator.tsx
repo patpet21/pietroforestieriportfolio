@@ -96,7 +96,9 @@ export default function HoloNavigator(){
  const [targetName,setTargetName]=useState('');
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
- const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+ const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
+ const [airCalibrationMessage,setAirCalibrationMessage]=useState('Show both hands, relax your fingers, then press ALIGN HANDS.');
+ const pendingAirCalibrationRef=useRef(false);
  const [airMode,setAirMode]=useState<AirTypingMode>('tap');
  const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('easy');
  const [airReach,setAirReach]=useState(1.3);
@@ -163,7 +165,10 @@ export default function HoloNavigator(){
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
   pinchRef.current={down:false,candidate:false,frames:0};
-  airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+  airEngineRef.current.clearCalibration();
+  pendingAirCalibrationRef.current=false;
+  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
+  setAirCalibrationMessage('Show both hands, relax your fingers, then press ALIGN HANDS.');
   clickLatchRef.current=false;clickFeedbackRef.current={at:0,label:''};
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
@@ -200,7 +205,8 @@ export default function HoloNavigator(){
  useEffect(()=>{
   clearHover();focusRef.current=null;
   keyboardRef.current=false;setKeyboard(false);
-  airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+  airEngineRef.current.clearCalibration();pendingAirCalibrationRef.current=false;
+  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
   swipeRef.current.armed=false;swipeRef.current.active=false;
   pinchRef.current={down:false,candidate:false,frames:0};
   clickLatchRef.current=false;
@@ -288,7 +294,7 @@ export default function HoloNavigator(){
       missedRef.current++;
       if(keyboardRef.current&&missedRef.current>=3){
        airEngineRef.current.reset();
-       setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+       setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS'});
       }
       // Preserve pinch state through brief tracking gaps; reset after sustained loss.
       if(missedRef.current<3)return;
@@ -323,6 +329,22 @@ export default function HoloNavigator(){
        }
        return null;
       };
+      if(pendingAirCalibrationRef.current){
+       pendingAirCalibrationRef.current=false;
+       const homeAt=(key:string):{x:number;y:number}|null=>{
+        if(!box||!box.width||!box.height)return null;
+        const found=keyBoxes.find(item=>item.key===key);
+        if(!found)return null;
+        const r=found.rect;
+        return {x:(r.left+r.width/2-box.left)/box.width,y:(r.top+r.height/2-box.top)/box.height};
+       };
+       const result=airEngineRef.current.calibrate(samples,homeAt);
+       setAirCalibrationMessage(result.message);
+       if(result.ok){
+        clickLatchRef.current=false;
+        setLabel('AIR TYPE · '+result.message);
+       }
+      }
       const frame=airEngineRef.current.process(samples,keyAt,now,{
        reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current
       });
@@ -556,7 +578,7 @@ export default function HoloNavigator(){
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     <button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
-     airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
+     airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS'});
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();pinchRef.current={down:false,candidate:false,frames:0};
      tapRef.current={down:false,candidate:false,frames:0};clickLatchRef.current=false;
@@ -575,6 +597,7 @@ export default function HoloNavigator(){
    fingers={airFrame.fingers}
    hands={airFrame.hands}
    status={airFrame.status}
+   calibrationMessage={airCalibrationMessage}
    text={focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-110):scratch.slice(-110)}
    mode={airMode}
    sensitivity={airSensitivity}
@@ -582,7 +605,7 @@ export default function HoloNavigator(){
    onMode={v=>{airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();}}
    onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
    onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
-   onReset={()=>{airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,status:'TRACKING RESET'});}}
+   onCalibrate={()=>{pendingAirCalibrationRef.current=true;setAirCalibrationMessage('Hold hands steady in a relaxed typing position…');}}
    onClose={()=>{keyboardRef.current=false;setKeyboard(false);airEngineRef.current.reset();controlHandRef.current=null;clearHover();}}
    onKey={insertText}
   />}
