@@ -2711,3 +2711,13 @@ a.svx-evidence-card:hover{transform:translateY(-6px);border-color:#a4dcff}
 @media(prefers-reduced-motion:reduce){
  .holo-nav-routes button,.holo-nav-scroll button{transition:none}
 }
+
+
+/* V15 improvements to 3-mode hand click and easy-to-reach navigation. */
+.holo-method{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.holo-method button{padding:7px 4px;font-size:8px}
+.holo-nav-modes{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.holo-nav-modes button{min-height:37px;color:#d8f5ff;background:#153b56;border:1px solid #a5dffcaa;border-radius:7px;font-size:9px;font-weight:850;padding:6px 4px}
+.holo-nav-modes button.active{color:#092a3b;background:#afeaff}
+.holo-nav-modes button.holo-focused-target{background:#c9fcff;color:#062438;outline-offset:1px!important;box-shadow:0 0 23px #a8f4ffbd!important}
+@media(max-width:620px){.holo-nav-modes{gap:4px;margin-top:7px}.holo-nav-modes button{font-size:7px;min-height:30px}.holo-method button{font-size:7px;padding:6px 2px}}
