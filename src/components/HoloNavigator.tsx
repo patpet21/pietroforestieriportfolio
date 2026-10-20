@@ -261,7 +261,7 @@ export default function HoloNavigator(){
       const h=item.landmarks;
       const gap=dist(h[4],h[8])/Math.max(.065,dist(h[5],h[17]));
       const bend=dist(h[8],h[5])/Math.max(.045,dist(h[6],h[5]));
-      return gap<(pinchRef.current.down?.78:.61)||(recentAim&&bend<(tapRef.current.down?2.36:2.08));
+      return gap<(pinchRef.current.down ? .78 : .61)||(recentAim&&bend<(tapRef.current.down ? 2.36 : 2.08));
      });
      const spread=pressHand?null:samples.find(item=>item.spread);
      const rawPose=pressHand?'press':spread?'zoom':samples.some(item=>item.open)?'scroll':samples.some(item=>item.pointing)?'point':'idle';
@@ -402,7 +402,7 @@ export default function HoloNavigator(){
      const clickedNow=(tapStarted||pinchStarted)&&!clickLatchRef.current;
      if(clickedNow){
       clickLatchRef.current=true;
-      if(ready&&now-lastPressRef.current>270){
+      if(target&&now-lastPressRef.current>270){
        lastPressRef.current=now;
        const label=nameOf(target);
        clickFeedbackRef.current={at:now,label};
