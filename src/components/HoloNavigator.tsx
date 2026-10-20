@@ -123,6 +123,7 @@ export default function HoloNavigator(){
  const scrollSpeedRef=useRef(2);
  const overlayRef=useRef<HTMLCanvasElement|null>(null);
  const [previewLarge,setPreviewLarge]=useState(false);
+ const [mobilePanelExpanded,setMobilePanelExpanded]=useState(false);
  const streamRef=useRef<MediaStream|null>(null);
  const modelRef=useRef<Landmarker|null>(null);
  const rafRef=useRef(0);
@@ -163,7 +164,7 @@ export default function HoloNavigator(){
   modelRef.current?.close();modelRef.current=null;
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
-  setCameraPlaying(false);setCameraNeedsTap(false);
+  setCameraPlaying(false);setCameraNeedsTap(false);setMobilePanelExpanded(false);
   swipeRef.current={armed:false,active:false,anchorX:.5,anchorY:.5,lastY:.5,startFrames:0,stillFrames:0,direction:0,reverse:0};
   zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0};
   zoomValueRef.current=1;setZoomLevel(1);
@@ -304,7 +305,9 @@ export default function HoloNavigator(){
     landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.50,minHandPresenceConfidence:.50,minTrackingConfidence:.52}) as Landmarker;
    }
    if(session!==tokenRef.current){landmarker.close();return;}
-   modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
+   modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');
+   if(mobile)setMobilePanelExpanded(false);
+   setStatus('ready');
    swipeRef.current.armed=false;swipeRef.current.active=false;missedRef.current=0;
    setLabel('PALM: SCROLL · INDEX: AIM · PINCH: CLICK');
    let lastFrame=0,lastVideo=-1,lastCount=-1;
@@ -592,12 +595,15 @@ export default function HoloNavigator(){
   }
  };
 
+ const mobileCompact=mobileView&&status==='ready'&&!mobilePanelExpanded;
  return <>
-  <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")} aria-label="Natural gesture control">
+  <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")+(mobileCompact?" holo-mobile-compact":"")} aria-label="Natural gesture control">
    <div className="holo-natural-title">
-    <Scan size={17}/><strong>SPATIAL CONTROL{mobileView?' · MOBILE':''}</strong>
+    <Scan size={17}/><strong>{mobileCompact?'GESTURES ON':('SPATIAL CONTROL'+(mobileView?' · MOBILE':''))}</strong>
     {status==='ready'&&<i/>}
-    {(status==='ready'||status==='preview')&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}
+    {mobileView&&status==='ready'
+      ?<button type="button" className="holo-preview-toggle" onClick={()=>setMobilePanelExpanded(v=>!v)} aria-label={mobilePanelExpanded?'Hide gesture camera and controls':'Show gesture camera and controls'}>{mobilePanelExpanded?'HIDE':'CAMERA'}</button>
+      :(status==='ready'||status==='preview')&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}
     {mobileView&&(status==='ready'||status==='preview')&&<button type="button" className="holo-mobile-stop-title" onClick={stop} aria-label="Stop mobile camera"><CameraOff size={15}/></button>}
    </div>
    <div className={'holo-vision-preview '+(['ready','loading','preview'].includes(status)?'on ':'')+(cameraPlaying?'playing':'')}>
