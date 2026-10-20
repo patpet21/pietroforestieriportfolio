@@ -1,0 +1,185 @@
+{
+  "source": "afa20f5 HoloNavigator palm calculation, 20 deterministic traces with reversals and jumps",
+  "rows": [
+    {
+      "dt": 47,
+      "speed": 0.7,
+      "height": 720,
+      "sum": -49.813859,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 68,
+      "speed": 2,
+      "height": 900,
+      "sum": -257.39684,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 105,
+      "speed": 4,
+      "height": 720,
+      "sum": -635.921604,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 150,
+      "speed": 0.7,
+      "height": 900,
+      "sum": -145.732034,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 47,
+      "speed": 2,
+      "height": 720,
+      "sum": -142.325311,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 68,
+      "speed": 4,
+      "height": 900,
+      "sum": -507.79833,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 105,
+      "speed": 0.7,
+      "height": 720,
+      "sum": -111.286281,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 150,
+      "speed": 2,
+      "height": 900,
+      "sum": -416.37724,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 47,
+      "speed": 4,
+      "height": 720,
+      "sum": -284.650623,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 68,
+      "speed": 0.7,
+      "height": 900,
+      "sum": -90.088894,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 105,
+      "speed": 2,
+      "height": 720,
+      "sum": -317.960802,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 150,
+      "speed": 4,
+      "height": 900,
+      "sum": -821.438476,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 47,
+      "speed": 0.7,
+      "height": 720,
+      "sum": -49.813859,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 68,
+      "speed": 2,
+      "height": 900,
+      "sum": -257.39684,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 105,
+      "speed": 4,
+      "height": 720,
+      "sum": -635.921604,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 150,
+      "speed": 0.7,
+      "height": 900,
+      "sum": -145.732034,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 47,
+      "speed": 2,
+      "height": 720,
+      "sum": -142.325311,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 68,
+      "speed": 4,
+      "height": 900,
+      "sum": -507.79833,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 105,
+      "speed": 0.7,
+      "height": 720,
+      "sum": -111.286281,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    },
+    {
+      "dt": 150,
+      "speed": 2,
+      "height": 900,
+      "sum": -416.37724,
+      "count": 24,
+      "positive": 12,
+      "negative": 12
+    }
+  ]
+}

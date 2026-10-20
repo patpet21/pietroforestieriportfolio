@@ -241,3 +241,5 @@
   margin:0!important;padding:0!important;
  }
 }
+.gesture-debug{position:fixed;right:8px;top:80px;z-index:100000;max-width:min(420px,90vw);max-height:60vh;overflow:auto;background:#101820;color:#d4ffef;padding:10px;border:1px solid #81f4d5;font:11px/1.4 monospace}
+.gesture-debug pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0}
