@@ -256,7 +256,8 @@ export default function HoloNavigator(){
      // A short pose debounce avoids resizing when passing through an intermediate hand shape.
      // Recognize explicit press gestures BEFORE palm/zoom classification.
      // Pinching or bending the index can otherwise appear as an open palm and block clicks.
-     const recentAim=now-pointerRef.current.lastPoint<1400&&!!targetRef.current;
+     // Aimed controls stay eligible while fingers transition into a pinch.
+     const recentAim=now-pointerRef.current.lastPoint<3000&&!!targetRef.current;
      const pressHand=samples.find(item=>{
       const h=item.landmarks;
       const gap=dist(h[4],h[8])/Math.max(.065,dist(h[5],h[17]));
@@ -300,8 +301,9 @@ export default function HoloNavigator(){
      if(palm&&rawPose==='scroll'&&!keyboardRef.current){
       const scroll=palmScrollRef.current,y=clamp(palm.palm.y,0,1);
       if(!poseStable){
+       // A transient open pose is not yet scroll: preserve the focused click target.
        palmScrollRef.current=newPalmScroll();
-       if(targetRef.current)clearHover();setCursor(null);setLabel('OPEN PALM · HOLD TO SCROLL');return;
+       setLabel('OPEN PALM · HOLD TO SCROLL');return;
       }
       if(!scroll.armed){
        scroll.armed=true;scroll.rawY=y;scroll.smoothedY=y;scroll.lastAt=now;scroll.velocity=0;
@@ -337,7 +339,7 @@ export default function HoloNavigator(){
       tapRef.current={down:false,candidate:false,frames:0};
       pinchRef.current={down:false,candidate:false,frames:0};
       clickLatchRef.current=false;
-      if(targetRef.current)clearHover();
+      // A different temporary pose should not discard the selected button.
       setCursor(null);setLabel('INDEX = AIM · PALM = SCROLL');
       return;
      }
@@ -348,7 +350,7 @@ export default function HoloNavigator(){
      if(wristJump>.32){
       swipeRef.current.armed=false;swipeRef.current.active=false;
       tapRef.current={down:false,candidate:false,frames:0};
-      if(targetRef.current)clearHover();
+      if(!pressHand&&now-p.lastPoint>500)clearHover();
      }
      const rawX=clamp((1-tip.x-.5)*1.48+.5,0,1);
      const rawY=clamp((tip.y-.5)*1.48+.5,0,1);
@@ -374,10 +376,18 @@ export default function HoloNavigator(){
      // Keep the last real target while the hand moves into a pinch/tap pose.
      // Crucially, this also applies to the FIRST press-candidate frame.
      const pendingPress=close||tapCandidate||pressing;
-     if(pointer.pointing&&!pendingPress){p.lastPoint=now;pointerAimRef.current={x,y};}
-     const aimFresh=now-p.lastPoint<1400&&!!targetRef.current;
+     // Re-arm on release BEFORE any return. This was previously skipped when
+     // the relaxed hand was not classified as a pointing index.
+     if(!pendingPress)clickLatchRef.current=false;
+     // The last aim must stay fresh even when the preliminary pinch detector
+     // sees a near-closed thumb while the index is still pointing.
+     if(pointer.pointing&&!pressing){p.lastPoint=now;pointerAimRef.current={x,y};}
+     const aimFresh=now-p.lastPoint<3000&&!!targetRef.current;
      const eligible=pointer.pointing||(pendingPress&&aimFresh);
-     if(!eligible){if(!pendingPress&&targetRef.current)clearHover();setCursor(null);setLabel('EXTEND INDEX TO AIM · PALM TO SCROLL');return;}
+     if(!eligible){
+      if(!pendingPress&&targetRef.current)clearHover();
+      setCursor(null);setLabel(pendingPress?'PINCH DETECTED · POINT AT A BUTTON':'EXTEND INDEX TO AIM · PALM TO SCROLL');return;
+     }
      const pointX=pendingPress&&aimFresh?pointerAimRef.current.x:x;
      const pointY=pendingPress&&aimFresh?pointerAimRef.current.y:y;
      const px=pointX*window.innerWidth,py=pointY*window.innerHeight;
@@ -413,7 +423,7 @@ export default function HoloNavigator(){
        };
       }
      }
-     if(!pendingPress&&!pinching&&!down)clickLatchRef.current=false;
+     // Click latch release is handled above even if pointer eligibility fails.
      if(now-clickFeedbackRef.current.at<650&&clickFeedbackRef.current.label){
       setLabel(clickFeedbackRef.current.label);
      }else{
@@ -440,7 +450,7 @@ export default function HoloNavigator(){
     {status==='ready'&&<span className="holo-vision-chip">21 LANDMARKS · LIVE</span>}
    </div>
    {status==='ready'?<>
-    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span></div>
+    <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span></div>
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
