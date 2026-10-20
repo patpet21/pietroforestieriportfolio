@@ -362,20 +362,51 @@ export default function HoloNavigator(){
        }
        return null;
       };
-      if(pendingAirCalibrationRef.current){
-       pendingAirCalibrationRef.current=false;
-       const homeAt=(key:string):{x:number;y:number}|null=>{
-        if(!box||!box.width||!box.height)return null;
-        const found=keyBoxes.find(item=>item.key===key);
-        if(!found)return null;
-        const r=found.rect;
-        return {x:(r.left+r.width/2-box.left)/box.width,y:(r.top+r.height/2-box.top)/box.height};
+      // Auto-calibrate without a mouse or a third hand:
+      // once two hands remain reasonably steady in frame for ~2.4 seconds,
+      // use their current relaxed posture as the reference.
+      const calibration=autoCalibrationRef.current;
+      if(calibration.enabled){
+       const hint=(value:string)=>{
+        if(calibration.hint!==value){calibration.hint=value;setAirCalibrationMessage(value);}
        };
-       const result=airEngineRef.current.calibrate(samples,homeAt);
-       setAirCalibrationMessage(result.message);
-       if(result.ok){
-        clickLatchRef.current=false;
-        setLabel('AIR TYPE · '+result.message);
+       const pose=samples.map(hand=>({
+        x:hand.wrist.x,y:hand.wrist.y,
+        fx:hand.landmarks[8].x,fy:hand.landmarks[8].y
+       })).sort((a,b)=>a.x-b.x);
+       if(samples.length!==2){
+        calibration.since=0;calibration.last=null;
+        hint(samples.length===1
+         ?'ONE HAND DETECTED. Move both hands apart into the frame; alignment will begin automatically.'
+         :'SHOW BOTH HANDS. No buttons required; alignment is automatic.');
+       }else if(!box||keyBoxes.length<29){
+        calibration.since=0;calibration.last=null;
+        hint('WAITING FOR THE VIRTUAL KEYBOARD TO APPEAR…');
+       }else{
+        const moving=!!calibration.last&&pose.some((p,i)=>
+         Math.hypot(p.x-calibration.last![i].x,p.y-calibration.last![i].y)>.035
+         ||Math.hypot(p.fx-calibration.last![i].fx,p.fy-calibration.last![i].fy)>.045);
+        calibration.last=pose;
+        if(moving||!calibration.since){calibration.since=now;}
+        const seconds=Math.ceil(Math.max(0,2400-(now-calibration.since))/1000);
+        if(seconds>0)hint('BOTH HANDS FOUND · HOLD STILL '+seconds+'…');
+        else{
+         const homeAt=(key:string):{x:number;y:number}|null=>{
+          const found=keyBoxes.find(item=>item.key===key);
+          if(!found||!box)return null;
+          const r=found.rect;
+          return {x:(r.left+r.width/2-box.left)/box.width,
+           y:(r.top+r.height/2-box.top)/box.height};
+         };
+         const result=airEngineRef.current.calibrate(samples,homeAt);
+         if(result.ok){
+          calibration.enabled=false;calibration.since=0;calibration.last=null;
+          hint('AUTO-ALIGNED ✓ · EXPERIMENTAL TYPING. Use PINCH FALLBACK if finger taps misfire.');
+          setLabel('AUTO-ALIGNED · BOTH HANDS');
+         }else{
+          calibration.since=now;hint(result.message+' · RETRYING AUTOMATICALLY');
+         }
+        }
        }
       }
       const frame=airEngineRef.current.process(samples,keyAt,now,{
@@ -627,7 +658,10 @@ export default function HoloNavigator(){
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
     {!mobileView?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
-     airEngineRef.current.reset();setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS'});
+     airEngineRef.current.clearCalibration();
+     autoCalibrationRef.current=keyboardRef.current?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
+     if(keyboardRef.current)setAirCalibrationMessage('HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
+     setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'WAITING FOR TWO HANDS'});
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();pinchRef.current={down:false,candidate:false,frames:0};
      tapRef.current={down:false,candidate:false,frames:0};clickLatchRef.current=false;
@@ -657,8 +691,17 @@ export default function HoloNavigator(){
    onMode={v=>{airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();}}
    onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
    onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
-   onCalibrate={()=>{pendingAirCalibrationRef.current=true;setAirCalibrationMessage('Hold hands steady in a relaxed typing position…');}}
-   onClose={()=>{keyboardRef.current=false;setKeyboard(false);airEngineRef.current.reset();controlHandRef.current=null;clearHover();}}
+   onCalibrate={()=>{
+    // This button merely RESTARTS hands-free alignment, before hands are positioned.
+    airEngineRef.current.clearCalibration();
+    autoCalibrationRef.current={enabled:true,since:0,last:null,hint:''};
+    setAirCalibrationMessage('AUTO-ALIGN RESTARTED · SHOW BOTH HANDS. HOLD STILL FOR 3 SECONDS.');
+   }}
+   onClose={()=>{
+    keyboardRef.current=false;setKeyboard(false);
+    autoCalibrationRef.current=freshAutoCalibration();
+    airEngineRef.current.clearCalibration();controlHandRef.current=null;clearHover();
+   }}
    onKey={insertText}
   />}
  </>;
