@@ -121,6 +121,7 @@ async function keyboardPose(page,key,closed=false){
   window.__hands=[p];window.__poseStart=window.__inferences||0;
  },{key,closed});
  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=6);
+ if(!closed)await page.waitForFunction(key=>document.querySelector(`[data-holo-key="${key}"]`)?.classList.contains('air-key-hover'),key,{timeout:5000});
 }
 test('floating Air Type: one hand highlights and types CIAO, repeated letters, space and backspace without calibration',async()=>{
  const page=await fixture({path:'gesture-lab'});
@@ -173,6 +174,7 @@ test('in-page Gesture Lab keyboard uses the same forward touch instead of pinch 
     window.__hands=[makeHand({x,y,scale,pinch})];window.__poseStart=window.__inferences;
    },{scale,pinch});
    await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
+   if(scale===1)await page.waitForFunction(()=>document.querySelector('[data-air-key="A"]')?.classList.contains('gsl-key-target'),null,{timeout:5000});
   };
   const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
   await poseKey();await poseKey(1,true);assert.equal(await field.inputValue(),'');

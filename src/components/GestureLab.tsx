@@ -246,7 +246,8 @@ export default function GestureLab(){
        return key&&keys.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.airKey||null:null;
       };
       const touch=touchRef.current.process({x:projectedX,y:projectedY},measureForwardDepth(hand,video.videoWidth/video.videoHeight),time,keyAt);
-      hoveredKeyRef.current=touch.key;setHoveredKey(touch.key);
+      const readyKey=touch.armed||touch.pending?touch.key:null;
+      hoveredKeyRef.current=readyKey;setHoveredKey(readyKey);
       if(touch.activation)keyAction(touch.activation);
       else setHint(touch.pending?'Push forward to touch · withdraw to release':touch.armed?'Virtual surface ready · push index forward':'Aim briefly at a key to position the virtual surface');
       setCursor({x:touch.point.x,y:touch.point.y,pinching:touch.down,dwell:touch.progress});

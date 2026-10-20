@@ -23,7 +23,7 @@ export class ForwardPushController<T>{
  private lastAt=-Infinity;
  private startedAt=0;
  private releaseFrames=0;
- get ready(){return !!this.rest&&!this.pending;}
+ get ready(){return !!this.rest&&!!this.target&&!this.pending;}
  reset(){
   this.phase='IDLE';this.down=false;this.pending=false;this.progress=0;this.frames=0;
   this.rest=null;this.target=null;this.held=null;this.samples=[];this.lastAt=-Infinity;this.releaseFrames=0;
@@ -40,7 +40,9 @@ export class ForwardPushController<T>{
   this.lastAt=now;
   const approaching=!!this.rest&&travelFrom(depth,this.rest)>FORWARD_TOUCH_POLICY.approach;
   // Check depth onset before retargeting: a forward motion can shift screen XY.
-  if(!this.pending&&!approaching&&target!==this.target){this.rest=null;this.samples=[];this.target=target;}
+  // The surface belongs to this tracked hand, not to a particular letter. Keep
+  // it when aiming at another key; otherwise every character adds a new dwell.
+  if(!this.pending&&!approaching&&target!==this.target){this.samples=[];this.target=target;this.aim={...point};}
   if(!this.rest){
    if(!target){this.phase='AIMING';return result('target-missing');}
    this.samples.push({at:now,depth});this.samples=this.samples.filter(s=>now-s.at<=FORWARD_TOUCH_POLICY.windowMs);
@@ -64,7 +66,7 @@ export class ForwardPushController<T>{
   if(!Number.isFinite(travel)||travel>3){this.reset();return result('depth-jump');}
   this.progress=Math.max(0,Math.min(1,travel));
   if(!this.pending){
-   if(travel<=FORWARD_TOUCH_POLICY.approach){this.aim={...point};this.phase='ARMED';return result();}
+   if(travel<=FORWARD_TOUCH_POLICY.approach){this.aim={...point};this.phase=this.target?'ARMED':'AIMING';return result(this.target?'none':'target-missing');}
    this.pending=true;this.held=this.target;this.heldPoint={...this.aim};this.startedAt=now;this.phase='PRESSING';
   }
   if(travel<=FORWARD_TOUCH_POLICY.release){

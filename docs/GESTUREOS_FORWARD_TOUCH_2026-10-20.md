@@ -36,6 +36,8 @@ These values define the initial estimated surface; they are **not hardware-
 validated accuracy or physical-distance calibration**.
 
 The open-aim target is captured before forward motion can shift the cursor XY.
+The reference surface is shared by the tracked hand across different buttons or
+letters; moving to another key does not repeat the initial settling period.
 Activation still verifies the target's current DOM visibility/enabled/connected
 state. Holding inside the virtual surface cannot repeat the action. Keyboard
 mode is exclusive with navigation and follows the same controller. Floating
@@ -52,7 +54,7 @@ floating keyboard typing (`CIAO`, repeated letters, space/backspace and native
 textarea insertion), and the in-page keyboard's forward-touch cycle. They also
 assert that a thumb/index pinch alone does not activate anything in these modes.
 
-Local result: strict TypeScript/Vite build passed, all 22 unit tests and all
+Local result: strict TypeScript/Vite build passed, all 23 unit tests and all
 9 Chromium browser tests passed. The existing large-bundle warning remains.
 
 These tests validate software control flow with canvas video and mocked model

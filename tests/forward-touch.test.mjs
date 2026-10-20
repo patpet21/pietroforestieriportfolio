@@ -55,3 +55,9 @@ test('withdrawal after reacquisition at the advanced position restores a usable 
  for(let i=0;i<8;i++)frame({depth:measureForwardDepth(makeHand({scale:1.2}))});
  frame();frame();assert.equal(push().activation,target);
 });
+test('moving between keys shares the existing plane without another calibration wait',()=>{
+ const {frame,aim}=setup();aim();const other={id:'next-letter'};
+ frame({target:other,point:{x:.6,y:.5}});
+ const depth=measureForwardDepth(makeHand({scale:1.2}));frame({target:other,depth});
+ assert.equal(frame({target:other,depth}).activation,other);
+});
