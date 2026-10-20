@@ -24,14 +24,17 @@ export default function AirKeyboard({
   onClick={()=>onKey(value)}>{text}</button>;
  return <section className="holo-air-console holo-control air-desk" aria-label="Multi-finger air keyboard">
   <div className="air-desk-header">
-   <div className="air-desk-brand"><ScanFace size={19}/><div><b>GESTUREOS / AIR TYPE</b><small>TEN FINGERS · ONE WEBCAM · EXPERIMENTAL</small></div></div>
+   <div className="air-desk-brand"><ScanFace size={19}/><div><b>GESTUREOS / AIR TYPE LAB</b><small>UNPROVEN EXPERIMENT · NOT A PHYSICAL KEYBOARD</small></div></div>
    <button type="button" className="air-desk-close" aria-label="Close air keyboard" onClick={onClose}><X size={16}/> CLOSE</button>
   </div>
   <div className="air-desk-information">
    <div className="air-desk-status"><span className={'air-online '+(hands===2?'on':'')}/><span>{status}</span></div>
    <div className="air-desk-finger-legend"><span className="left">L · LEFT HAND</span><span className="right">R · RIGHT HAND</span></div>
   </div>
-  <p className="air-calibration-note"><strong>{calibrationMessage||'FIRST: show both hands with relaxed fingers, then press ALIGN HANDS.'}</strong> Home keys: left A S D F · right J K L ; · thumbs SPACE.</p>
+  <p className="air-calibration-note" role="status">
+   <strong>{calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
+   <span> No simultaneous clicking and hand positioning. This is only an approximate camera-based alignment, not a touch keyboard.</span>
+  </p>
   <div className="air-desk-output"><small>LIVE TYPING · SELECTED FIELD / DEMO BUFFER</small><output aria-live="off">{text||'Move both hands in view. Aim a fingertip at a key and bend it to press.'}</output></div>
   <div className="air-desk-settings">
    <div className="air-choice" role="group" aria-label="Air keyboard actuation mode">
@@ -46,7 +49,7 @@ export default function AirKeyboard({
     RANGE <strong>{reach.toFixed(1)}×</strong>
     <input type="range" aria-label="Typing hand movement range" min=".8" max="2" step=".1" value={reach} onChange={e=>onReach(Number(e.target.value))}/>
    </label>
-   <button type="button" className="air-calibrate" onClick={onCalibrate} title="Align tracked fingertips with the home row"><RotateCcw size={13}/> ALIGN HANDS</button>
+   <button type="button" className="air-calibrate" onClick={onCalibrate} title="Restart automatic hands-free calibration"><RotateCcw size={13}/> RESTART AUTO-ALIGN</button>
   </div>
   <div className="air-desk-plane" ref={keysRef} aria-label="Virtual QWERTY keyboard and ten tracked fingertip pointers">
    {rows.map((row,i)=><div className={'air-desk-keyrow air-desk-keyrow-'+i} key={row}>
@@ -63,9 +66,9 @@ export default function AirKeyboard({
   </div>
   <div className="air-desk-footer">
    {mode==='tap'
-    ?<span><Keyboard size={14}/> ALIGN HANDS first. Straighten a finger, move it toward a nearby key, bend it once to press, then release.</span>
-    :<span><Keyboard size={14}/> PINCH MODE: move your index finger over a key, touch thumb + index once, then release.</span>}
-   <span><RefreshCw size={13}/> ALIGN again if the key positions drift</span>
+    ?<span><Keyboard size={14}/> Automatic alignment begins when two steady hands are visible. Finger TAP is experimental; press/release may be inaccurate.</span>
+    :<span><Keyboard size={14}/> Fallback: hover a key with an index finger, pinch thumb + index and release.</span>}
+   <span><RefreshCw size={13}/> If alignment drifts, use RESTART before positioning your hands</span>
   </div>
   <p className="air-desk-disclaimer">A webcam estimates finger movements; this experimental mode cannot replicate the reliability of physical keyboard contact. Mouse and normal keyboard remain available.</p>
  </section>;
