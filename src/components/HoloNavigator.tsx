@@ -178,10 +178,10 @@ export default function HoloNavigator(){
    if(session!==tokenRef.current)return;
    let landmarker:Landmarker,cpu=false;
    try{
-    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.56,minTrackingConfidence:.55}) as Landmarker;
+    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.58,minTrackingConfidence:.62}) as Landmarker;
    }catch{
     cpu=true;
-    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.56,minTrackingConfidence:.55}) as Landmarker;
+    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.58,minTrackingConfidence:.62}) as Landmarker;
    }
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
