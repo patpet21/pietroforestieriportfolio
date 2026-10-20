@@ -8,6 +8,8 @@ type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks
 type Status='off'|'loading'|'ready'|'error';
 type Cursor={x:number;y:number;progress:number;press:boolean};
 type HandSample={landmarks:Landmark[];wrist:Landmark;palm:{x:number;y:number};open:boolean;pointing:boolean;spread:boolean};
+type PalmScroll={armed:boolean;rawY:number;smoothedY:number;lastAt:number;velocity:number};
+const newPalmScroll=():PalmScroll=>({armed:false,rawY:0,smoothedY:0,lastAt:0,velocity:0});
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const ROWS=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
@@ -68,6 +70,9 @@ export default function HoloNavigator(){
  const [backend,setBackend]=useState('');
  const [zoomLevel,setZoomLevel]=useState(1);
  const videoRef=useRef<HTMLVideoElement|null>(null);
+ const palmScrollRef=useRef<PalmScroll>(newPalmScroll());
+ const [scrollSpeed,setScrollSpeed]=useState(1);
+ const scrollSpeedRef=useRef(1);
  const overlayRef=useRef<HTMLCanvasElement|null>(null);
  const [previewLarge,setPreviewLarge]=useState(false);
  const streamRef=useRef<MediaStream|null>(null);
@@ -113,6 +118,7 @@ export default function HoloNavigator(){
   zoomValueRef.current=1;setZoomLevel(1);
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
+  palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
   pointerAimRef.current={x:.5,y:.5};
   clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');
@@ -212,7 +218,7 @@ export default function HoloNavigator(){
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
    swipeRef.current.armed=false;swipeRef.current.active=false;missedRef.current=0;
-   setLabel('INDEX: SWIPE OR PRESS · TWO FINGERS: ZOOM');
+   setLabel('PALM: SCROLL · INDEX: AIM · PINCH: CLICK');
    let lastFrame=0,lastVideo=-1,lastCount=-1;
    const tick=(now:number)=>{
     if(session!==tokenRef.current)return;
@@ -238,7 +244,7 @@ export default function HoloNavigator(){
      // Two-finger V gesture: spread index + middle to zoom the site's content.
      // A short pose debounce avoids resizing when passing through an intermediate hand shape.
      const spread=samples.find(item=>item.spread);
-     const rawPose=spread?'zoom':samples.some(item=>item.pointing)?'point':samples.some(item=>item.open)?'pause':'idle';
+     const rawPose=spread?'zoom':samples.some(item=>item.open)?'scroll':samples.some(item=>item.pointing)?'point':'idle';
      if(poseRef.current.kind!==rawPose)poseRef.current={kind:rawPose,since:now};
      const poseStable=now-poseRef.current.since>=160;
      const zg=zoomGestureRef.current;
@@ -269,12 +275,36 @@ export default function HoloNavigator(){
      }else{
       zg.active=false;zg.frames=0;zg.missed=0;
      }
-     const candidates=samples.filter(item=>!item.open&&!item.spread);
-     if(rawPose==='pause'&&poseStable){
-      swipeRef.current.armed=false;swipeRef.current.active=false;scrollVelocityRef.current=0;
+     // Separate the open-palm scroll state from index-based pointing and clicking.
+     const palm=samples.find(item=>item.open&&!item.spread);
+     if(palm&&rawPose==='scroll'&&!keyboardRef.current){
+      const scroll=palmScrollRef.current,y=clamp(palm.palm.y,0,1);
+      if(!poseStable){
+       palmScrollRef.current=newPalmScroll();
+       if(targetRef.current)clearHover();setCursor(null);setLabel('OPEN PALM · HOLD TO SCROLL');return;
+      }
+      if(!scroll.armed){
+       scroll.armed=true;scroll.rawY=y;scroll.smoothedY=y;scroll.lastAt=now;scroll.velocity=0;
+      }else{
+       const jump=Math.abs(y-scroll.rawY)>.16||now-scroll.lastAt>320;
+       const previous=scroll.smoothedY;
+       scroll.smoothedY=previous*.35+y*.65;scroll.rawY=y;
+       const elapsed=clamp(now-scroll.lastAt,25,110);scroll.lastAt=now;
+       if(jump){scroll.velocity=0;scroll.smoothedY=y;}
+       else{
+        const raw=-((scroll.smoothedY-previous)*window.innerHeight*1.48*scrollSpeedRef.current);
+        const desired=Math.abs(raw)>2.2?clamp(raw,-54,54):0;
+        scroll.velocity=scroll.velocity*.38+desired*.62;
+        const amount=scroll.velocity*(elapsed/50);
+        if(Math.abs(amount)>1.8)window.scrollBy(0,amount);
+       }
+      }
+      if(targetRef.current)clearHover();setCursor(null);
       tapRef.current={down:false,candidate:false,frames:0};
-      if(targetRef.current)clearHover();setCursor(null);setLabel('PALM OPEN · PAUSED');return;
+      setLabel('OPEN PALM · SMOOTH SCROLL');return;
      }
+     palmScrollRef.current=newPalmScroll();
+     const candidates=samples.filter(item=>!item.open&&!item.spread);
      const pointer=candidates.sort((a,b)=>{
       const previous=pointerRef.current;
       const d1=Math.hypot(1-a.wrist.x-previous.wristX,a.wrist.y-previous.wristY);
@@ -285,7 +315,7 @@ export default function HoloNavigator(){
       swipeRef.current.armed=false;swipeRef.current.active=false;
       tapRef.current={down:false,candidate:false,frames:0};
       if(targetRef.current)clearHover();
-      setCursor(null);setLabel('ONE INDEX = MOVE / SWIPE · TWO FINGERS = ZOOM');
+      setCursor(null);setLabel('INDEX = AIM · PALM = SCROLL');
       return;
      }
      const tip=pointer.landmarks[8],joint=pointer.landmarks[6],base=pointer.landmarks[5];
@@ -316,58 +346,9 @@ export default function HoloNavigator(){
       pointerAimRef.current={x,y};
      }
      const eligible=pointer.pointing||(down&&now-p.lastPoint<600);
-     const swipe=swipeRef.current;
-     if(eligible&&!keyboardRef.current&&!down&&poseStable){
-      if(!swipe.armed){
-       swipe.armed=true;swipe.active=false;swipe.anchorX=x;swipe.anchorY=y;
-       swipe.lastY=y;swipe.startFrames=0;swipe.stillFrames=0;swipe.reverse=0;
-      }
-      if(!swipe.active){
-       const dy=y-swipe.anchorY,dx=x-swipe.anchorX;
-       if(Math.abs(dy)>.055&&Math.abs(dy)>Math.abs(dx)*1.45){
-        swipe.startFrames++;
-        if(swipe.startFrames>=2){
-         swipe.active=true;swipe.lastY=y;swipe.direction=Math.sign(dy);
-          scrollVelocityRef.current=0;lastScrollAtRef.current=now;
-         swipe.reverse=0;swipe.stillFrames=0;
-         if(targetRef.current)clearHover();
-        }
-       }else if(Math.abs(dx)>.09||Math.abs(dy)<.026){
-        swipe.startFrames=0;
-        if(Math.abs(dx)>.09){swipe.anchorX=x;swipe.anchorY=y;}
-       }
-      }
-      if(swipe.active){
-       const dy=y-swipe.lastY;swipe.lastY=y;
-       if(Math.abs(dy)<.006){swipe.stillFrames++;}
-       else{
-        swipe.stillFrames=0;
-        const sign=Math.sign(dy);
-        if(sign!==swipe.direction){
-         swipe.reverse+=Math.abs(dy);
-         if(swipe.reverse>.036){swipe.direction=sign;swipe.reverse=0;}
-        }else{
-         swipe.reverse=0;
-         const pixels=clamp(-dy*window.innerHeight*.72,-32,32);
-          const target=Math.abs(pixels)>5?pixels:0;
-          scrollVelocityRef.current=scrollVelocityRef.current*.65+target*.35;
-          const elapsed=clamp(now-lastScrollAtRef.current,20,110);lastScrollAtRef.current=now;
-          if(Math.abs(scrollVelocityRef.current)>3.5)window.scrollBy(0,scrollVelocityRef.current*elapsed/50);
-        }
-       }
-       if(swipe.stillFrames>=5){
-        swipe.active=false;swipe.armed=false;swipe.stillFrames=0;scrollVelocityRef.current=0;
-       }else{
-        setCursor({x,y,progress:0,press:false});
-        setLabel('INDEX SWIPE · SCROLLING');return;
-       }
-      }
-     }else if(!eligible||down){
-      swipe.armed=false;swipe.active=false;swipe.startFrames=0;scrollVelocityRef.current=0;
-     }
      if(!eligible){
       if(targetRef.current)clearHover();
-      setCursor(null);setLabel('EXTEND INDEX TO POINT OR SWIPE');return;
+      setCursor(null);setLabel('EXTEND INDEX TO AIM · OPEN PALM TO SCROLL');return;
      }
      const pointX=down&&targetRef.current?pointerAimRef.current.x:x;
      const pointY=down&&targetRef.current?pointerAimRef.current.y:y;
@@ -422,7 +403,8 @@ export default function HoloNavigator(){
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
-   <p className="holo-natural-legend">1 INDEX: SWIPE TO SCROLL · BEND TO CLICK · 2 FINGERS: ZOOM</p>
+   {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".6" max="2" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
+   <p className="holo-natural-legend">OPEN PALM: SCROLL · INDEX: AIM · PINCH / BEND: CLICK · V: ZOOM</p>
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
   {status==='ready'&&cursor&&<div className={'holo-gesture-pointer '+(cursor.press?'pressed':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/>{targetName&&<small>{targetName}</small>}</div>}
@@ -430,7 +412,7 @@ export default function HoloNavigator(){
    <div className="holo-air-head"><div><Keyboard size={18}/><strong>AIR KEYBOARD</strong></div><button type="button" onClick={()=>{keyboardRef.current=false;setKeyboard(false);clearHover();}}><X size={16}/> CLOSE</button></div>
    <div className="holo-air-input"><span>{focusRef.current&&document.contains(focusRef.current)?'TEXT FIELD · '+(focusRef.current.getAttribute('placeholder')||focusRef.current.getAttribute('name')||'MESSAGE'):'DEMO TEXT'}</span><output>{focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-60):scratch.slice(-60)}</output></div>
    <div className="holo-air-keys">{ROWS.map((row,i)=><div className="holo-air-row" key={i}>{row.split('').map(letter=><button type="button" key={letter} data-holo-key={letter} className={hoverKey===letter?'selected':''} onClick={()=>insertText(letter)}>{letter}</button>)}</div>)}<div className="holo-air-row holo-air-utils"><button data-holo-key="BACK" className={hoverKey==='BACK'?'selected':''} onClick={()=>insertText('BACK')}>BACKSPACE</button><button data-holo-key="SPACE" className={hoverKey==='SPACE'?'selected':''} onClick={()=>insertText('SPACE')}>SPACE</button><button data-holo-key="CLEAR" className={hoverKey==='CLEAR'?'selected':''} onClick={()=>insertText('CLEAR')}>CLEAR</button></div></div>
-   <p className="holo-air-foot">POINT AT A KEY · BEND INDEX OR HOLD · ONE INDEX SWIPES THE SITE WHEN NOT TYPING</p>
+   <p className="holo-air-foot">POINT AT A KEY · BEND INDEX TO TYPE · OPEN PALM TO SCROLL</p>
   </section>}
  </>;
 }
