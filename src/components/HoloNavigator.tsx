@@ -70,6 +70,7 @@ export default function HoloNavigator(){
  const [backend,setBackend]=useState('');
  const [zoomLevel,setZoomLevel]=useState(1);
  const videoRef=useRef<HTMLVideoElement|null>(null);
+ const pinchRef=useRef({down:false,candidate:false,frames:0});
  const palmScrollRef=useRef<PalmScroll>(newPalmScroll());
  const [scrollSpeed,setScrollSpeed]=useState(1);
  const scrollSpeedRef=useRef(1);
@@ -118,6 +119,7 @@ export default function HoloNavigator(){
   zoomValueRef.current=1;setZoomLevel(1);
   document.documentElement.style.removeProperty('--spatial-site-zoom');
   tapRef.current={down:false,candidate:false,frames:0};
+  pinchRef.current={down:false,candidate:false,frames:0};
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
   pointerAimRef.current={x:.5,y:.5};
@@ -232,6 +234,7 @@ export default function HoloNavigator(){
      if(samples.length!==lastCount){lastCount=samples.length;setHandCount(samples.length);}
      if(!samples.length){
       missedRef.current++;
+      pinchRef.current={down:false,candidate:false,frames:0};
       // Ignore up to two dropped frames; mobile landmark tracking sometimes misses a single frame.
       if(missedRef.current<3)return;
       swipeRef.current.armed=false;swipeRef.current.active=false;
@@ -318,8 +321,8 @@ export default function HoloNavigator(){
       setCursor(null);setLabel('INDEX = AIM · PALM = SCROLL');
       return;
      }
-     const tip=pointer.landmarks[8],joint=pointer.landmarks[6],base=pointer.landmarks[5];
-     if(!tip||!joint||!base)return;
+     const tip=pointer.landmarks[8],joint=pointer.landmarks[6],base=pointer.landmarks[5],thumb=pointer.landmarks[4];
+     if(!tip||!joint||!base||!thumb)return;
      const p=pointerRef.current;
      const wristJump=Math.hypot(1-pointer.wrist.x-p.wristX,pointer.wrist.y-p.wristY);
      if(wristJump>.32){
@@ -331,7 +334,7 @@ export default function HoloNavigator(){
      const rawY=clamp((tip.y-.5)*1.48+.5,0,1);
      // Temporal smoothing makes a slight hand tremor move the cursor only slightly.
      const motion=Math.hypot(rawX-p.x,rawY-p.y);
-     const smoothing=motion<.015?.17:motion<.055?.34:.57;
+     const smoothing=motion<.015?.24:motion<.055?.47:.7;
      const x=p.x=p.x*(1-smoothing)+rawX*smoothing;
      const y=p.y=p.y*(1-smoothing)+rawY*smoothing;
      p.wristX=1-pointer.wrist.x;p.wristY=pointer.wrist.y;
@@ -341,20 +344,21 @@ export default function HoloNavigator(){
      if(tap.candidate!==tapCandidate){tap.candidate=tapCandidate;tap.frames=1;}else tap.frames++;
      const down=tap.frames>=2?tapCandidate:tap.down;
      const tapStarted=down&&!tap.down;tap.down=down;
-     if(pointer.pointing&&!down){
-      p.lastPoint=now;
-      pointerAimRef.current={x,y};
-     }
-     const eligible=pointer.pointing||(down&&now-p.lastPoint<600);
-     if(!eligible){
-      if(targetRef.current)clearHover();
-      setCursor(null);setLabel('EXTEND INDEX TO AIM · OPEN PALM TO SCROLL');return;
-     }
-     const pointX=down&&targetRef.current?pointerAimRef.current.x:x;
-     const pointY=down&&targetRef.current?pointerAimRef.current.y:y;
+     const pinch=pinchRef.current;
+     const ratio=dist(tip,thumb)/Math.max(.065,dist(pointer.landmarks[5],pointer.landmarks[17]));
+     const close=pinch.down?ratio<.62:ratio<.43;
+     if(close!==pinch.candidate){pinch.candidate=close;pinch.frames=1;}else pinch.frames++;
+     const pinching=pinch.frames>=2?close:pinch.down;
+     const pinchStarted=pinching&&!pinch.down;pinch.down=pinching;
+     const pressing=down||pinching;
+     if(pointer.pointing&&!pressing){p.lastPoint=now;pointerAimRef.current={x,y};}
+     const eligible=pointer.pointing||(pressing&&now-p.lastPoint<900);
+     if(!eligible){if(targetRef.current)clearHover();setCursor(null);setLabel('EXTEND INDEX TO AIM · PALM TO SCROLL');return;}
+     const pointX=pressing&&targetRef.current?pointerAimRef.current.x:x;
+     const pointY=pressing&&targetRef.current?pointerAimRef.current.y:y;
      const px=pointX*window.innerWidth,py=pointY*window.innerHeight;
      const element=document.elementFromPoint(px,py) as HTMLElement|null;
-     let target=element?.closest<HTMLElement>(CLICKABLE)||null;
+     let target=pressing&&targetRef.current&&document.contains(targetRef.current)?targetRef.current:element?.closest<HTMLElement>(CLICKABLE)||null;
      if(target?.closest('.holo-natural-control')&&!target.closest('[data-holo-key]'))target=null;
      if(targetRef.current&&target!==targetRef.current){
       const rect=targetRef.current.getBoundingClientRect();
@@ -369,16 +373,13 @@ export default function HoloNavigator(){
       setTargetName(target?nameOf(target):'');
      }
      const hover=hoverRef.current;
-     const holdMs=keyboardRef.current&&target?.dataset.holoKey?950:1450;
-     const progress=target&&!hover.fired?clamp((now-hover.since)/holdMs,0,1):0;
-     const stableTarget=target&&now-hover.since>220&&poseStable&&!swipe.active;
-     if(stableTarget&&!hover.fired&&now-lastPressRef.current>460&&
-       ((tapStarted&&now-p.lastPoint<600)||(pointer.pointing&&progress>=1))){
-      hover.fired=true;lastPressRef.current=now;
-      activateRef.current(target);
-     }
-     setCursor({x:pointX,y:pointY,progress,press:down});
-     setLabel(target?'INDEX · PRESS OR HOLD TO CLICK':'INDEX · SWIPE VERTICALLY TO SCROLL');
+     const ready=!!target&&now-hover.since>70;
+     // Explicit gesture click, without any dwell-triggered activation.
+     if(ready&&(tapStarted||pinchStarted)&&now-lastPressRef.current>330&&now-p.lastPoint<900){
+      lastPressRef.current=now;activateRef.current(target);
+      setLabel('CLICK ✓ '+nameOf(target));
+     }else setLabel(pressing?'PINCH / AIR TAP · CLICK':'INDEX · AIM AT A LINK OR BUTTON');
+     setCursor({x:pointX,y:pointY,progress:ready?1:0,press:pressing});
     }catch(e){console.warn('Gesture frame skipped:',e);}
    };
    rafRef.current=requestAnimationFrame(tick);
