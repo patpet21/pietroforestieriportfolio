@@ -11,7 +11,7 @@ export type GestureSettings={
 };
 export const GESTURE_SETTINGS_EVENT='pf-gesture-settings-changed';
 export const DEFAULT_GESTURE_SETTINGS:GestureSettings={
- navigationTouch:'balanced',keyboardTouch:'precise',keyboardReach:1.3,scrollSpeed:2
+ navigationTouch:'balanced',keyboardTouch:'precise',keyboardReach:1.0,scrollSpeed:2
 };
 const STORAGE='pf-gestureos-settings-v1';
 const range=(v:unknown,low:number,high:number,fallback:number)=>{
