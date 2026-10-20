@@ -112,7 +112,7 @@ export class AirTypingEngine{
    for(const {name,tip} of FINGERS){
    const id=side+'-'+name;
    let pointer=this.pushPointers.get(id);
-   if(!pointer){pointer=new KeyboardPointer({easy:.045,balanced:.065,precise:.09}[sensitivity]);this.pushPointers.set(id,pointer);}
+   if(!pointer){pointer=new KeyboardPointer({easy:.085,balanced:.12,precise:.16}[sensitivity]);this.pushPointers.set(id,pointer);}
    if(reset)pointer.reset();
    const position=hand.landmarks[tip],depth=measureFingerDepth(hand.landmarks,tip,aspect);
    const result=pointer.process({x:clamp((1-position.x-.5)*reach+.5,0,1),y:clamp((position.y-.5)*reach+.5,0,1)},depth,now,keyAt);
