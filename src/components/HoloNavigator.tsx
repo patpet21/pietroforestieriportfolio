@@ -198,8 +198,8 @@ export default function HoloNavigator(){
      const prevPalm=palmRef.current;
      if(openHands.length){
       scrollHand=prevPalm?openHands.reduce((a,b)=>
-       Math.hypot(a.palm.x-prevPalm.x,a.palm.y-prevPalm.y)
-       <=Math.hypot(b.palm.x-prevPalm.x,b.palm.y-prevPalm.y)?a:b):openHands[0];
+       Math.hypot(1-a.palm.x-prevPalm.x,a.palm.y-prevPalm.y)
+       <=Math.hypot(1-b.palm.x-prevPalm.x,b.palm.y-prevPalm.y)?a:b):openHands[0];
      }
      let scrolling=false;
      if(scrollHand){
