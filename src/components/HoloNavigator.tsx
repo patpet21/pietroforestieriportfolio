@@ -596,10 +596,11 @@ export default function HoloNavigator(){
  };
 
  const mobileCompact=mobileView&&status==='ready'&&!mobilePanelExpanded;
+ const mobileIdle=mobileView&&status==='off';
  return <>
-  <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")+(mobileCompact?" holo-mobile-compact":"")} aria-label="Natural gesture control">
+  <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")+(mobileCompact?" holo-mobile-compact":"")+(mobileIdle?" holo-mobile-idle":"")} aria-label="Natural gesture control">
    <div className="holo-natural-title">
-    <Scan size={17}/><strong>{mobileCompact?'GESTURES ON':('SPATIAL CONTROL'+(mobileView?' · MOBILE':''))}</strong>
+    <Scan size={17}/><strong>{mobileCompact?('GESTURES ON · '+handCount+' HAND'):('SPATIAL CONTROL'+(mobileView?' · MOBILE':''))}</strong>
     {status==='ready'&&<i/>}
     {mobileView&&status==='ready'
       ?<button type="button" className="holo-preview-toggle" onClick={()=>setMobilePanelExpanded(v=>!v)} aria-label={mobilePanelExpanded?'Hide gesture camera and controls':'Show gesture camera and controls'}>{mobilePanelExpanded?'HIDE':'CAMERA'}</button>
