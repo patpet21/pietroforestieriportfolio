@@ -259,7 +259,7 @@ export default function HoloNavigator(){
   setStatus('loading');setError('');setLabel('STARTING CAMERA');
   try{
    const mobile=window.matchMedia('(max-width: 760px)').matches;
-   const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:mobile?480:640},height:{ideal:mobile?640:480},facingMode:'user'},audio:false});
+   const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:mobile?480:960},height:{ideal:mobile?640:720},facingMode:'user'},audio:false});
    if(session!==tokenRef.current){stream.getTracks().forEach(t=>t.stop());return;}
    streamRef.current=stream;
    const video=videoRef.current;
@@ -271,10 +271,10 @@ export default function HoloNavigator(){
    if(session!==tokenRef.current)return;
    let landmarker:Landmarker,cpu=false;
    try{
-    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.58,minTrackingConfidence:.62}) as Landmarker;
+    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.47,minHandPresenceConfidence:.47,minTrackingConfidence:.5}) as Landmarker;
    }catch{
     cpu=true;
-    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:mobile?1:2,minHandDetectionConfidence:.58,minTrackingConfidence:.62}) as Landmarker;
+    landmarker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.47,minHandPresenceConfidence:.47,minTrackingConfidence:.5}) as Landmarker;
    }
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');setStatus('ready');
