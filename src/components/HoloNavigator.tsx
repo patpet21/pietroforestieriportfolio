@@ -224,7 +224,7 @@ export default function HoloNavigator(){
  const activate=useCallback((target:HTMLElement)=>{
   const key=target.closest<HTMLElement>('[data-holo-key]');
   if(key){if(key.dataset.holoKey==='SITE')return;insertText(key.dataset.holoKey||'');return;}
-  if(target.closest('.holo-natural-control')&&!target.closest('[data-holo-test]'))return;
+  if(target.closest('.holo-natural-control')&&!target.closest('[data-holo-test],[data-holo-ui]'))return;
   if(isEditable(target)){
    focusRef.current=target;
    target.focus({preventScroll:true});
