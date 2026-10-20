@@ -137,7 +137,8 @@ export default function HoloNavigator(){
   const onFocus=(event:Event)=>{
    const field=event.target as Element;
    if(isEditable(field)&&streamRef.current){
-    focusRef.current=field;keyboardRef.current=true;setKeyboard(true);
+    // Focus alone must not open a floating gesture keyboard.
+    focusRef.current=field;
    }
   };
   const onKey=(event:KeyboardEvent)=>{
@@ -193,7 +194,7 @@ export default function HoloNavigator(){
   if(isEditable(target)){
    focusRef.current=target;
    target.focus({preventScroll:true});
-   keyboardRef.current=true;setKeyboard(true);
+   // Keep native text input; enable air keyboard manually when wanted.
    return;
   }
   target.click();
@@ -351,7 +352,7 @@ export default function HoloNavigator(){
      if(wristJump>.32){
       swipeRef.current.armed=false;swipeRef.current.active=false;
       tapRef.current={down:false,candidate:false,frames:0};
-      if(!pressHand&&now-p.lastPoint>500)clearHover();
+      if(!pressHand&&now-p.lastPoint>750)clearHover();
      }
      const rawX=clamp((1-tip.x-.5)*1.48+.5,0,1);
      const rawY=clamp((tip.y-.5)*1.48+.5,0,1);
@@ -410,19 +411,22 @@ export default function HoloNavigator(){
      const ready=!!target;
      // A click is an explicit pinch / index-tap edge, never a dwell countdown.
      // Both gestures share one latch, preventing double-click when a pinch also bends the index.
-     const clickedNow=(tapStarted||pinchStarted)&&!clickLatchRef.current;
+     // Pinch-only air typing on a stable key; finger bends were producing nonsense text.
+     const keyboardKey=target?.closest<HTMLElement>('[data-holo-key]');
+     const keyboardStable=!!keyboardKey&&now-hoverRef.current.since>=300;
+     const clickGesture=keyboardRef.current?pinchStarted:(pinchStarted||tapStarted);
+     const allowedTarget=keyboardRef.current?(keyboardStable?keyboardKey:null):target;
+     const clickedNow=clickGesture&&!clickLatchRef.current;
      if(clickedNow){
-      if(target&&now-lastPressRef.current>270){
-       // Arm the latch ONLY when a real control was activated.
-       // A premature air-tap without a target must not block a subsequent pinch.
+      if(allowedTarget&&now-lastPressRef.current>(keyboardRef.current?390:270)){
        clickLatchRef.current=true;
        lastPressRef.current=now;
-       clickFeedbackRef.current={at:now,label:'CLICK ✓ '+nameOf(target)};
-       activateRef.current(target);
+       clickFeedbackRef.current={at:now,label:(keyboardRef.current?'KEY ✓ ':'CLICK ✓ ')+nameOf(allowedTarget)};
+       activateRef.current(allowedTarget);
       }else{
        clickFeedbackRef.current={
         at:now,
-        label:target?'GESTURE DETECTED · RELEASE TO TRY AGAIN':'GESTURE DETECTED · AIM AT A BUTTON'
+        label:keyboardRef.current?'AIM ON A LETTER, THEN PINCH':target?'GESTURE DETECTED · RELEASE TO TRY AGAIN':'GESTURE DETECTED · AIM AT A BUTTON'
        };
       }
      }
@@ -455,6 +459,12 @@ export default function HoloNavigator(){
    {status==='ready'?<>
     <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
+    <button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
+     keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
+     clearHover();pinchRef.current={down:false,candidate:false,frames:0};
+     tapRef.current={down:false,candidate:false,frames:0};clickLatchRef.current=false;
+     setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PINCH':'AIR KEYBOARD OFF');
+    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'OPEN AIR KEYBOARD'}</button>
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:<button type="button" className="holo-natural-start" onClick={start} disabled={status==='loading'}><Camera size={16}/>{status==='loading'?'LOADING CAMERA…':'ENABLE GESTURES'}</button>}
    {status==='error'&&<p className="holo-natural-error" role="alert">{error}</p>}
@@ -467,7 +477,7 @@ export default function HoloNavigator(){
    <div className="holo-air-head"><div><Keyboard size={18}/><strong>AIR KEYBOARD</strong></div><button type="button" onClick={()=>{keyboardRef.current=false;setKeyboard(false);clearHover();}}><X size={16}/> CLOSE</button></div>
    <div className="holo-air-input"><span>{focusRef.current&&document.contains(focusRef.current)?'TEXT FIELD · '+(focusRef.current.getAttribute('placeholder')||focusRef.current.getAttribute('name')||'MESSAGE'):'DEMO TEXT'}</span><output>{focusRef.current&&document.contains(focusRef.current)?focusRef.current.value.slice(-60):scratch.slice(-60)}</output></div>
    <div className="holo-air-keys">{ROWS.map((row,i)=><div className="holo-air-row" key={i}>{row.split('').map(letter=><button type="button" key={letter} data-holo-key={letter} className={hoverKey===letter?'selected':''} onClick={()=>insertText(letter)}>{letter}</button>)}</div>)}<div className="holo-air-row holo-air-utils"><button data-holo-key="BACK" className={hoverKey==='BACK'?'selected':''} onClick={()=>insertText('BACK')}>BACKSPACE</button><button data-holo-key="SPACE" className={hoverKey==='SPACE'?'selected':''} onClick={()=>insertText('SPACE')}>SPACE</button><button data-holo-key="CLEAR" className={hoverKey==='CLEAR'?'selected':''} onClick={()=>insertText('CLEAR')}>CLEAR</button></div></div>
-   <p className="holo-air-foot">POINT AT A KEY · BEND INDEX TO TYPE · OPEN PALM TO SCROLL</p>
+   <p className="holo-air-foot">POINT AT A KEY · HOLD AIM BRIEFLY · PINCH TO TYPE · RELEASE BETWEEN KEYS. INDEX BEND IS DISABLED HERE.</p>
   </section>}
  </>;
 }
