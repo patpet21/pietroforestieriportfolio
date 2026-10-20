@@ -171,15 +171,19 @@ export default function HoloNavigator(){
  useEffect(()=>{
   const sync=(event:Event)=>{
    const settings=(event as CustomEvent<GestureSettings>).detail||readGestureSettings();
+   const previous=gestureSettingsRef.current;gestureSettingsRef.current=settings;
    scrollSpeedRef.current=settings.scrollSpeed;setScrollSpeed(settings.scrollSpeed);
    airSensitivityRef.current=settings.keyboardTouch;setAirSensitivity(settings.keyboardTouch);
    airReachRef.current=settings.keyboardReach;setAirReach(settings.keyboardReach);
-   airEngineRef.current.reset();
-   controllerRef.current=new ForwardPushController<HTMLElement>(navigationTouchTravel(settings.navigationTouch));
+   if(settings.keyboardTouch!==previous.keyboardTouch||settings.keyboardReach!==previous.keyboardReach)airEngineRef.current.reset();
+   if(settings.navigationTouch!==previous.navigationTouch){
+    controllerRef.current=new ForwardPushController<HTMLElement>(navigationTouchTravel(settings.navigationTouch));
+   }
   };
   window.addEventListener(GESTURE_SETTINGS_EVENT,sync);
   return()=>window.removeEventListener(GESTURE_SETTINGS_EVENT,sync);
  },[]);
+ const gestureSettingsRef=useRef(readGestureSettings());
  const stopRef=useRef(stop);stopRef.current=stop;
  const leaveKeyboard=useCallback(()=>{
   keyboardRef.current=false;setKeyboard(false);keyboardExitFistAt.current=0;
