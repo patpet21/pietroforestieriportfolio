@@ -347,7 +347,7 @@ export default function HoloNavigator(){
       setTargetName(target?nameOf(target):'');
      }
      const hover=hoverRef.current;
-     const holdMs=keyboardRef.current&&target?.dataset.holoKey?1100:1550;
+     const holdMs=keyboardRef.current&&target?.dataset.holoKey?950:1250;
      const progress=target&&!hover.fired?clamp((now-hover.since)/holdMs,0,1):0;
      const stableTarget=target&&now-hover.since>150;
      if(stableTarget&&!hover.fired&&now-lastPressRef.current>460&&
