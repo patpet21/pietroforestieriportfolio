@@ -1,7 +1,7 @@
+import {KeyboardPointer} from './gesture/KeyboardPointer.ts';
 /**
- * GestureOS Air Type V3
- * Ten independent fingertip cursors, explicit home-row calibration, and
- * press/release hysteresis. Browser-local geometry; no external key service.
+ * One index + pinch uses the shared pointer lifecycle without calibration.
+ * Ten-finger tap remains an independently calibrated research mode.
  */
 export type AirPoint={x:number;y:number;z:number};
 export type AirHand={landmarks:AirPoint[]};
@@ -32,17 +32,18 @@ const HOME:Record<string,string>={
  'L-THUMB':'SPACE','L-INDEX':'F','L-MIDDLE':'D','L-RING':'S','L-PINKY':'A',
  'R-THUMB':'SPACE','R-INDEX':'J','R-MIDDLE':'K','R-RING':'L','R-PINKY':';',
 };
-const dist=(a:AirPoint,b:AirPoint)=>Math.hypot(a.x-b.x,a.y-b.y);
+const dist=(a:{x:number;y:number},b:{x:number;y:number})=>Math.hypot(a.x-b.x,a.y-b.y);
 const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));
 const pressFactors:Record<AirSensitivity,number>={easy:.83,balanced:.75,precise:.67};
 export class AirTypingEngine{
  private states=new Map<string,FingerState>();
- private pinches=new Map<Side,boolean>();
+ private keyboardPointer=new KeyboardPointer();
+ private control:{x:number;y:number;at:number}|null=null;
  private calibration=new Map<Side,Calibration>();
  private lastGlobalPress=0;
  private singleHandSide:Side|null=null;
  private statusMessage='';
- reset(){this.states.clear();this.pinches.clear();this.lastGlobalPress=0;this.singleHandSide=null;}
+ reset(){this.states.clear();this.keyboardPointer.reset();this.control=null;this.lastGlobalPress=0;this.singleHandSide=null;}
  clearCalibration(){this.reset();this.calibration.clear();this.statusMessage='';}
  calibratedHands(){return this.calibration.size;}
  private assignHands(hands:AirHand[]):{side:Side;hand:AirHand}[]{
@@ -96,18 +97,34 @@ export class AirTypingEngine{
   this.statusMessage=count===2?'BOTH HANDS ALIGNED':'ONE HAND ALIGNED · SHOW SECOND HAND TO CALIBRATE BOTH';
   return {ok:true,hands:count,message:this.statusMessage};
  }
+ private processPinch(hands:AirHand[],keyAt:KeyLocator,now:number,reach:number):AirFrame{
+  const valid=hands.filter(h=>h.landmarks.length===21&&h.landmarks.every(p=>[p.x,p.y,p.z].every(Number.isFinite)));
+  if(!valid.length){this.keyboardPointer.reset();this.control=null;return {fingers:[],presses:[],hands:0,calibrated:0,status:'SHOW ONE HAND · INDEX TO AIM'};}
+  const previous=this.control;
+  const hand=valid.slice().sort((a,b)=>{
+   const origin=previous||{x:.5,y:.5};
+   return dist(a.landmarks[0],origin)-dist(b.landmarks[0],origin);
+  })[0];
+  const wrist=hand.landmarks[0],tip=hand.landmarks[8];
+  if(previous&&(now-previous.at>320||Math.hypot(wrist.x-previous.x,wrist.y-previous.y)>.28))this.keyboardPointer.reset();
+  this.control={x:wrist.x,y:wrist.y,at:now};
+  const ratio=dist(tip,hand.landmarks[4])/Math.max(.065,dist(hand.landmarks[5],hand.landmarks[17]));
+  const result=this.keyboardPointer.process({x:clamp((1-tip.x-.5)*reach+.5,0,1),y:clamp((tip.y-.5)*reach+.5,0,1)},ratio,now,keyAt);
+  const side:Side=wrist.x>.5?'L':'R';
+  const id=side+'-INDEX';
+  return {fingers:[{id,hand:side,name:'INDEX',x:result.point.x,y:result.point.y,key:result.key,
+    pressed:result.down,armed:result.armed,ratio}],
+   presses:result.activation?[{key:result.activation,fingerId:id}]:[],hands:valid.length,calibrated:0,
+   status:result.activation?'KEY PRESSED · RELEASE TO REPEAT':result.pending?'PINCH · RELEASE THUMB AND INDEX':result.key?'KEY '+result.key+' · PINCH TO PRESS':'MOVE INDEX OVER A KEY'};
+ }
  process(hands:AirHand[],keyAt:KeyLocator,now:number,options:AirTypingSettings):AirFrame{
-  const assigned=this.assignHands(hands);
   const reach=clamp(options.reach,.8,2.0);
+  if(options.mode==='pinch')return this.processPinch(hands,keyAt,now,reach);
+  const assigned=this.assignHands(hands);
   const fingers:AirFinger[]=[],presses:AirKeyPress[]=[],alive=new Set<string>();
   for(const {side,hand} of assigned){
    const points=hand.landmarks,wrist=points[0];
    const cal=this.calibration.get(side);
-   const index=points[8],thumb=points[4];
-   const width=Math.max(.075,dist(points[5],points[17]));
-   const pinchRatio=dist(index,thumb)/width;
-   const wasPinching=this.pinches.get(side)||false;
-   const pinching=pinchRatio<(wasPinching?.8:.58);
    for(const {name,tip,pip,mcp} of FINGERS){
     const id=side+'-'+name;alive.add(id);
     const p=points[tip],fingerCal=cal?.fingers[name];
@@ -161,17 +178,8 @@ export class AirTypingEngine{
     }
     fingers.push({id,hand:side,name,x:st.x,y:st.y,key:st.key,pressed:st.down,armed:st.armed,ratio});
    }
-   if(options.mode==='pinch'&&cal){
-    const pointer=this.states.get(side+'-INDEX');
-    if(pinching&&!wasPinching&&pointer?.key&&now-pointer.stableSince>=150&&now-this.lastGlobalPress>180){
-     presses.push({key:pointer.key,fingerId:side+'-INDEX'});
-     pointer.lastPress=now;this.lastGlobalPress=now;
-    }
-   }
-   this.pinches.set(side,pinching);
   }
   for(const [id,st] of this.states){if(!alive.has(id)&&now-st.lastAt>350)this.states.delete(id);}
-  if(!assigned.length){this.pinches.clear();}
   const count=assigned.length,calibrated=this.calibration.size;
   const status=calibrated===0?'NOT ALIGNED · PRESS ALIGN HANDS':
    count===0?'SHOW YOUR HANDS IN THE CAMERA':

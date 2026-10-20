@@ -13,6 +13,7 @@ export class PointerController<T>{
  private held:typeof this.aim=null;
  private lastAt=-Infinity;
  private closeAt=0;
+ get ready(){return this.armed;}
  reset(){
   this.phase='IDLE';this.down=false;this.candidate=false;this.frames=0;
   this.armed=false;this.aim=null;this.held=null;this.lastAt=-Infinity;this.closeAt=0;

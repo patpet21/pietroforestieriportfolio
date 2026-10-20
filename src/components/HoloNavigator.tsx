@@ -315,7 +315,7 @@ export default function HoloNavigator(){
       controllerRef.current.reset();metrics.values.suppression='tracker-lost';
       clearHover();setCursor(null);
       missedRef.current++;
-      if(keyboardRef.current&&missedRef.current>=3){
+      if(keyboardRef.current){
        airEngineRef.current.reset();
        setAirFrame({fingers:[],presses:[],hands:0,calibrated:airEngineRef.current.calibratedHands(),status:'SHOW YOUR HANDS'});
       }
@@ -332,30 +332,25 @@ export default function HoloNavigator(){
      missedRef.current=0;
      if(keyboardRef.current){
       controllerRef.current.reset();metrics.values.suppression='mode-switch';
-      // Exclusive keyboard mode: all fingertips from BOTH tracked hands.
-      // The existing navigator is suspended while air typing is active.
-      // Compute keyboard geometry ONCE per camera frame, not 10 times.
-      // This avoids repeated layout work when all ten fingertips are tracked.
+      // Keyboard is exclusive: one index + pinch, or opt-in ten-finger research.
+      // Full key geometry is only needed while calibrating the finger experiment.
       const root=airKeysRef.current;
       const box=root?.getBoundingClientRect();
-      const keyBoxes=root?Array.from(root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]')).map(button=>({
+      const keyBoxes=root&&airModeRef.current==='tap'&&autoCalibrationRef.current.enabled?Array.from(root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]')).map(button=>({
        key:button.dataset.holoKey||'',rect:button.getBoundingClientRect()
       })):[];
       const keyAt=(nx:number,ny:number):string|null=>{
        if(!box||!box.width||!box.height)return null;
        const px=box.left+nx*box.width,py=box.top+ny*box.height;
        if(px<box.left||px>box.right||py<box.top||py>box.bottom)return null;
-       for(const item of keyBoxes){
-        const rect=item.rect;
-        if(px>=rect.left&&px<=rect.right&&py>=rect.top&&py<=rect.bottom)return item.key;
-       }
-       return null;
+       const key=document.elementFromPoint(px,py)?.closest<HTMLButtonElement>('button[data-holo-key]');
+       return key&&root?.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.holoKey||null:null;
       };
       // Auto-calibrate without a mouse or a third hand:
       // once two hands remain reasonably steady in frame for ~2.4 seconds,
       // use their current relaxed posture as the reference.
       const calibration=autoCalibrationRef.current;
-      if(calibration.enabled){
+      if(calibration.enabled&&airModeRef.current==='tap'){
        const hint=(value:string)=>{
         if(calibration.hint!==value){calibration.hint=value;setAirCalibrationMessage(value);}
        };
@@ -578,8 +573,8 @@ export default function HoloNavigator(){
     {!mobileView&&location.pathname==='/gesture-lab'?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
      airEngineRef.current.clearCalibration();
-     autoCalibrationRef.current=keyboardRef.current?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
-     if(keyboardRef.current)setAirCalibrationMessage('HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
+     autoCalibrationRef.current=keyboardRef.current&&airModeRef.current==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
+     if(keyboardRef.current)setAirCalibrationMessage(airModeRef.current==='pinch'?'ONE HAND · AIM WITH INDEX, PINCH TO PRESS, RELEASE TO REPEAT. NO ALIGNMENT NEEDED.':'HANDS-FREE AUTO-ALIGN · SHOW BOTH HANDS, THEN HOLD STILL.');
      setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'WAITING FOR TWO HANDS'});
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
@@ -607,7 +602,11 @@ export default function HoloNavigator(){
    mode={airMode}
    sensitivity={airSensitivity}
    reach={airReach}
-   onMode={v=>{airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();}}
+   onMode={v=>{
+    airModeRef.current=v;setAirMode(v);airEngineRef.current.reset();
+    autoCalibrationRef.current=v==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
+    setAirCalibrationMessage(v==='pinch'?'ONE HAND · AIM WITH INDEX, PINCH TO PRESS, RELEASE TO REPEAT. NO ALIGNMENT NEEDED.':'SHOW BOTH HANDS AND HOLD STILL TO ALIGN EXPERIMENTAL FINGER TAPS.');
+   }}
    onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
    onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
    onCalibrate={()=>{
