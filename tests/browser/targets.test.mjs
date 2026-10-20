@@ -10,7 +10,7 @@ before(async()=>{
 });
 after(async()=>{await browser?.close();await server?.close();});
 test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links and stale nodes',async()=>{
- await page.goto(origin);await page.waitForSelector('.holo-natural-control');
+ await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('.holo-natural-control');
  const result=await page.evaluate(async()=>{
   const {findGestureTarget,canActivateTarget}=await import('/src/lib/gesture/targets.ts');
   const {PointerController}=await import('/src/lib/gesture/PointerController.ts');
@@ -36,17 +36,17 @@ test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links
  assert.deepEqual(result,{nested:true,clicks:1,covered:true,disabled:true,ariaDisabled:true,adjacent:true,removed:true,fieldset:true,inert:true});
 });
 test('portfolio native navigation, fields and experimental entry remain usable',async()=>{
- await page.goto(origin);await page.waitForSelector('.holo-natural-control');
+ await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('.holo-natural-control');
  assert.equal(await page.locator('.gesture-debug').count(),0);
  assert.equal(await page.locator('.holo-air-toggle').count(),0);
  await page.locator('header nav a[href="/contact"]').click();
  await page.waitForURL('**/contact');
  const field=page.locator('input[name="name"]').first();await field.fill('Manual input');assert.equal(await field.inputValue(),'Manual input');
- await page.goto(origin+'?gestureDebug=1');await page.waitForSelector('.gesture-debug');
+ await page.goto(origin+'?gestureDebug=1',{waitUntil:'domcontentloaded'});await page.waitForSelector('.gesture-debug');
  assert.equal(await page.locator('video').evaluate(v=>v.srcObject),null);
 });
 test('gesture activation follows React Router links and focuses native inputs',async()=>{
- await page.goto(origin);await page.waitForSelector('header nav');
+ await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('header nav');
  await page.evaluate(async()=>{
   const {findGestureTarget,canActivateTarget}=await import('/src/lib/gesture/targets.ts');
   const link=document.querySelector('header nav a[href="/contact"]');const r=link.getBoundingClientRect();

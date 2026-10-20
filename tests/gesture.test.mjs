@@ -74,7 +74,7 @@ test('diagnostics disabled by default and bounded to 240 observations',()=>{
 });
 test('experimental typing cannot emit characters before calibration',()=>{
  const engine=new AirTypingEngine();
- for(let now=100;now<2000;now+=50)assert.deepEqual(engine.process([{landmarks:hand([0,1,2,3])}],()=> 'A',now,{reach:1,mode:'pinch',sensitivity:'easy'}).presses,[]);
+ for(let now=100;now<2000;now+=50)assert.deepEqual(engine.process([{landmarks:hand([0,1,2,3])}],()=> 'A',now,{reach:1,mode:'tap',sensitivity:'easy'}).presses,[]);
 });
 test('20 palm traces match recorded baseline scroll, reversals, speeds and jump guards',()=>{
  const {rows}=JSON.parse(readFileSync(new URL('./fixtures/palm-baseline.json',import.meta.url)));

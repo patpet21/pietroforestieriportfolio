@@ -8,7 +8,7 @@ before(async()=>{
  browser=await chromium.launch({headless:true});
 });
 after(async()=>{await browser?.close();await server?.close();});
-async function fixture({mobile=false,cpu=false,denied=false}={}){
+async function fixture({mobile=false,cpu=false,denied=false,path=''}={}){
  const page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:900}});
  await page.route(/@mediapipe_tasks-vision/,route=>route.fulfill({contentType:'text/javascript',body:`
   export const FilesetResolver={forVisionTasks:async()=>({})};
@@ -27,7 +27,7 @@ async function fixture({mobile=false,cpu=false,denied=false}={}){
    window.__streams.push(stream);return stream;
   }});
  },{denied});
- await page.goto(origin+'?gestureDebug=1');
+ await page.goto(origin+path+'?gestureDebug=1',{waitUntil:'domcontentloaded'});
  await page.getByRole('button',{name:'ENABLE GESTURES',exact:true}).click();
  if(!denied){
   await page.waitForFunction(()=>document.querySelector('.holo-natural-status'));
@@ -112,5 +112,51 @@ test('a covered target, route transition and competing camera never replay a hel
   await page.waitForSelector('.holo-natural-start');
   assert.equal(await page.evaluate(()=>window.__streams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
   assert.equal(await page.evaluate(()=>window.__closed),1);
+ }finally{await page.close();}
+});
+async function keyboardPose(page,key,closed=false){
+ await page.evaluate(({key,closed})=>{
+  const plane=document.querySelector('.air-desk-plane').getBoundingClientRect();
+  const target=document.querySelector(`[data-holo-key="${key}"]`).getBoundingClientRect();
+  const nx=(target.left+target.width/2-plane.left)/plane.width,ny=(target.top+target.height/2-plane.top)/plane.height;
+  const reach=Number(document.querySelector('[aria-label="Typing hand movement range"]').value);
+  const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
+  const p=Array.from({length:21},()=>({x:.5,y:.7,z:0}));
+  p[0]={x:.5,y:.85,z:0};p[5]={x:.44,y:.7,z:0};p[17]={x:.56,y:.7,z:0};
+  p[8]={x,y,z:0};p[4]={x:x+(closed?.02:.2),y,z:0};
+  window.__hands=[p];window.__poseStart=window.__inferences||0;
+ },{key,closed});
+ await page.waitForFunction(()=>window.__inferences-window.__poseStart>=6);
+}
+test('floating Air Type: one hand highlights and types CIAO, repeated letters, space and backspace without calibration',async()=>{
+ const page=await fixture({path:'gesture-lab'});
+ try{
+  await page.evaluate(()=>document.getElementById('fixture-target').remove());
+  await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
+  await page.waitForSelector('.air-desk-plane');
+  assert.equal(await page.locator('.air-calibrate').count(),0);
+  assert.match(await page.locator('.air-calibration-note').textContent(),/NO ALIGNMENT NEEDED/);
+  const press=async key=>{await keyboardPose(page,key);await keyboardPose(page,key,true);};
+  await keyboardPose(page,'C');assert.equal(await page.locator('[data-holo-key="C"]').evaluate(el=>el.classList.contains('air-key-hover')),true);
+  await keyboardPose(page,'C',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'C');
+  await keyboardPose(page,'C',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'C');
+  for(const key of ['I','A','O','O','BACK','SPACE'])await press(key);
+  assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO ');
+  await page.evaluate(()=>{window.__hands=[];window.__poseStart=window.__inferences;});
+  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=3);
+  await keyboardPose(page,'Q',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO ');
+  await press('Q');assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
+  await keyboardPose(page,'K');
+  await page.locator('[data-holo-key="K"]').evaluate(el=>{el.disabled=true;});
+  await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
+  await page.locator('[data-holo-key="K"]').evaluate(el=>{el.disabled=false;});
+  await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
+  await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
+  assert.equal(await page.locator('.air-desk-plane').count(),0);
+  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
+  await field.fill('');
+  await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
+  await press('K');assert.equal(await field.inputValue(),'K');
+  assert.equal(await page.locator('.air-desk-output output').textContent(),'K');
  }finally{await page.close();}
 });
