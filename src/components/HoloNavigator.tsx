@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
-import {Camera,CameraOff,Hand,Keyboard,Scan,X} from 'lucide-react';
+import {Camera,CameraOff,Keyboard,Scan} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import AirKeyboard from './AirKeyboard';
 import {AirTypingEngine} from '../lib/AirTypingEngine';
@@ -15,7 +15,6 @@ type PalmScroll={armed:boolean;rawY:number;smoothedY:number;lastAt:number;veloci
 const newPalmScroll=():PalmScroll=>({armed:false,rawY:0,smoothedY:0,lastAt:0,velocity:0});
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const ROWS=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
 const HAND_BONES:number[][]=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 function paintHandSkeleton(canvas:HTMLCanvasElement|null,video:HTMLVideoElement,hands:Landmark[][]){
  if(!canvas)return;
@@ -97,7 +96,6 @@ export default function HoloNavigator(){
  const [targetName,setTargetName]=useState('');
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
- const [hoverKey,setHoverKey]=useState('');
  const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
  const [airMode,setAirMode]=useState<AirTypingMode>('tap');
  const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('balanced');
@@ -150,7 +148,6 @@ export default function HoloNavigator(){
  const clearHover=useCallback(()=>{
   if(targetRef.current){targetRef.current.classList.remove('holo-focused-target');targetRef.current=null;}
   hoverRef.current={target:null,since:0,fired:false};
-  setHoverKey('');
   setTargetName('');
  },[]);
  const stop=useCallback(()=>{
@@ -213,9 +210,11 @@ export default function HoloNavigator(){
  const insertText=useCallback((value:string)=>{
   const field=focusRef.current;
   if(!field||!document.contains(field)){
-   setScratch(old=>value==='CLEAR'?'':value==='BACK'?old.slice(0,-1):old+(value==='SPACE'?' ':value));
+   setScratch(old=>value==='CLEAR'?'':value==='BACK'?old.slice(0,-1):old+(value==='SPACE'?' ':value==='ENTER'?'\n':value));
    return;
   }
+  // Never auto-submit forms with an air gesture.
+  if(value==='ENTER'&&field instanceof HTMLInputElement)return;
   const old=field.value,start=field.selectionStart??old.length,end=field.selectionEnd??old.length;
   let next:string,at:number;
   if(value==='CLEAR'){next='';at=0;}
@@ -502,8 +501,7 @@ export default function HoloNavigator(){
       targetRef.current=target;
       if(target)target.classList.add('holo-focused-target');
       hoverRef.current={target,since:now,fired:false};
-      setHoverKey(target?.dataset.holoKey||'');
-      setTargetName(target?nameOf(target):'');
+       setTargetName(target?nameOf(target):'');
      }
      const ready=!!target;
      // A click is an explicit pinch / index-tap edge, never a dwell countdown.
