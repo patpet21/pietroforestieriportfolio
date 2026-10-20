@@ -75,7 +75,7 @@ export default function AirKeyboard({
   <div className="air-desk-footer">
    {mode==='tap'
     ?<span><Keyboard size={14}/> Automatic alignment begins when two steady hands are visible. Finger TAP is experimental; press/release may be inaccurate.</span>
-    :<span><Keyboard size={14}/> Only deliberate forward taps type. Touch ↗ SITE to return to full gesture navigation; Esc also closes the keyboard.</span>}
+    :<span><Keyboard size={14}/> Tap ↗ SITE or hold two closed fists briefly to return to full-site gesture control. Esc also closes the keyboard.</span>}
    {mode==='tap'&&<span><RefreshCw size={13}/> If alignment drifts, use RESTART before positioning your hands</span>}
   </div>
   <p className="air-desk-disclaimer">A webcam estimates finger movements; this experimental mode cannot replicate the reliability of physical keyboard contact. Mouse and normal keyboard remain available.</p>
