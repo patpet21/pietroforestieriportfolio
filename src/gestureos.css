@@ -91,3 +91,91 @@
 @media(max-width:760px){
  .holo-natural-status .holo-pinch-readout,.holo-natural-legend{font-size:8px}
 }
+
+
+/* GestureOS V20: actual mobile camera viewport, not a 1px hidden video. */
+.holo-camera-placeholder{
+ position:absolute;z-index:3;inset:0;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+ padding:12px;text-align:center;pointer-events:none;
+ background:linear-gradient(145deg,#071626f0,#0b2a3eea);
+ color:#e1ffff;
+}
+.holo-camera-placeholder>svg{color:#94e7fa}
+.holo-camera-placeholder strong{font:850 11px/1.35 Manrope,sans-serif;letter-spacing:.65px}
+.holo-camera-placeholder small{font:600 10px/1.45 Manrope,sans-serif;color:#b3d4e4}
+.holo-camera-resume{
+ position:absolute;z-index:5;left:50%;bottom:12px;transform:translateX(-50%);
+ width:max-content;max-width:90%;border:1px solid #d6fff6;
+ border-radius:9px;padding:10px 12px;background:#a6ffe5;color:#072c37;
+ font:850 10px Manrope,sans-serif;letter-spacing:.5px;
+}
+.holo-camera-progress{
+ margin:0;font:750 10px/1.5 Manrope,sans-serif;color:#a4f3df;
+}
+.holo-mobile-note{
+ margin:0;padding:7px 9px;border-radius:8px;background:#9ef5d10d;border:1px solid #9ef5d140;
+ color:#a7d5d8;font:700 9px/1.45 Manrope,sans-serif;
+}
+.holo-mobile-stop-title{
+ display:none;align-items:center;justify-content:center;
+ width:28px;height:28px;margin-left:2px;flex:none;
+ border:1px solid #ffb1cb80;border-radius:7px;background:#442838;color:#ffdbea;
+}
+@media(max-width:760px){
+ .holo-natural-control,.holo-natural-control.holo-expanded{
+  left:max(8px,env(safe-area-inset-left));right:auto;
+  bottom:max(8px,env(safe-area-inset-bottom));
+  width:min(302px,calc(100vw - 20px));
+  max-height:min(78dvh,680px);max-height:min(78svh,680px);
+  padding:10px 11px;gap:8px;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;z-index:1300;
+ }
+ .holo-natural-title{
+  position:sticky;top:-10px;z-index:9;
+  min-height:34px;margin:-2px -2px 0;padding:5px 2px;
+  background:#102d43;letter-spacing:.35px;font-size:10px;
+ }
+ .holo-natural-title strong{flex:1;min-width:0}
+ .holo-mobile-stop-title{display:flex}
+ .holo-preview-toggle{margin-left:0;font-size:9px;padding:7px 8px;flex:none}
+ .holo-vision-preview,.holo-vision-preview:not(.on){
+  position:sticky!important;top:32px!important;
+  opacity:1!important;pointer-events:auto!important;
+  display:block!important;
+  flex:0 0 auto;
+  width:100%!important;height:auto!important;
+  min-height:175px!important;
+  aspect-ratio:4/3!important;
+  overflow:hidden!important;border-radius:10px!important;
+  background:#041523!important;border:1px solid #8cdbec9f!important;
+  z-index:7;
+ }
+ .holo-vision-preview .holo-natural-preview,
+ .holo-vision-preview .holo-natural-preview.on{
+  position:absolute!important;inset:0!important;
+  display:block!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;
+  transform:scaleX(-1)!important;opacity:1!important;visibility:visible!important;
+ }
+ .holo-hand-overlay{position:absolute!important;inset:0!important;z-index:2}
+ .holo-natural-status{
+  font-size:9px;gap:5px;line-height:1.45;
+ }
+ .holo-natural-status>span{overflow-wrap:anywhere}
+ .holo-natural-status .holo-target-readout,.holo-natural-status .holo-pinch-readout{font-size:9px}
+ .holo-natural-start,.holo-natural-stop,.holo-gesture-test{
+  min-height:39px;font-size:10px;padding:9px 10px;flex:none;
+ }
+ .holo-scroll-config{padding:8px 9px}
+ .holo-scroll-config input{min-height:23px}
+ .holo-natural-legend{font-size:9px;line-height:1.5}
+ .holo-natural-privacy{font-size:8px;line-height:1.45}
+ .holo-natural-error{font-size:10px;line-height:1.55}
+}
+@media(max-width:380px){
+ .holo-natural-control,.holo-natural-control.holo-expanded{width:min(282px,calc(100vw - 16px));max-height:76svh}
+ .holo-vision-preview,.holo-vision-preview:not(.on){min-height:160px!important}
+ .holo-natural-title{font-size:9px}
+ .holo-camera-placeholder strong{font-size:10px}
+}
