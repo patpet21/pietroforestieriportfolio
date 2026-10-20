@@ -98,10 +98,10 @@ export default function HoloNavigator(){
  const [keyboard,setKeyboard]=useState(false);
  const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,status:'SHOW YOUR HANDS'});
  const [airMode,setAirMode]=useState<AirTypingMode>('tap');
- const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('balanced');
+ const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('easy');
  const [airReach,setAirReach]=useState(1.3);
  const airModeRef=useRef<AirTypingMode>('tap');
- const airSensitivityRef=useRef<AirSensitivity>('balanced');
+ const airSensitivityRef=useRef<AirSensitivity>('easy');
  const airReachRef=useRef(1.3);
  const airEngineRef=useRef(new AirTypingEngine());
  const airKeysRef=useRef<HTMLDivElement|null>(null);
