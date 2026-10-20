@@ -1,4 +1,4 @@
-/* GestureOS Air Type — two forward index pointers and a separate ten-finger experiment.
+/* GestureOS Air Type — guarded ten-finger forward touches and a return-to-site key.
    Only appears when user explicitly enables Air Keyboard. */
 .air-desk.holo-air-console{
  position:fixed;z-index:1250;
@@ -47,6 +47,7 @@
 .air-desk-actions button{font-size:10px;min-height:41px}
 .air-desk-actions .wide{flex:3}
 .air-desk-actions .utility{flex:1.1}
+.air-desk-actions .exit-site{flex:1.25;background:linear-gradient(135deg,#347773,#1e615f);border-color:#afffe0;color:#e5fff4;box-shadow:0 0 16px #60ffd127}
 .air-finger-dot{position:absolute;z-index:3;pointer-events:none;width:25px;height:25px;transform:translate(-50%,-50%);border-radius:50%;display:flex;align-items:center;justify-content:center;background:#1a363fa9;box-shadow:0 0 10px #000a}
 .air-contact-dot{position:absolute;z-index:2;pointer-events:none;width:13px;height:13px;transform:translate(-50%,-50%);border:1px dashed currentColor;border-radius:50%;color:#83ffdf;background:#83ffdf28}
 .air-contact-dot.right{color:#a7b7ff;background:#a7b7ff28}
