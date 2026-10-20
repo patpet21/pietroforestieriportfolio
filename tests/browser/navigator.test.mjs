@@ -116,7 +116,7 @@ async function keyboardPose(page,key,closed=false){
   const plane=document.querySelector('.air-desk-plane').getBoundingClientRect();
   const target=document.querySelector(`[data-holo-key="${key}"]`).getBoundingClientRect();
   const nx=(target.left+target.width/2-plane.left)/plane.width,ny=(target.top+target.height/2-plane.top)/plane.height;
-  const reach=Number(document.querySelector('[aria-label="Typing hand movement range"]').value);
+  const reach=Number(document.querySelector('.air-desk-plane').dataset.keyboardReach);
   const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
   const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
   const base=makeHand({x,y}),p=closed?tapFinger(base,8,.23):base;
@@ -132,7 +132,7 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
   await page.waitForSelector('.air-desk-plane');
   assert.equal(await page.locator('.air-calibrate').count(),0);
-  assert.match(await page.locator('.air-calibration-note').textContent(),/all ten fingertips/i);
+  assert.match(await page.locator('.air-calibration-note').textContent(),/aim at one key/i);
   const press=async key=>{await keyboardPose(page,key);await keyboardPose(page,key,true);};
   await keyboardPose(page,'C');assert.equal(await page.locator('[data-holo-key="C"]').evaluate(el=>el.classList.contains('air-key-hover')),true);
   await keyboardPose(page,'C',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'C');
@@ -150,39 +150,46 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
   await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
   assert.equal(await page.locator('.air-desk-plane').count(),0);
-  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
-  await field.fill('');
+  await page.evaluate(()=>{
+   const field=document.createElement('textarea');
+   field.setAttribute('aria-label','Test native gesture input');
+   field.id='native-gesture-input';
+   Object.assign(field.style,{position:'fixed',top:'95px',left:'42%',width:'240px',height:'55px',zIndex:'9999'});
+   document.body.append(field);field.focus();
+  });
+  const field=page.getByRole('textbox',{name:'Test native gesture input',exact:true});
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
   await press('K');assert.equal(await field.inputValue(),'K');
   assert.equal(await page.locator('.air-desk-output output').textContent(),'K');
  }finally{await page.close();}
 });
-test('in-page Gesture Lab keyboard uses the same forward touch instead of pinch or bending',async()=>{
+test('GestureOS settings are shared with the one global camera and floating keyboard',async()=>{
  const page=await fixture({path:'gesture-lab'});
  try{
   await page.evaluate(()=>document.getElementById('fixture-target').remove());
-  await page.locator('.gsl-camera-btn').click();await page.waitForSelector('.gsl-camera-stop');
-  await page.locator('.gsl-stage').evaluate(el=>el.scrollIntoView({block:'center'}));
-  const poseKey=async(scale=1,pinch=false)=>{
-   await page.evaluate(async({scale,pinch})=>{
-    const video=document.querySelector('.gsl-stage video'),stage=document.querySelector('.gsl-stage').getBoundingClientRect();
-    const key=document.querySelector('[data-air-key="A"]').getBoundingClientRect();
-    const cover=Math.max(stage.width/video.videoWidth,stage.height/video.videoHeight);
-    const w=video.videoWidth*cover,h=video.videoHeight*cover;
-    const gain=Number(document.querySelector('[aria-label="Hand pointer reach"]').value);
-    const vx=(key.left+key.width/2-stage.left+(w-stage.width)/2)/w,vy=(key.top+key.height/2-stage.top+(h-stage.height)/2)/h;
-    const x=1-(.5+(vx-.5)/gain),y=.5+(vy-.5)/gain;
-    const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
-    const base=makeHand({x,y,pinch});
-    window.__hands=[scale>1?tapFinger(base,8,.23):base];window.__poseStart=window.__inferences;
-   },{scale,pinch});
-   await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
-   if(scale===1)await page.waitForFunction(()=>document.querySelector('[data-air-key="A"]')?.classList.contains('gsl-key-target'),null,{timeout:5000});
-  };
-  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
-  await poseKey();await poseKey(1,true);assert.equal(await field.inputValue(),'');
-  await poseKey(1.2);assert.equal(await field.inputValue(),'A');
-  await poseKey(1.2);assert.equal(await field.inputValue(),'A');
-  await poseKey();await poseKey(1.2);assert.equal(await field.inputValue(),'AA');
+  assert.equal(await page.locator('.gsl-keyboard-panel,.gsl-camera-panel,.gsl-camera-btn').count(),0);
+  assert.equal(await page.locator('.gsl-settings-grid').count(),1);
+  assert.equal(await page.locator('.holo-natural-control video').count(),1);
+  assert.equal(await page.locator('.air-desk-plane').count(),0);
+  assert.equal(await page.locator('.gsl-settings-page video').count(),0);
+  assert.equal(await page.locator('.holo-air-toggle').count(),1);
+  await page.getByRole('group',{name:'Navigation touch sensitivity'}).getByRole('button',{name:/FIRM/}).click();
+  await page.getByRole('group',{name:'Air keyboard touch sensitivity'}).getByRole('button',{name:/FIRM/}).click();
+  await page.locator('#gesture-scroll-settings').evaluate(el=>{el.value='3.1';el.dispatchEvent(new Event('input',{bubbles:true}));});
+  await page.waitForFunction(()=>document.querySelector('.holo-scroll-config input')?.value==='3.1');
+  await page.locator('#gesture-reach-settings').evaluate(el=>{el.value='1.0';el.dispatchEvent(new Event('input',{bubbles:true}));});
+  const settings=await page.evaluate(()=>JSON.parse(localStorage.getItem('pf-gestureos-settings-v1')));
+  assert.equal(settings.navigationTouch,'firm');assert.equal(settings.keyboardTouch,'precise');
+  assert.equal(settings.scrollSpeed,3.1);assert.equal(settings.keyboardReach,1);
+  await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
+  assert.equal(await page.locator('.air-desk-plane').count(),1);
+  assert.equal(await page.locator('.air-desk-plane').getAttribute('data-keyboard-reach'),'1');
+  await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
+  assert.equal(await page.locator('.air-desk-plane').count(),0);
+  assert.equal(await page.locator('.holo-natural-status').count(),1);
+  await page.getByRole('button',{name:'RESTORE DEFAULTS',exact:true}).click();
+  const restored=await page.evaluate(()=>JSON.parse(localStorage.getItem('pf-gestureos-settings-v1')));
+  assert.equal(restored.navigationTouch,'balanced');
+  assert.equal(restored.scrollSpeed,2);assert.equal(restored.keyboardReach,1);
  }finally{await page.close();}
 });
