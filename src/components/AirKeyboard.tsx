@@ -1,5 +1,5 @@
 import type{RefObject}from 'react';
-import{Keyboard,ScanFace,RefreshCw,Hand,MousePointer2,X,Delete,RotateCcw}from 'lucide-react';
+import{Keyboard,ScanFace,RefreshCw,Hand,MousePointer2,X,RotateCcw}from 'lucide-react';
 import type{AirFinger,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 const rows=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
 type Props={
@@ -44,7 +44,7 @@ export default function AirKeyboard({
     RANGE <strong>{reach.toFixed(1)}×</strong>
     <input type="range" aria-label="Typing hand movement range" min=".8" max="2" step=".1" value={reach} onChange={e=>onReach(Number(e.target.value))}/>
    </label>
-   <button type="button" className="air-calibrate" onClick={onReset} title="Reset tracked finger hover states"><RotateCcw size={13}/> RECENTER</button>
+   <button type="button" className="air-calibrate" onClick={onReset} title="Reset tracked finger hover states"><RotateCcw size={13}/> RESET TRACKING</button>
   </div>
   <div className="air-desk-plane" ref={keysRef} aria-label="Virtual QWERTY keyboard and ten tracked fingertip pointers">
    {rows.map((row,i)=><div className={'air-desk-keyrow air-desk-keyrow-'+i} key={row}>
