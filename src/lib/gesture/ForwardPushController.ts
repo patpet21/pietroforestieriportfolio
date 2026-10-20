@@ -51,7 +51,7 @@ export class ForwardPushController<T>{
   if(this.down){
    const position=this.active==='finger'?depth.fingerDepth:Math.log(depth.scale);
    this.peak=Math.max(this.peak,position);
-   const threshold=this.active==='finger'?this.minTravel:FORWARD_TOUCH_POLICY.palmGrowth;
+   const threshold=this.active==='finger'?this.minTravel:Math.max(FORWARD_TOUCH_POLICY.palmGrowth,this.minTravel*.5);
    if(target!==this.target||this.peak-position>=threshold*FORWARD_TOUCH_POLICY.releaseFraction){
     this.down=false;this.pending=false;this.progress=0;this.frames=0;
     this.cooldownUntil=now+(this.profile==='keyboard'?FORWARD_TOUCH_POLICY.keyboardCooldownMs:FORWARD_TOUCH_POLICY.navigationCooldownMs);
@@ -80,7 +80,7 @@ export class ForwardPushController<T>{
    depth.jointDepth-this.rest.jointDepth>=fingerAdvance*.22;
   // Palm approach may click a page element, but never type on a virtual keyboard.
   const fingerContact=fingerAdvance>=travel&&coherent;
-  const palmContact=this.profile==='navigation'&&palmAdvance>=FORWARD_TOUCH_POLICY.palmGrowth;
+  const palmContact=this.profile==='navigation'&&palmAdvance>=Math.max(FORWARD_TOUCH_POLICY.palmGrowth,this.minTravel*.5);
   const kind:'finger'|'palm'|null=fingerContact?'finger':palmContact?'palm':null;
   if(kind!==null){
    if(this.candidate!==kind||this.candidateAt===null){
