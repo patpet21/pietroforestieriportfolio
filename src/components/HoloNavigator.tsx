@@ -307,15 +307,20 @@ export default function HoloNavigator(){
      if(keyboardRef.current){
       // Exclusive keyboard mode: all fingertips from BOTH tracked hands.
       // The existing navigator is suspended while air typing is active.
+      // Compute keyboard geometry ONCE per camera frame, not 10 times.
+      // This avoids repeated layout work when all ten fingertips are tracked.
+      const root=airKeysRef.current;
+      const box=root?.getBoundingClientRect();
+      const keyBoxes=root?Array.from(root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]')).map(button=>({
+       key:button.dataset.holoKey||'',rect:button.getBoundingClientRect()
+      })):[];
       const keyAt=(nx:number,ny:number):string|null=>{
-       const root=airKeysRef.current;if(!root)return null;
-       const box=root.getBoundingClientRect();if(!box.width||!box.height)return null;
+       if(!box||!box.width||!box.height)return null;
        const px=box.left+nx*box.width,py=box.top+ny*box.height;
        if(px<box.left||px>box.right||py<box.top||py>box.bottom)return null;
-       const buttons=root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]');
-       for(const button of buttons){
-        const rect=button.getBoundingClientRect();
-        if(px>=rect.left&&px<=rect.right&&py>=rect.top&&py<=rect.bottom)return button.dataset.holoKey||null;
+       for(const item of keyBoxes){
+        const rect=item.rect;
+        if(px>=rect.left&&px<=rect.right&&py>=rect.top&&py<=rect.bottom)return item.key;
        }
        return null;
       };
