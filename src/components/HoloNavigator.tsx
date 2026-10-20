@@ -37,7 +37,7 @@ const CLICKABLE='a[href],button:not([disabled]),input:not([disabled]),textarea:n
 const clamp=(v:number,a:number,b:number)=>Math.min(b,Math.max(a,v));
 const dist=(a:Landmark,b:Landmark)=>Math.hypot(a.x-b.x,a.y-b.y);
 const isEditable=(element:Element|null):element is HTMLInputElement|HTMLTextAreaElement=>
- (element instanceof HTMLInputElement&&!['password','file','hidden','checkbox','radio','button','submit'].includes(element.type))||element instanceof HTMLTextAreaElement;
+ (element instanceof HTMLInputElement&&['text','search','email','url','tel','number'].includes(element.type))||element instanceof HTMLTextAreaElement;
 const nameOf=(el:HTMLElement)=>el.getAttribute('aria-label')||el.getAttribute('title')||el.textContent?.trim().replace(/\s+/g,' ').slice(0,33)||'SELECT';
 const extended=(points:Landmark[],tip:number,pip:number,mcp:number)=>{
  const a=points[tip],b=points[pip],c=points[mcp],w=points[0];
@@ -304,6 +304,7 @@ export default function HoloNavigator(){
       }
       if(targetRef.current)clearHover();setCursor(null);
       tapRef.current={down:false,candidate:false,frames:0};
+      pinchRef.current={down:false,candidate:false,frames:0};
       setLabel('OPEN PALM · SMOOTH SCROLL');return;
      }
      palmScrollRef.current=newPalmScroll();
