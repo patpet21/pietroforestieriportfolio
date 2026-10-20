@@ -12,6 +12,8 @@ import {measureForwardDepth} from '../lib/gesture/forwardDepth';
 import {findGestureTarget,canActivateTarget} from '../lib/gesture/targets';
 import {FrameBudget,GestureDiagnostics} from '../lib/gesture/diagnostics';
 import {newPalmScroll,palmScrollDelta} from '../lib/gesture/palmScroll';
+import {GESTURE_SETTINGS_EVENT,navigationTouchTravel,readGestureSettings,saveGestureSettings} from '../lib/gesture/userSettings';
+import type {GestureSettings} from '../lib/gesture/userSettings';
 import type {PalmScroll} from '../lib/gesture/palmScroll';
 type Landmarker={detectForVideo:(video:HTMLVideoElement,time:number)=>{landmarks:Landmark[][];handedness?:{categoryName:string;score:number}[][]};close:()=>void};
 type Status='off'|'loading'|'ready'|'preview'|'error';
@@ -63,7 +65,7 @@ export default function HoloNavigator(){
   if(value){node.style.left=(value.x*100)+'%';node.style.top=(value.y*100)+'%';
    node.style.setProperty('--holo-progress',(value.progress*360)+'deg');node.classList.toggle('pressed',value.press);}
  },[]);
- const controllerRef=useRef(new ForwardPushController<HTMLElement>());
+ const controllerRef=useRef(new ForwardPushController<HTMLElement>(navigationTouchTravel(readGestureSettings().navigationTouch)));
  const debugEnabled=new URLSearchParams(location.search).get('gestureDebug')==='1';
  const diagnostics=useRef(new GestureDiagnostics(debugEnabled));
  diagnostics.current.enabled=debugEnabled;
@@ -99,11 +101,11 @@ export default function HoloNavigator(){
  const [airCalibrationMessage,setAirCalibrationMessage]=useState('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
  const autoCalibrationRef=useRef<AutoCalibration>(freshAutoCalibration());
  const [airMode,setAirMode]=useState<AirTypingMode>('push');
- const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('precise');
- const [airReach,setAirReach]=useState(1.3);
+ const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>(readGestureSettings().keyboardTouch);
+ const [airReach,setAirReach]=useState(readGestureSettings().keyboardReach);
  const airModeRef=useRef<AirTypingMode>('push');
- const airSensitivityRef=useRef<AirSensitivity>('precise');
- const airReachRef=useRef(1.3);
+ const airSensitivityRef=useRef<AirSensitivity>(readGestureSettings().keyboardTouch);
+ const airReachRef=useRef(readGestureSettings().keyboardReach);
  const airEngineRef=useRef(new AirTypingEngine());
  const airKeysRef=useRef<HTMLDivElement|null>(null);
  const [scratch,setScratch]=useState('');
@@ -112,8 +114,8 @@ export default function HoloNavigator(){
  const videoRef=useRef<HTMLVideoElement|null>(null);
  const clickFeedbackRef=useRef({at:0,label:''});
  const palmScrollRef=useRef<PalmScroll>(newPalmScroll());
- const [scrollSpeed,setScrollSpeed]=useState(2);
- const scrollSpeedRef=useRef(2);
+ const [scrollSpeed,setScrollSpeed]=useState(readGestureSettings().scrollSpeed);
+ const scrollSpeedRef=useRef(readGestureSettings().scrollSpeed);
  const overlayRef=useRef<HTMLCanvasElement|null>(null);
  const [previewLarge,setPreviewLarge]=useState(false);
  const [mobilePanelExpanded,setMobilePanelExpanded]=useState(false);
@@ -166,6 +168,18 @@ export default function HoloNavigator(){
   clearHover();setCursor(null);setHandCount(0);setBackend('');setStatus('off');setPressSignal('OPEN');
   setKeyboard(false);keyboardRef.current=false;setError('');setLabel('CAMERA OFF');
  },[clearHover,setLabel]);
+ useEffect(()=>{
+  const sync=(event:Event)=>{
+   const settings=(event as CustomEvent<GestureSettings>).detail||readGestureSettings();
+   scrollSpeedRef.current=settings.scrollSpeed;setScrollSpeed(settings.scrollSpeed);
+   airSensitivityRef.current=settings.keyboardTouch;setAirSensitivity(settings.keyboardTouch);
+   airReachRef.current=settings.keyboardReach;setAirReach(settings.keyboardReach);
+   airEngineRef.current.reset();
+   controllerRef.current=new ForwardPushController<HTMLElement>(navigationTouchTravel(settings.navigationTouch));
+  };
+  window.addEventListener(GESTURE_SETTINGS_EVENT,sync);
+  return()=>window.removeEventListener(GESTURE_SETTINGS_EVENT,sync);
+ },[]);
  const stopRef=useRef(stop);stopRef.current=stop;
  const leaveKeyboard=useCallback(()=>{
   keyboardRef.current=false;setKeyboard(false);keyboardExitFistAt.current=0;
@@ -650,7 +664,7 @@ export default function HoloNavigator(){
    :<button type="button" className="holo-natural-start" onClick={start}><Camera size={16}/> ENABLE GESTURES</button>}
    {(status==='error'||status==='preview')&&<p className="holo-natural-error" role="alert">{error}</p>}
    {status==='error'&&<p className="holo-mobile-note">If you are opening the site inside an app, try opening it directly in Chrome or Safari and allow camera permission.</p>}
-   {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".7" max="4" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);scrollSpeedRef.current=v;setScrollSpeed(v);}}/></label>}
+   {status==='ready'&&<label className="holo-scroll-config"><span>SCROLL RESPONSE <strong>{scrollSpeed.toFixed(1)}×</strong></span><input type="range" aria-label="Gesture scroll speed" min=".7" max="4" step=".1" value={scrollSpeed} onChange={e=>{const v=Number(e.target.value);saveGestureSettings({scrollSpeed:v});}}/></label>}
    <p className="holo-natural-legend">{mobileView?'MOBILE · PALM: SCROLL · PUSH INDEX FORWARD: TOUCH · WITHDRAW: RELEASE.':'TOUCH = AIM WITH INDEX → PUSH FORWARD → WITHDRAW. OPEN PALM = SCROLL. V = ZOOM.'}</p>
    <p className="holo-natural-privacy">Camera runs only when enabled. Tracking runs on-device; external MediaPipe resources and SDK usage metrics may be requested.</p>
   </aside>
@@ -674,8 +688,8 @@ export default function HoloNavigator(){
     autoCalibrationRef.current=v==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
     setAirCalibrationMessage(v==='push'?'TEN FINGERS READY · AIM, THEN MAKE A DELIBERATE FORWARD TOUCH.':'SHOW BOTH HANDS AND HOLD STILL TO ALIGN EXPERIMENTAL FINGER TAPS.');
    }}
-   onSensitivity={v=>{airSensitivityRef.current=v;setAirSensitivity(v);airEngineRef.current.reset();}}
-   onReach={v=>{airReachRef.current=v;setAirReach(v);airEngineRef.current.reset();}}
+   onSensitivity={v=>saveGestureSettings({keyboardTouch:v})}
+   onReach={v=>saveGestureSettings({keyboardReach:v})}
    onCalibrate={()=>{
     // This button merely RESTARTS hands-free alignment, before hands are positioned.
     airEngineRef.current.clearCalibration();
