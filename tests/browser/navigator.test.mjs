@@ -175,9 +175,9 @@ test('GestureOS settings are shared with the one global camera and floating keyb
   assert.equal(await page.locator('.holo-air-toggle').count(),1);
   await page.getByRole('group',{name:'Navigation touch sensitivity'}).getByRole('button',{name:/FIRM/}).click();
   await page.getByRole('group',{name:'Air keyboard touch sensitivity'}).getByRole('button',{name:/FIRM/}).click();
-  await page.locator('#gesture-scroll-settings').evaluate(el=>{el.value='3.1';el.dispatchEvent(new Event('input',{bubbles:true}));});
+  await page.locator('#gesture-scroll-settings').evaluate(el=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'3.1');el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});
   await page.waitForFunction(()=>document.querySelector('.holo-scroll-config input')?.value==='3.1');
-  await page.locator('#gesture-reach-settings').evaluate(el=>{el.value='1.0';el.dispatchEvent(new Event('input',{bubbles:true}));});
+  await page.locator('#gesture-reach-settings').evaluate(el=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'1.0');el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});
   const settings=await page.evaluate(()=>JSON.parse(localStorage.getItem('pf-gestureos-settings-v1')));
   assert.equal(settings.navigationTouch,'firm');assert.equal(settings.keyboardTouch,'precise');
   assert.equal(settings.scrollSpeed,3.1);assert.equal(settings.keyboardReach,1);
