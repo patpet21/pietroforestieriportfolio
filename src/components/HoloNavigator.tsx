@@ -386,7 +386,7 @@ export default function HoloNavigator(){
      const aimFresh=now-p.lastPoint<3000&&!!targetRef.current;
      const eligible=pointer.pointing||(pendingPress&&aimFresh);
      if(!eligible){
-      if(!pendingPress&&targetRef.current)clearHover();
+      if(!pendingPress&&targetRef.current&&now-p.lastPoint>850)clearHover();
       setCursor(null);setLabel(pendingPress?'PINCH DETECTED · POINT AT A BUTTON':'EXTEND INDEX TO AIM · PALM TO SCROLL');return;
      }
      const pointX=pendingPress&&aimFresh?pointerAimRef.current.x:x;
