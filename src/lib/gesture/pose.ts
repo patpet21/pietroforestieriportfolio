@@ -12,6 +12,7 @@ export function getHand(points:Landmark[]):HandSample|null{
  // no longer disqualify an index aim; a pinch does not need an extended index.
  const open=fingers.filter(Boolean).length>=3;
  const spread=fingers[0]&&fingers[1]&&!fingers[2]&&!fingers[3];
- return {landmarks:points,wrist:points[0],palm,open,spread,pointing:fingers[0]&&!open&&!spread};
+ return {landmarks:points,wrist:points[0],palm,open,spread,pointing:(fingers[0]||!!measureForwardDepth(points)?.indexExtended)&&!open&&!spread};
 }
 export const pinchRatio=(hand:HandSample)=>distance(hand.landmarks[4],hand.landmarks[8])/Math.max(.065,distance(hand.landmarks[5],hand.landmarks[17]));
+import {measureForwardDepth} from './forwardDepth.ts';

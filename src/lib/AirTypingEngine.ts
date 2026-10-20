@@ -1,16 +1,17 @@
+import {measureForwardDepth} from './gesture/forwardDepth.ts';
 import {KeyboardPointer} from './gesture/KeyboardPointer.ts';
 /**
- * One index + pinch uses the shared pointer lifecycle without calibration.
+ * Forward index touch uses the shared virtual-plane lifecycle.
  * Ten-finger tap remains an independently calibrated research mode.
  */
 export type AirPoint={x:number;y:number;z:number};
 export type AirHand={landmarks:AirPoint[]};
-export type AirFinger={id:string;hand:'L'|'R';name:string;x:number;y:number;key:string|null;pressed:boolean;armed:boolean;ratio:number};
+export type AirFinger={id:string;hand:'L'|'R';name:string;x:number;y:number;key:string|null;pressed:boolean;armed:boolean;ratio:number;progress?:number};
 export type AirKeyPress={key:string;fingerId:string};
-export type AirFrame={fingers:AirFinger[];presses:AirKeyPress[];hands:number;calibrated:number;status:string};
-export type AirTypingMode='tap'|'pinch';
+export type AirFrame={fingers:AirFinger[];presses:AirKeyPress[];hands:number;calibrated:number;status:string;control?:{progress:number;phase:string;reason:string;confirmationMs?:number}};
+export type AirTypingMode='tap'|'push';
 export type AirSensitivity='easy'|'balanced'|'precise';
-export type AirTypingSettings={reach:number;mode:AirTypingMode;sensitivity:AirSensitivity};
+export type AirTypingSettings={reach:number;mode:AirTypingMode;sensitivity:AirSensitivity;aspect?:number};
 export type KeyLocator=(x:number,y:number)=>string|null;
 export type HomeLocator=(key:string)=>{x:number;y:number}|null;
 type Side='L'|'R';
@@ -97,7 +98,7 @@ export class AirTypingEngine{
   this.statusMessage=count===2?'BOTH HANDS ALIGNED':'ONE HAND ALIGNED · SHOW SECOND HAND TO CALIBRATE BOTH';
   return {ok:true,hands:count,message:this.statusMessage};
  }
- private processPinch(hands:AirHand[],keyAt:KeyLocator,now:number,reach:number):AirFrame{
+ private processPush(hands:AirHand[],keyAt:KeyLocator,now:number,reach:number,aspect=1):AirFrame{
   const valid=hands.filter(h=>h.landmarks.length===21&&h.landmarks.every(p=>[p.x,p.y,p.z].every(Number.isFinite)));
   if(!valid.length){this.keyboardPointer.reset();this.control=null;return {fingers:[],presses:[],hands:0,calibrated:0,status:'SHOW ONE HAND · INDEX TO AIM'};}
   const previous=this.control;
@@ -108,18 +109,19 @@ export class AirTypingEngine{
   const wrist=hand.landmarks[0],tip=hand.landmarks[8];
   if(previous&&(now-previous.at>320||Math.hypot(wrist.x-previous.x,wrist.y-previous.y)>.28))this.keyboardPointer.reset();
   this.control={x:wrist.x,y:wrist.y,at:now};
-  const ratio=dist(tip,hand.landmarks[4])/Math.max(.065,dist(hand.landmarks[5],hand.landmarks[17]));
-  const result=this.keyboardPointer.process({x:clamp((1-tip.x-.5)*reach+.5,0,1),y:clamp((tip.y-.5)*reach+.5,0,1)},ratio,now,keyAt);
+  const depth=measureForwardDepth(hand.landmarks,aspect);
+  const result=this.keyboardPointer.process({x:clamp((1-tip.x-.5)*reach+.5,0,1),y:clamp((tip.y-.5)*reach+.5,0,1)},depth,now,keyAt);
   const side:Side=wrist.x>.5?'L':'R';
   const id=side+'-INDEX';
   return {fingers:[{id,hand:side,name:'INDEX',x:result.point.x,y:result.point.y,key:result.key,
-    pressed:result.down,armed:result.armed,ratio}],
+    pressed:result.down,armed:result.armed,ratio:result.progress,progress:result.progress}],
    presses:result.activation?[{key:result.activation,fingerId:id}]:[],hands:valid.length,calibrated:0,
-   status:result.activation?'KEY PRESSED · RELEASE TO REPEAT':result.pending?'PINCH · RELEASE THUMB AND INDEX':result.key?'KEY '+result.key+' · PINCH TO PRESS':'MOVE INDEX OVER A KEY'};
+   control:{progress:result.progress,phase:result.phase,reason:result.reason,confirmationMs:result.confirmationMs},
+   status:result.reason==='stale-target'?'WITHDRAW TO REPOSITION THE SURFACE':result.activation?'TOUCH ✓ · WITHDRAW TO RELEASE':result.pending?'PUSH · '+Math.round(result.progress*100)+'% · WITHDRAW TO RELEASE':result.armed?'PUSH INDEX FORWARD TO TOUCH':result.key?'HOLD AIM BRIEFLY · POSITIONING TOUCH PLANE':'MOVE INDEX OVER A KEY'};
  }
  process(hands:AirHand[],keyAt:KeyLocator,now:number,options:AirTypingSettings):AirFrame{
   const reach=clamp(options.reach,.8,2.0);
-  if(options.mode==='pinch')return this.processPinch(hands,keyAt,now,reach);
+  if(options.mode==='push')return this.processPush(hands,keyAt,now,reach,options.aspect);
   const assigned=this.assignHands(hands);
   const fingers:AirFinger[]=[],presses:AirKeyPress[]=[],alive=new Set<string>();
   for(const {side,hand} of assigned){
