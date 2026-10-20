@@ -44,11 +44,11 @@ export class AirTypingEngine{
   sorted.forEach((hand,handIndex)=>{
    const handName:'L'|'R'=sorted.length===2?(handIndex===0?'L':'R'):
     (1-hand.landmarks[0].x<.5?'L':'R');
-   const wrist=hand.landmarks[0],index=hand.landmarks[8],thumb=hand.landmarks[4];
+   const index=hand.landmarks[8],thumb=hand.landmarks[4];
    const palmWidth=Math.max(.06,d(hand.landmarks[5],hand.landmarks[17]));
    const pinchRatio=d(index,thumb)/palmWidth;
    const pinch=this.pinches.get(handName)||{down:false,lastPress:0};
-   const pinchThreshold=pinch.down?.75:.49;
+   const pinchThreshold=pinch.down ? .75 : .49;
    const currentPinch=pinchRatio<pinchThreshold;
    FINGERS.forEach(({name,tip,pip,mcp})=>{
     const id=handName+'-'+name;alive.add(id);
