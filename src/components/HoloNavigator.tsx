@@ -38,7 +38,7 @@ const clamp=(v:number,a:number,b:number)=>Math.min(b,Math.max(a,v));
 const dist=(a:Landmark,b:Landmark)=>Math.hypot(a.x-b.x,a.y-b.y);
 const isEditable=(element:Element|null):element is HTMLInputElement|HTMLTextAreaElement=>
  (element instanceof HTMLInputElement&&['text','search','email','url','tel','number'].includes(element.type))||element instanceof HTMLTextAreaElement;
-const nameOf=(el:HTMLElement)=>el.getAttribute('aria-label')||el.getAttribute('title')||el.textContent?.trim().replace(/\s+/g,' ').slice(0,33)||'SELECT';
+const nameOf=(el:HTMLElement)=>el.getAttribute('aria-label')||el.getAttribute('title')||el.getAttribute('placeholder')||el.getAttribute('name')||el.textContent?.trim().replace(/\s+/g,' ').slice(0,33)||'SELECT';
 /** Hit-target assistance for webcam pointing, where 10-25px of hand jitter is normal.
  * Direct hits always win; nearby hits are only a fallback and ignore blocked controls.
  */
