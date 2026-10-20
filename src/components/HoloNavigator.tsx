@@ -270,6 +270,7 @@ export default function HoloNavigator(){
   {status==='ready'&&<nav className="holo-nav-dock holo-control" aria-label="Gesture navigation dock">
    <div className="holo-nav-title"><Scan size={16}/><span>GESTURE COMMAND CENTER</span><i/></div>
    <div className="holo-nav-routes">{NAV_ROUTES.map(([path,label])=><button type="button" key={path} data-holo-action="navigate" aria-current={location.pathname===path?'page':undefined} onClick={()=>{navigate(path);clearTarget();}}>{label}</button>)}</div>
+   <div className="holo-nav-modes"><button type="button" data-holo-action="point" className={mode==='point'?'active':''} onClick={()=>switchMode('point')}>● POINT & CLICK</button><button type="button" data-holo-action="scroll" className={mode==='scroll'?'active':''} onClick={()=>switchMode('scroll')}>↕ HAND SCROLL</button></div>
    <div className="holo-nav-scroll">
     <button data-holo-action="scroll-up" type="button" onClick={()=>scrollByStep(-650)}><ArrowUp size={18}/> PAGE UP</button>
     <button data-holo-action="scroll-down" type="button" onClick={()=>scrollByStep(650)}><ArrowDown size={18}/> PAGE DOWN</button>
