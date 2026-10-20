@@ -238,17 +238,26 @@ export default function HoloNavigator(){
    {status==='off'||status==='error'?<button type="button" className="holo-open" onClick={start}><Scan size={19}/> <span>HOLO CONTROL</span><i/></button>:minimized?<div className="holo-minimized"><span><i/> {status==='ready'?'HOLO ACTIVE':'CONNECTING…'}</span><button onClick={()=>setMinimized(false)} aria-label="Expand Holo Control"><ChevronUp size={16}/></button><button onClick={stop} aria-label="Stop webcam"><X size={16}/></button></div>:null}
   </div>
   <aside className={'holo-console holo-control '+((status==='off'||status==='error')?'holo-hidden':minimized?'holo-hidden':'')} aria-label="Holographic gesture navigation controller">
-   <div className="holo-console-head"><div><i/><strong>HOLO / NAVIGATOR</strong><small>ONE-HAND CONTROL · V1</small></div><button onClick={()=>setMinimized(true)} aria-label="Minimize Holo controls"><ChevronDown size={19}/></button><button onClick={stop} aria-label="Stop camera"><X size={20}/></button></div>
+   <div className="holo-console-head"><div><i/><strong>HOLO / NAVIGATOR</strong><small>ONE-HAND CONTROL · V2</small></div><button onClick={()=>setMinimized(true)} aria-label="Minimize Holo controls"><ChevronDown size={19}/></button><button onClick={stop} aria-label="Stop camera"><X size={20}/></button></div>
    <div className="holo-preview"><video ref={videoRef} muted playsInline autoPlay className={status==='ready'?'visible':''}/><span>{status==='loading'?'LOADING HAND MODEL…':cursor?'HAND TRACKED':'SHOW YOUR HAND'}</span><b>{backend||'CAMERA'}</b></div>
    <div className="holo-console-modes" role="group" aria-label="Gesture navigation mode"><button aria-pressed={mode==='point'} className={mode==='point'?'active':''} onClick={()=>switchMode('point')}><MousePointer2 size={14}/> POINT / CLICK</button><button aria-pressed={mode==='scroll'} className={mode==='scroll'?'active':''} onClick={()=>switchMode('scroll')}><ArrowDown size={14}/> SCROLL</button></div>
    <button className={'holo-keyboard-toggle '+(keyboard?'active':'')} onClick={()=>switchKeyboard(!keyboard)}><Keyboard size={15}/> {keyboard?'CLOSE AIR KEYBOARD':'OPEN AIR KEYBOARD'}</button>
-   <div className="holo-calibration"><label>REACH <span>{sensitivity.toFixed(1)}×</span><input aria-label="Pointer movement range" type="range" min="0.8" max="1.7" step="0.1" value={sensitivity} onChange={e=>{setSensitivity(Number(e.target.value));}}/></label></div>
+   <div className="holo-calibration"><label>POINTER REACH <span>{sensitivity.toFixed(1)}×</span><input aria-label="Pointer movement range" type="range" min="0.8" max="2.5" step="0.1" value={sensitivity} onChange={e=>setSensitivity(Number(e.target.value))}/></label><button className="holo-recenter" type="button" onClick={recenter}>RECENTER HAND POSITION</button><small>Hold your index in the center of the camera view, then press Recenter once.</small></div>
    <div className="holo-console-info"><span><Hand size={14}/> ONE HAND ONLY</span><span>HOVER {activation==='dwell'?'1 SEC':'THEN PINCH'} TO CLICK</span></div>
    <div className="holo-method" role="group" aria-label="How to click"><button className={activation==='dwell'?'active':''} onClick={()=>setActivation('dwell')} aria-pressed={activation==='dwell'}>AUTO CLICK</button><button className={activation==='pinch'?'active':''} onClick={()=>setActivation('pinch')} aria-pressed={activation==='pinch'}>PINCH</button></div>
    <div className="holo-state"><span>TARGET</span><strong>{targetName}</strong></div>
    <button className="holo-power" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    <p>Webcam starts on demand. Video is processed on your device. The MediaPipe model downloads from third parties, and the SDK may transmit usage metrics.</p>
   </aside>
+  {status==='ready'&&<nav className="holo-nav-dock holo-control" aria-label="Gesture navigation dock">
+   <div className="holo-nav-title"><Scan size={16}/><span>GESTURE COMMAND CENTER</span><i/></div>
+   <div className="holo-nav-routes">{NAV_ROUTES.map(([path,label])=><button type="button" key={path} data-holo-action="navigate" aria-current={location.pathname===path?'page':undefined} onClick={()=>{navigate(path);clearTarget();}}>{label}</button>)}</div>
+   <div className="holo-nav-scroll">
+    <button data-holo-action="scroll-up" type="button" onClick={()=>scrollByStep(-650)}><ArrowUp size={18}/> PAGE UP</button>
+    <button data-holo-action="scroll-down" type="button" onClick={()=>scrollByStep(650)}><ArrowDown size={18}/> PAGE DOWN</button>
+   </div>
+   <div className="holo-nav-help">Point and hold for a second on any command. Or select SCROLL mode to scroll by moving your hand vertically.</div>
+  </nav>}
   {status==='error'&&<div className="holo-error holo-control" role="alert">{error}<button onClick={()=>setError('')} aria-label="Dismiss error"><X size={14}/></button></div>}
   {status==='ready'&&cursor&&<div className={'holo-hand-pointer '+(cursor.pinch?'pinch':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--holo-progress':(cursor.progress*360)+'deg'} as CSSProperties} aria-hidden="true"><i/><span>{mode==='scroll'?'SCROLL':keyboard?'TYPE':'HOLD'}</span></div>}
   {status==='ready'&&mode==='scroll'&&!keyboard&&<div className="holo-scroll-beacons" aria-hidden="true"><div><ArrowUp size={18}/> LIFT HAND TO SCROLL UP</div><div><ArrowDown size={18}/> LOWER HAND TO SCROLL DOWN</div></div>}
