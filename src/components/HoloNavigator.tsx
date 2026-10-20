@@ -12,6 +12,8 @@ type Status='off'|'loading'|'ready'|'preview'|'error';
 type Cursor={x:number;y:number;progress:number;press:boolean};
 type HandSample={landmarks:Landmark[];wrist:Landmark;palm:{x:number;y:number};open:boolean;pointing:boolean;spread:boolean};
 type PalmScroll={armed:boolean;rawY:number;smoothedY:number;lastAt:number;velocity:number};
+type AutoCalibration={enabled:boolean;since:number;last:{x:number;y:number;fx:number;fy:number}[]|null;hint:string};
+const freshAutoCalibration=():AutoCalibration=>({enabled:false,since:0,last:null,hint:''});
 const newPalmScroll=():PalmScroll=>({armed:false,rawY:0,smoothedY:0,lastAt:0,velocity:0});
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
@@ -101,8 +103,8 @@ export default function HoloNavigator(){
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
  const [airFrame,setAirFrame]=useState<AirFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
- const [airCalibrationMessage,setAirCalibrationMessage]=useState('Show both hands, relax your fingers, then press ALIGN HANDS.');
- const pendingAirCalibrationRef=useRef(false);
+ const [airCalibrationMessage,setAirCalibrationMessage]=useState('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
+ const autoCalibrationRef=useRef<AutoCalibration>(freshAutoCalibration());
  const [airMode,setAirMode]=useState<AirTypingMode>('tap');
  const [airSensitivity,setAirSensitivity]=useState<AirSensitivity>('easy');
  const [airReach,setAirReach]=useState(1.3);
@@ -172,9 +174,9 @@ export default function HoloNavigator(){
   tapRef.current={down:false,candidate:false,frames:0};
   pinchRef.current={down:false,candidate:false,frames:0};
   airEngineRef.current.clearCalibration();
-  pendingAirCalibrationRef.current=false;
-  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
-  setAirCalibrationMessage('Show both hands, relax your fingers, then press ALIGN HANDS.');
+  autoCalibrationRef.current=freshAutoCalibration();
+  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'WAITING FOR TWO HANDS'});
+  setAirCalibrationMessage('HANDS-FREE: show both hands, relaxed and apart. Hold still and the keyboard aligns itself.');
   clickLatchRef.current=false;clickFeedbackRef.current={at:0,label:''};
   palmScrollRef.current=newPalmScroll();
   poseRef.current={kind:'idle',since:0};scrollVelocityRef.current=0;lastScrollAtRef.current=0;
@@ -211,8 +213,8 @@ export default function HoloNavigator(){
  useEffect(()=>{
   clearHover();focusRef.current=null;
   keyboardRef.current=false;setKeyboard(false);
-  airEngineRef.current.clearCalibration();pendingAirCalibrationRef.current=false;
-  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
+  airEngineRef.current.clearCalibration();autoCalibrationRef.current=freshAutoCalibration();
+  setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'WAITING FOR TWO HANDS'});
   swipeRef.current.armed=false;swipeRef.current.active=false;
   pinchRef.current={down:false,candidate:false,frames:0};
   clickLatchRef.current=false;
