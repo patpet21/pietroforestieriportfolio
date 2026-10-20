@@ -51,3 +51,32 @@
  .holo-natural-status .holo-target-readout{font-size:8px}
  .holo-gesture-test{min-height:36px;font-size:8px}
 }
+
+/* V19 — Air keyboard is an explicit, independent interaction mode. */
+.holo-air-toggle{
+ width:100%;min-height:37px;border-radius:9px;padding:8px 11px;
+ background:#c5ddff10;border:1px solid #8cc8ee88;color:#ecfaff;
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ font:850 10px Manrope,sans-serif;letter-spacing:.65px;
+}
+.holo-air-toggle.active{background:#88f8df31;border-color:#89f9de;color:#d4fff2}
+.holo-air-toggle svg{color:#9beaff}
+.holo-air-console{
+ width:min(540px,calc(100vw - 345px));
+ max-height:73dvh;overflow:auto;overscroll-behavior:contain;
+ transform:none!important;
+}
+.holo-air-console .holo-air-row button{
+ min-height:49px;
+ transition:background .12s,border-color .12s,box-shadow .12s;
+}
+.holo-air-foot{line-height:1.6;letter-spacing:.3px}
+.holo-air-console [data-holo-key].holo-focused-target{
+ outline:3px solid #b3ffee!important;outline-offset:2px!important
+}
+@media(max-width:760px){
+ .holo-air-toggle{font-size:8px;min-height:32px}
+ .holo-air-console{left:7px;right:7px;bottom:55px;width:auto;max-height:42dvh;padding:10px}
+ .holo-air-console .holo-air-row button{min-height:36px;font-size:12px}
+ .holo-air-foot{font-size:7px}
+}
