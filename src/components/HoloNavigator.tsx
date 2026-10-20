@@ -176,7 +176,7 @@ export default function HoloNavigator(){
      const indexJoint=hand[6],indexBase=hand[5];
      if(indexJoint&&indexBase){
       const ratio=distance(tip,indexBase)/Math.max(.04,distance(indexJoint,indexBase));
-      const t=tapRef.current,old=t.down,candidate=old?ratio<2.14:ratio<1.76;
+      const t=tapRef.current,old=t.down,candidate=old?ratio<2.28:ratio<1.95;
       if(t.candidate!==candidate){t.candidate=candidate;t.frames=1;}else t.frames++;
       const next=t.frames>=2?candidate:old;
       tapStarted=next&&!old;t.down=next;
