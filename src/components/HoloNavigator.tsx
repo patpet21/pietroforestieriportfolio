@@ -628,17 +628,17 @@ export default function HoloNavigator(){
   }
  };
 
- const mobileCompact=mobileView&&status==='ready'&&cameraPlaying&&!mobilePanelExpanded;
+ const mobileCompact=mobileView&&!mobilePanelExpanded&&((status==='loading'&&!cameraNeedsTap)||(status==='ready'&&cameraPlaying));
  const mobileIdle=mobileView&&status==='off';
  return <>
   <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")+(mobileCompact?" holo-mobile-compact":"")+(mobileIdle?" holo-mobile-idle":"")} aria-label="Natural gesture control">
    <div className="holo-natural-title">
-    <Scan size={17}/><strong>{mobileCompact?('GESTURES ON · '+handCount+' HAND'):('SPATIAL CONTROL'+(mobileView?' · MOBILE':''))}</strong>
+    <Scan size={17}/><strong>{mobileCompact?(status==='loading'?'CONNECTING…':('GESTURES ON · '+handCount+' HAND')):('SPATIAL CONTROL'+(mobileView?' · MOBILE':''))}</strong>
     {status==='ready'&&<i/>}
-    {mobileView&&status==='ready'
+    {mobileView&&(status==='ready'||status==='loading')
       ?<button type="button" className="holo-preview-toggle" onClick={()=>setMobilePanelExpanded(v=>!v)} aria-label={mobilePanelExpanded?'Hide gesture camera and controls':'Show gesture camera and controls'}>{mobilePanelExpanded?'HIDE':'CAMERA'}</button>
       :(status==='ready'||status==='preview')&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}
-    {mobileView&&(status==='ready'||status==='preview')&&<button type="button" className="holo-mobile-stop-title" onClick={stop} aria-label="Stop mobile camera"><CameraOff size={15}/></button>}
+    {mobileView&&(status==='ready'||status==='preview'||status==='loading')&&<button type="button" className="holo-mobile-stop-title" onClick={stop} aria-label="Stop mobile camera"><CameraOff size={15}/></button>}
    </div>
    <div className={'holo-vision-preview '+(['ready','loading','preview'].includes(status)?'on ':'')+(cameraPlaying?'playing':'')}>
     <video ref={videoRef} muted playsInline autoPlay onPlaying={()=>{setCameraPlaying(true);setCameraNeedsTap(false);}} onPause={()=>setCameraPlaying(false)}
