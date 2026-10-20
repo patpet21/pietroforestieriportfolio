@@ -242,13 +242,13 @@ export default function GestureLab(){
       if(knuckle&&middleJoint){
        const ratio=distance(finger,knuckle)/Math.max(.04,distance(middleJoint,knuckle));
        const old=airTapRef.current.down;
-       const candidate=old?ratio<2.14:ratio<1.76;
+       const candidate=old?ratio<2.28:ratio<1.95;
        const t=airTapRef.current;
        if(t.candidate!==candidate){t.candidate=candidate;t.frames=1;}else t.frames++;
        const down=t.frames>=2?candidate:old;
        tapStarted=down&&!old;t.down=down;
        if(inputMethodRef.current==='tap'){
-        setTapMessage(down?'INDEX PRESSED · RELEASE TO RESET':ratio>2.14?'FINGER EXTENDED · READY':'STRAIGHTEN YOUR INDEX');
+        setTapMessage(down?'INDEX PRESSED · RELEASE TO RESET':ratio>2.28?'FINGER EXTENDED · READY':'STRAIGHTEN YOUR INDEX');
        }
       }
       // Trigger from the previously highlighted key, before bending moves the tip.
