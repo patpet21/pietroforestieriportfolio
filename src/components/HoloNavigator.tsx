@@ -110,7 +110,7 @@ export default function HoloNavigator(){
   try{field.setSelectionRange(pos,pos);}catch{/* email/number fields do not support text selection */}
  },[]);
  const activate=useCallback((target:Target)=>{
-  if(target.closest('.holo-control'))return;
+  if(target.closest('.holo-control')&&!target.closest('[data-holo-action]')&&!target.closest('[data-holo-key]'))return;
   const airKey=target.closest<HTMLElement>('[data-holo-key]');
   if(airKey){insertText(airKey.dataset.holoKey||'');return;}
   if(editable(target)){
