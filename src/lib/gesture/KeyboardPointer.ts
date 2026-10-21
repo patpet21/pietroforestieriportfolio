@@ -39,7 +39,7 @@ export class KeyboardPointer {
   if(!depth){
    this.reset();
    return {activation:null,livePoint,key:null,down:false,armed:false,point:livePoint,
-    phase:'IDLE',reason:'tracker-lost',pending:false,progress:0};
+    phase:'IDLE',reason:'tracker-lost',pending:false,progress:0,confirmationMs:undefined};
   }
   const delta=this.lastDepth===null?0:depth.fingerDepth-this.lastDepth;
   this.lastDepth=depth.fingerDepth;
@@ -54,7 +54,7 @@ export class KeyboardPointer {
   if(this.strokeLocked&&this.anchor&&distance>STROKE_ABORT_TRAVEL){
    this.reset();
    return {activation:null,livePoint,key:null,down:false,armed:false,point:livePoint,
-    phase:'IDLE',reason:'target-missing',pending:false,progress:0};
+    phase:'IDLE',reason:'target-missing',pending:false,progress:0,confirmationMs:undefined};
   }
 
   if(this.selected!==raw&&!this.strokeLocked&&!this.controller.down){
