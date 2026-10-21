@@ -25,11 +25,12 @@ export class KeyboardPointer {
  private switchAt=0;
  private lastDepth:number|null=null;
  private strokeLocked=false;
+ private strokeStartedAt=0;
  constructor(travel?:number){this.controller=new ForwardPushController<string>(travel,'keyboard');}
  reset(){
   this.controller.reset();this.lastAt=-Infinity;this.selected=null;
   this.anchor=null;this.switchCandidate=null;this.switchAt=0;
-  this.lastDepth=null;this.strokeLocked=false;
+  this.lastDepth=null;this.strokeLocked=false;this.strokeStartedAt=0;
  }
  process(point:Point,depth:ForwardDepth|null,now:number,keyAt:(x:number,y:number)=>string|null){
   if(now-this.lastAt>320||now<=this.lastAt)this.reset();
@@ -47,8 +48,18 @@ export class KeyboardPointer {
 
   // Lock the chosen character as soon as a forward stroke starts, BEFORE
   // the contact frame when fingertip projection can wander sideways.
-  if(this.selected&&delta>.025&&this.controller.ready)this.strokeLocked=true;
-  if(this.controller.phase==='PRESSING'||this.controller.phase==='PRESSED')this.strokeLocked=true;
+  if(this.selected&&delta>.025&&this.controller.ready){
+   if(!this.strokeLocked)this.strokeStartedAt=now;
+   this.strokeLocked=true;
+  }
+  if(this.controller.phase==='PRESSING'||this.controller.phase==='PRESSED'){
+   if(!this.strokeLocked)this.strokeStartedAt=now;
+   this.strokeLocked=true;
+  }
+  // A small Z-noise spike below the contact threshold must not freeze aiming
+  // indefinitely. Real committed presses remain latched until withdrawal.
+  if(this.strokeLocked&&!this.controller.down&&this.controller.phase!=='PRESSING'&&
+   (delta<-.023||now-this.strokeStartedAt>420))this.strokeLocked=false;
 
   // A real large sideways movement isn't a valid press on the old key.
   if(this.strokeLocked&&this.anchor&&distance>STROKE_ABORT_TRAVEL){
@@ -82,7 +93,7 @@ export class KeyboardPointer {
   const result=this.controller.step({now,tracking:true,depth,pointing:true,
    mode:'navigation',target:this.selected,point:livePoint});
   if(result.phase==='RELEASED'||result.reason==='tracker-lost'){
-   this.strokeLocked=false;
+   this.strokeLocked=false;this.strokeStartedAt=0;
   }
   // Never type a disabled/covered/deleted key; the selected key must still
   // exist at the point where aiming settled, even if the live finger drifted.
