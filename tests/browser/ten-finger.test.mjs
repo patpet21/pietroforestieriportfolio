@@ -57,10 +57,15 @@ test('two hands show ten live fingertips, with skeleton/count/markers committed 
   await hands(page,pair());assert.equal(await page.locator('.air-finger-dot').count(),10);
   const state=await page.evaluate(()=>{
    const plane=document.querySelector('.air-desk-plane'),overlay=document.querySelector('.holo-hand-overlay');
+   const ctx=overlay.getContext('2d');
+   const center=ctx.getImageData(Math.floor(overlay.width/2),Math.floor(overlay.height/2),1,1).data;
+   const video=document.querySelector('.holo-vision-preview video');
    return {sample:plane.dataset.sampleId,overlaySample:overlay.dataset.sampleId,hands:overlay.dataset.hands,
+    composite:overlay.parentElement.classList.contains('sampled'),
+    webcamOpacity:getComputedStyle(video).opacity,photoAlpha:center[3],
     fingers:[...plane.querySelectorAll('.air-finger-dot')].map(el=>({id:el.dataset.fingerId,sample:el.dataset.sampleId,ring:getComputedStyle(el,'::after').content,transition:getComputedStyle(el).transitionDuration}))};
   });
-  assert.equal(state.overlaySample,state.sample);assert.equal(state.hands,'2');assert.equal(new Set(state.fingers.map(f=>f.id)).size,10);
+  assert.equal(state.overlaySample,state.sample);assert.equal(state.hands,'2');assert.equal(state.composite,true,'preview and skeleton share a captured canvas');assert.equal(state.webcamOpacity,'0','live webcam cannot drift underneath landmarks');assert.equal(state.photoAlpha,255,'sampled overlay contains the captured video pixels');assert.equal(new Set(state.fingers.map(f=>f.id)).size,10);
   for(const f of state.fingers){assert.equal(f.sample,state.sample);assert.ok(['none','normal'].includes(f.ring));assert.equal(f.transition,'0s');}
   const before=await page.locator('.air-finger-dot').evaluateAll(els=>els.map(el=>[el.dataset.fingerId,el.style.left,el.style.top]));
   await hands(page,pair(),{reverse:true});
