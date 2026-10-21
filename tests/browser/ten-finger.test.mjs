@@ -126,7 +126,8 @@ test('simultaneous contacts insert both characters once, including a selected na
   });
   const field=page.getByRole('textbox',{name:'Test native gesture field',exact:true});
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
-  await hands(page,pair());await hands(page,pair(true,true),{reverse:true});
+  await hands(page,pair(),{frames:18}); // recalibrate from neutral fingers, not a held press
+  await hands(page,pair(true,true),{reverse:true});
   assert.equal(await field.inputValue(),'FJ');assert.deepEqual(await page.evaluate(()=>window.__nativeInputs),['F','FJ']);
  }finally{await page.close();}
 });
