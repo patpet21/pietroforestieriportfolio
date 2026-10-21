@@ -29,7 +29,18 @@ async function keyboard(){
  await page.getByRole('button',{name:'ENABLE GESTURES',exact:true}).click();await page.waitForSelector('.holo-natural-status');
  await page.locator('.gesture-debug summary').click();
  await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();await page.waitForSelector('.air-desk-plane');
- assert.equal(await page.evaluate(()=>window.__modelOptions.numHands),2);return page;
+ assert.equal(await page.evaluate(()=>window.__modelOptions.numHands),2);
+ await page.evaluate(async()=>{
+  const {makeHand}=await import('/tests/fixtures/hand.mjs');
+  window.__tracked=[
+   {side:'L',landmarks:makeHand({x:.70,palm:true})},
+   {side:'R',landmarks:makeHand({x:.25,palm:true})}
+  ];
+ });
+ await page.waitForFunction(()=>{
+  try{return JSON.parse(document.querySelector('.gesture-debug pre').textContent).alignedHands===2;}catch{return false;}
+ },null,{timeout:7000});
+ return page;
 }
 const pair=(l=false,r=false)=>[{side:'L',key:'F',tap:l},{side:'R',key:'J',tap:r}];
 async function hands(page,poses,{reverse=false,frames=6}={}){
@@ -37,12 +48,26 @@ async function hands(page,poses,{reverse=false,frames=6}={}){
   const plane=document.querySelector('.air-desk-plane').getBoundingClientRect();
   const reach=Number(document.querySelector('.air-desk-plane').dataset.keyboardReach);
   const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
+  const tips={4:'THUMB',8:'INDEX',12:'MIDDLE',16:'RING',20:'PINKY'};
+  const homes={
+   L:{THUMB:'SPACE',INDEX:'F',MIDDLE:'D',RING:'S',PINKY:'A'},
+   R:{THUMB:'SPACE',INDEX:'J',MIDDLE:'K',RING:'L',PINKY:';'}
+  };
+  const center=(key)=>{
+   const target=[...document.querySelectorAll('[data-holo-key]')].find(el=>el.dataset.holoKey===key).getBoundingClientRect();
+   return {
+    x:(target.left+target.width/2-plane.left)/plane.width,
+    y:(target.top+target.height/2-plane.top)/plane.height
+   };
+  };
   const tracked=poses.map(({side,key,finger=8,tap=false})=>{
-   const target=document.querySelector('[data-holo-key="'+key+'"]').getBoundingClientRect();
-   const nx=(target.left+target.width/2-plane.left)/plane.width,ny=(target.top+target.height/2-plane.top)/plane.height;
-   const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
-   const base=makeHand({x,y,palm:true}),dx=x-base[finger].x,dy=y-base[finger].y;
-   const landmarks=base.map(p=>({...p,x:p.x+dx,y:p.y+dy}));
+   const base=makeHand({x:side==='L'?.70:.25,palm:true});
+   const name=tips[finger],home=center(homes[side][name]),target=center(key);
+   const width=Math.hypot(base[5].x-base[17].x,base[5].y-base[17].y);
+   const dx=(target.x-home.x)*width/(.37*reach);
+   const dy=(target.y-home.y)*width/(.48*reach);
+   const landmarks=base.map(p=>({...p}));
+   landmarks[finger].x-=dx;landmarks[finger].y+=dy;
    return {side,landmarks:tap?tapFinger(landmarks,finger,.23):landmarks};
   });
   window.__tracked=reverse?tracked.reverse():tracked;window.__poseStart=window.__inferences||0;
