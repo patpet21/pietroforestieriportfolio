@@ -101,12 +101,12 @@ test('two hands show ten live fingertips, with skeleton/count/markers committed 
 
 test('all ten fingers can type with short local strokes; other fingers and palm remain unchanged',async()=>{
  const page=await keyboard();try{
-  const tips=[4,8,12,16,20],keys='QWERTYUIOP';let text='';
+  const tips=[4,8,12,16,20],keys=['SPACE','F','D','S','A','SPACE','J','K','L',';'];let text='';
   for(let i=0;i<10;i++){
    const side=i<5?'L':'R',finger=tips[i%5],key=keys[i];
    const poses=[{side,key,finger},{side:side==='L'?'R':'L',key:side==='L'?'J':'F'}];
    await hands(page,poses);await hands(page,[{...poses[0],tap:true},poses[1]],{reverse:i%2===0});
-   text+=key;assert.equal(await output(page),text);
+   text+=key==='SPACE'?' ':key;assert.equal(await output(page),text);
   }
  }finally{await page.close();}
 });
