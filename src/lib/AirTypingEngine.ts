@@ -1,6 +1,7 @@
 import {measureFingerDepth} from './gesture/fingerDepth.ts';
 import {KeyboardPointer} from './gesture/KeyboardPointer.ts';
 import {HandIdentityTracker} from './gesture/HandIdentityTracker.ts';
+import {HandKeyMapper} from './gesture/HandKeyMapper.ts';
 /**
  * All ten fingertips use short, palm-relative forward strokes.
  * Ten-finger tap remains an independently calibrated research mode.
@@ -13,7 +14,7 @@ export type AirControl={id:string;hand:'L'|'R';progress:number;phase:string;reas
 export type AirFrame={fingers:AirFinger[];presses:AirKeyPress[];hands:number;calibrated:number;status:string;control?:AirControl;controls?:AirControl[]};
 export type AirTypingMode='tap'|'push';
 export type AirSensitivity='easy'|'balanced'|'precise';
-export type AirTypingSettings={reach:number;mode:AirTypingMode;sensitivity:AirSensitivity;aspect?:number};
+export type AirTypingSettings={reach:number;mode:AirTypingMode;sensitivity:AirSensitivity;aspect?:number;homeAt?:HomeLocator};
 export type KeyLocator=(x:number,y:number)=>string|null;
 export type HomeLocator=(key:string)=>{x:number;y:number}|null;
 type Side='L'|'R';
@@ -42,13 +43,14 @@ export class AirTypingEngine{
  private states=new Map<string,FingerState>();
  private pushPointers=new Map<string,KeyboardPointer>();
  private handIdentities=new HandIdentityTracker();
+ private pushMapper=new HandKeyMapper();
  private calibration=new Map<Side,Calibration>();
  private lastGlobalPress=0;
  private singleHandSide:Side|null=null;
  private statusMessage='';
- reset(){this.states.clear();this.pushPointers.clear();this.handIdentities.reset();this.lastGlobalPress=0;this.singleHandSide=null;}
+ reset(){this.states.clear();this.pushPointers.clear();this.handIdentities.reset();this.pushMapper.reset();this.lastGlobalPress=0;this.singleHandSide=null;}
  clearCalibration(){this.reset();this.calibration.clear();this.statusMessage='';}
- calibratedHands(){return this.calibration.size;}
+ calibratedHands(){return Math.max(this.calibration.size,this.pushMapper.count());}
  private assignHands(hands:AirHand[]):{side:Side;hand:AirHand}[]{
   const sorted=hands.filter(h=>h.landmarks.length>=21).slice(0,2)
    .sort((a,b)=>(1-a.landmarks[0].x)-(1-b.landmarks[0].x));
@@ -100,22 +102,32 @@ export class AirTypingEngine{
   this.statusMessage=count===2?'BOTH HANDS ALIGNED':'ONE HAND ALIGNED · SHOW SECOND HAND TO CALIBRATE BOTH';
   return {ok:true,hands:count,message:this.statusMessage};
  }
- private processPush(hands:AirHand[],keyAt:KeyLocator,now:number,reach:number,sensitivity:AirSensitivity,aspect=1):AirFrame{
+ private processPush(hands:AirHand[],keyAt:KeyLocator,now:number,reach:number,sensitivity:AirSensitivity,aspect=1,homeAt?:HomeLocator):AirFrame{
   const valid=hands.filter(h=>h.landmarks.length===21&&h.landmarks.every(p=>[p.x,p.y,p.z].every(Number.isFinite)));
   const assigned=this.handIdentities.update(valid,now);
   const alive=new Set(assigned.map(item=>item.side));
   // A missing hand loses its contact immediately. The other hand keeps its own
   // reference and release latch; reacquisition starts with a fresh controller.
   for(const id of this.pushPointers.keys())if(!alive.has(id[0] as Side))this.pushPointers.delete(id);
+  if(homeAt)for(const side of ['L','R'] as Side[])if(!alive.has(side))this.pushMapper.clear(side);
   const fingers:AirFinger[]=[],presses:AirKeyPress[]=[],controls:AirControl[]=[];
   for(const {side,hand,reset} of assigned){
+   if(reset&&homeAt)this.pushMapper.clear(side);
+   const aligned=homeAt?this.pushMapper.update(side,hand.landmarks,now,homeAt):true;
    for(const {name,tip} of FINGERS){
    const id=side+'-'+name;
    let pointer=this.pushPointers.get(id);
    if(!pointer){pointer=new KeyboardPointer({easy:.085,balanced:.12,precise:.16}[sensitivity]);this.pushPointers.set(id,pointer);}
-   if(reset)pointer.reset();
-   const position=hand.landmarks[tip],depth=measureFingerDepth(hand.landmarks,tip,aspect);
-   const result=pointer.process({x:clamp((1-position.x-.5)*reach+.5,0,1),y:clamp((position.y-.5)*reach+.5,0,1)},depth,now,keyAt);
+   if(reset||!aligned)pointer.reset();
+   const position=hand.landmarks[tip],depth=aligned?measureFingerDepth(hand.landmarks,tip,aspect):null;
+   const mapped=homeAt?this.pushMapper.project(side,name,hand.landmarks,reach):null;
+   const coord=mapped||{x:clamp((1-position.x-.5)*reach+.5,0,1),y:clamp((position.y-.5)*reach+.5,0,1)};
+   // Alignment is mandatory when a QWERTY home locator is supplied. Never
+   // let uncaptured fingers type at arbitrary absolute camera positions.
+   const result=aligned?pointer.process(coord,depth,now,keyAt):{
+    livePoint:coord,down:false,armed:false,progress:0,pending:false,key:null,point:coord,
+    phase:'IDLE',reason:'calibrating',confirmationMs:undefined,activation:null
+   };
    fingers.push({id,hand:side,name,x:result.livePoint.x,y:result.livePoint.y,key:result.key,
     pressed:result.down,armed:result.armed,ratio:result.progress,progress:result.progress,pending:result.pending,
     contact:result.pending?{...result.point}:undefined});
@@ -124,12 +136,15 @@ export class AirTypingEngine{
    }
   }
   const count=assigned.length,prefix=count+' HAND'+(count===1?'':'S')+' · '+fingers.length+' FINGERS · ';
-  const status=!count?'SHOW YOUR HANDS':presses.length?prefix+'TOUCH ✓':prefix+'SMALL FORWARD TAPS · NO HOLD REQUIRED';
-  return {fingers,presses,hands:count,calibrated:0,controls,control:controls[0],status};
+  const calibrated=homeAt?this.pushMapper.count():0;
+  const status=!count?'SHOW YOUR HANDS':
+   homeAt&&calibrated<count?prefix+'ALIGNING HANDS · RELAX FINGERS':
+   presses.length?prefix+'TOUCH ✓':prefix+'HOME-ALIGNED · AIM THEN TOUCH';
+  return {fingers,presses,hands:count,calibrated,controls,control:controls[0],status};
  }
  process(hands:AirHand[],keyAt:KeyLocator,now:number,options:AirTypingSettings):AirFrame{
   const reach=clamp(options.reach,.8,2.0);
-  if(options.mode==='push')return this.processPush(hands,keyAt,now,reach,options.sensitivity,options.aspect);
+  if(options.mode==='push')return this.processPush(hands,keyAt,now,reach,options.sensitivity,options.aspect,options.homeAt);
   const assigned=this.assignHands(hands);
   const fingers:AirFinger[]=[],presses:AirKeyPress[]=[],alive=new Set<string>();
   for(const {side,hand} of assigned){
