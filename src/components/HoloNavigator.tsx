@@ -9,6 +9,7 @@ import {getHand} from '../lib/gesture/pose';
 import type {Landmark} from '../lib/gesture/pose';
 import {ForwardPushController} from '../lib/gesture/ForwardPushController';
 import {measureForwardDepth} from '../lib/gesture/forwardDepth';
+import {HandLandmarkStabilizer} from '../lib/gesture/HandLandmarkStabilizer';
 import {findGestureTarget,canActivateTarget} from '../lib/gesture/targets';
 import {FrameBudget,GestureDiagnostics} from '../lib/gesture/diagnostics';
 import {newPalmScroll,palmScrollDelta} from '../lib/gesture/palmScroll';
@@ -24,15 +25,28 @@ const freshAutoCalibration=():AutoCalibration=>({enabled:false,since:0,last:null
 const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
 const MODEL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const HAND_BONES:number[][]=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
-function paintHandSkeleton(canvas:HTMLCanvasElement|null,video:HTMLVideoElement,hands:Landmark[][]){
+function paintHandSkeleton(canvas:HTMLCanvasElement|null,video:HTMLVideoElement,hands:Landmark[][],capture=false){
  if(!canvas)return;
  const w=canvas.clientWidth,h=canvas.clientHeight;
  if(!w||!h||!video.videoWidth||!video.videoHeight)return;
  const dpr=Math.min(window.devicePixelRatio||1,2),pw=Math.round(w*dpr),ph=Math.round(h*dpr);
  if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph;}
  const ctx=canvas.getContext('2d');if(!ctx)return;
- ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
  const scale=Math.max(w/video.videoWidth,h/video.videoHeight),ox=(w-video.videoWidth*scale)/2,oy=(h-video.videoHeight*scale)/2;
+ if(capture){
+  ctx.clearRect(0,0,w,h);
+  let captured=false;
+  try{
+   // Freeze the same camera frame that MediaPipe analyzes. Drawing skeleton
+   // on a separately playing <video> makes the index marker trail its finger.
+   ctx.save();ctx.translate(w,0);ctx.scale(-1,1);
+   ctx.drawImage(video,ox,oy,video.videoWidth*scale,video.videoHeight*scale);
+   captured=true;
+  }catch{/* Keep live video visible if the camera image is not drawable. */}
+  finally{ctx.restore();}
+  canvas.parentElement?.classList.toggle('sampled',captured);
+ }
  const pos=(p:Landmark)=>({x:ox+(1-p.x)*video.videoWidth*scale,y:oy+p.y*video.videoHeight*scale});
  hands.forEach((hand,handIndex)=>{
   if(hand.length<21)return;
@@ -84,16 +98,13 @@ export default function HoloNavigator(){
  const [testClicks,setTestClicks]=useState(0);
  const [keyboard,setKeyboard]=useState(false);
  const [airFrame,setAirFrame]=useState<KeyboardFrame>({fingers:[],presses:[],hands:0,calibrated:0,status:'ALIGN HANDS TO START'});
- const keyboardOverlays=useRef(new Map<number,Landmark[][]>());
+ const handStabilizer=useRef(new HandLandmarkStabilizer());
  const keyboardCommitted=useCallback((id:number,at:number)=>{
   const metrics=diagnostics.current;
-  const hands=keyboardOverlays.current.get(id),canvas=overlayRef.current,video=videoRef.current;
-  if(hands&&canvas&&video){
-   const start=performance.now();paintHandSkeleton(canvas,video,hands);
-   canvas.dataset.sampleId=String(id);canvas.dataset.hands=String(hands.length);
-   metrics.record('keyboardOverlayMs',performance.now()-start);
-  }
-  for(const key of keyboardOverlays.current.keys())if(key<=id)keyboardOverlays.current.delete(key);
+  const canvas=overlayRef.current;
+  // Image and landmarks were captured in the same inference frame. A React
+  // commit must not repaint the skeleton over a newer camera frame.
+  if(canvas?.dataset.sampleId===String(id))metrics.record('keyboardOverlayMs',0);
   if(!metrics.enabled)return;
   metrics.values.keyboardPresentedSample=id;
   metrics.record('sampleToKeyboardCommitMs',performance.now()-at);
@@ -151,7 +162,8 @@ export default function HoloNavigator(){
   rafRef.current=0;
   modelRef.current?.close();modelRef.current=null;
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
-  if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
+  if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;videoRef.current.parentElement?.classList.remove('sampled');}
+  handStabilizer.current.reset();
   setCameraPlaying(false);setCameraNeedsTap(false);setMobilePanelExpanded(false);
   zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0};
   zoomValueRef.current=1;setZoomLevel(1);
@@ -188,7 +200,7 @@ export default function HoloNavigator(){
  const leaveKeyboard=useCallback(()=>{
   keyboardRef.current=false;setKeyboard(false);keyboardExitFistAt.current=0;
   airEngineRef.current.clearCalibration();autoCalibrationRef.current=freshAutoCalibration();
-  keyboardOverlays.current.clear();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
+  handStabilizer.current.reset();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
   controlHandRef.current=null;clearHover();setCursor(null);
   setAirFrame({fingers:[],presses:[],hands:0,calibrated:0,status:'NAVIGATION ACTIVE'});
   setLabel('SITE NAVIGATION · OPEN PALM TO SCROLL · INDEX TO CLICK');
@@ -323,11 +335,11 @@ export default function HoloNavigator(){
    metrics.values={browser:navigator.userAgent,viewport:[innerWidth,innerHeight],dpr:devicePixelRatio,
     camera:{width:video.videoWidth,height:video.videoHeight,frameRate:stream.getVideoTracks()[0]?.getSettings().frameRate},backend:cpu?'CPU':'GPU',
     latencyNote:'sample-to-action excludes camera exposure/transport and display scanout'};
-   let lastFrame=0,lastVideo=-1,lastCount=-1,rateAt=performance.now(),processed=0,videoFrames=0,lastDraw=0,hadHand=false,sampleId=0;
+   let lastFrame=0,lastVideo=-1,lastCount=-1,rateAt=performance.now(),processed=0,videoFrames=0,hadHand=false,sampleId=0;
    const tick=(now:number)=>{
     if(session!==tokenRef.current)return;
     rafRef.current=requestAnimationFrame(tick);
-    if(document.hidden){controllerRef.current.reset();airEngineRef.current.reset();palmScrollRef.current=newPalmScroll();controlHandRef.current=null;clearHover();setCursor(null);return;}
+    if(document.hidden){controllerRef.current.reset();airEngineRef.current.reset();handStabilizer.current.reset();palmScrollRef.current=newPalmScroll();controlHandRef.current=null;clearHover();setCursor(null);return;}
     if(!video.videoWidth||video.currentTime===lastVideo)return;
     if(now-lastFrame<budget.interval)return;
     lastVideo=video.currentTime;
@@ -336,9 +348,12 @@ export default function HoloNavigator(){
     if(lastFrame)metrics.record('processedIntervalMs',now-lastFrame);
     lastFrame=now;
     try{
+     const captureStart=performance.now();
+     if(!mobile||mobilePanelExpandedRef.current)paintHandSkeleton(overlayRef.current,video,[],true);
+     metrics.record('previewCaptureMs',performance.now()-captureStart);
      const inferenceStart=performance.now();
      const result=landmarker.detectForVideo(video,now);
-     const landmarks=result.landmarks||[];
+     const landmarks=handStabilizer.current.update(result.landmarks||[],now);
      metrics.record('inferenceMs',performance.now()-inferenceStart);
      processed++;
      const quality=video.getVideoPlaybackQuality?.();
@@ -356,14 +371,11 @@ export default function HoloNavigator(){
       return hand?[{...hand,handedness:result.handedness?.[index]?.[0]}]:[];
      });
      metrics.record('poseMs',performance.now()-poseStart);
-     // Keyboard bones, hand count and ten markers share the same valid sample.
-     // The former 15 Hz overlay could still show a hand already lost by input.
+     // Render the bones on the frozen camera frame from this exact inference.
+     // Navigation and all ten keyboard markers use these same stabilized tips.
      const drawStart=performance.now();
-     if(keyboardRef.current){
-      keyboardOverlays.current.set(sampleId,samples.map(s=>s.landmarks));
-      if(keyboardOverlays.current.size>4)keyboardOverlays.current.delete(keyboardOverlays.current.keys().next().value!);
-     }else if((!mobile||mobilePanelExpandedRef.current)&&(now-lastDraw>=1000/15||samples.length!==lastCount)){
-      paintHandSkeleton(overlayRef.current,video,samples.map(s=>s.landmarks));lastDraw=now;
+     if(!mobile||mobilePanelExpandedRef.current){
+      paintHandSkeleton(overlayRef.current,video,samples.map(s=>s.landmarks));
       if(overlayRef.current){overlayRef.current.dataset.sampleId=String(sampleId);overlayRef.current.dataset.hands=String(samples.length);}
      }
      metrics.record('overlayMs',performance.now()-drawStart);
