@@ -429,7 +429,12 @@ export default function HoloNavigator(){
        const px=box.left+(root?.clientLeft||0)+nx*(root?.clientWidth||0),py=box.top+(root?.clientTop||0)+ny*(root?.clientHeight||0);
        if(px<box.left||px>box.right||py<box.top||py>box.bottom)return null;
        const key=document.elementFromPoint(px,py)?.closest<HTMLButtonElement>('button[data-holo-key]');
-       return key&&root?.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.holoKey||null:null;
+       if(!key||!root?.contains(key)||key.matches(':disabled')||key.closest('[inert],[aria-disabled="true"]'))return null;
+       if(airModeRef.current==='push'){
+        const r=key.getBoundingClientRect(),mx=Math.min(5,r.width*.1),my=Math.min(5,r.height*.12);
+        if(px<r.left+mx||px>r.right-mx||py<r.top+my||py>r.bottom-my)return null;
+       }
+       return key.dataset.holoKey||null;
        }finally{hitTime+=performance.now()-hitStart;}
       };
       // Auto-calibrate without a mouse or a third hand:
@@ -479,11 +484,23 @@ export default function HoloNavigator(){
         }
        }
       }
+      const homeAt=(key:string):{x:number;y:number}|null=>{
+       if(!root||!box?.width||!box?.height)return null;
+       const button=Array.from(root.querySelectorAll<HTMLButtonElement>('button[data-holo-key]'))
+        .find(item=>item.dataset.holoKey===key&&!item.disabled);
+       if(!button)return null;
+       const r=button.getBoundingClientRect();
+       return {x:(r.left+r.width/2-box.left-(root.clientLeft||0))/Math.max(1,root.clientWidth),
+        y:(r.top+r.height/2-box.top-(root.clientTop||0))/Math.max(1,root.clientHeight)};
+      };
       const frame=airEngineRef.current.process(samples,keyAt,now,{
-       reach:airReachRef.current,mode:airModeRef.current,sensitivity:airSensitivityRef.current,aspect:video.videoWidth/video.videoHeight
+       reach:airReachRef.current,mode:airModeRef.current,
+       sensitivity:airSensitivityRef.current,aspect:video.videoWidth/video.videoHeight,
+       homeAt
       });
       metrics.record('keyboardHitTestMs',hitTime);
       if(frame.controls){metrics.values.pose='keyboard-forward-touch';metrics.values.press=frame.controls;}
+      metrics.values.alignedHands=frame.calibrated;
       if(metrics.enabled){
        metrics.values.keyboardProcessedSample=sampleId;
        metrics.values.keyboardPointers=frame.fingers.map(f=>({id:f.id,x:f.x,y:f.y,contact:f.contact,pending:f.pending,down:f.pressed,progress:f.progress}));
