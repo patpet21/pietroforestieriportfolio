@@ -150,14 +150,18 @@ test('floating Air Type: one hand auto-aligns then types CIAO, repeated letters,
   assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO ');
   await page.evaluate(()=>{window.__hands=[];window.__poseStart=window.__inferences;});
   await page.waitForFunction(()=>window.__inferences-window.__poseStart>=3);
-  await keyboardPose(page,'Q',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO ');
-  await keyboardPose(page,'J',false,17); // regain a relaxed home reference after tracking loss
-  await press('Q');assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
+  await keyboardPose(page,'Q',true,2);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO ');
+  // A partly pushed hand is NOT a valid new rest pose. Drop it again before
+  // acquiring a neutral hand and selecting the next key.
+  await page.evaluate(()=>{window.__hands=[];window.__poseStart=window.__inferences;});
+  await page.waitForFunction(()=>window.__inferences-window.__poseStart>=3);
+  await keyboardPose(page,'J',false,18);
+  await press('H');assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO H');
   await keyboardPose(page,'K');
   await page.locator('[data-holo-key="K"]').evaluate(el=>{el.disabled=true;});
-  await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
+  await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO H');
   await page.locator('[data-holo-key="K"]').evaluate(el=>{el.disabled=false;});
-  await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
+  await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO H');
   await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
   assert.equal(await page.locator('.air-desk-plane').count(),0);
   await page.evaluate(()=>{
