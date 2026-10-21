@@ -133,7 +133,7 @@ async function keyboardPose(page,key,closed=false,frames=7){
  await page.waitForFunction(n=>window.__inferences-window.__poseStart>=n,frames);
  if(!closed)await page.waitForFunction(key=>document.querySelector(`[data-holo-key="${key}"]`)?.classList.contains('air-key-hover'),key,{timeout:5500});
 }
-test('floating Air Type: one hand highlights and types CIAO, repeated letters, space and backspace without calibration',async()=>{
+test('floating Air Type: one hand auto-aligns then types CIAO, repeated letters, space and backspace',async()=>{
  const page=await fixture({path:'gesture-lab'});
  try{
   await page.evaluate(()=>document.getElementById('fixture-target').remove());
@@ -151,6 +151,7 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   await page.evaluate(()=>{window.__hands=[];window.__poseStart=window.__inferences;});
   await page.waitForFunction(()=>window.__inferences-window.__poseStart>=3);
   await keyboardPose(page,'Q',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO ');
+  await keyboardPose(page,'J',false,17); // regain a relaxed home reference after tracking loss
   await press('Q');assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
   await keyboardPose(page,'K');
   await page.locator('[data-holo-key="K"]').evaluate(el=>{el.disabled=true;});
