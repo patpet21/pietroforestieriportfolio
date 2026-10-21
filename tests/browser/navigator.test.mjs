@@ -111,19 +111,27 @@ test('a covered target, route transition and competing camera never replay a hel
   assert.equal(await page.evaluate(()=>window.__closed),1);
  }finally{await page.close();}
 });
-async function keyboardPose(page,key,closed=false){
+async function keyboardPose(page,key,closed=false,frames=7){
  await page.evaluate(async ({key,closed})=>{
   const plane=document.querySelector('.air-desk-plane').getBoundingClientRect();
-  const target=document.querySelector(`[data-holo-key="${key}"]`).getBoundingClientRect();
-  const nx=(target.left+target.width/2-plane.left)/plane.width,ny=(target.top+target.height/2-plane.top)/plane.height;
+  const byKey=k=>[...document.querySelectorAll('[data-holo-key]')].find(el=>el.dataset.holoKey===k).getBoundingClientRect();
+  const location=k=>{
+   const r=byKey(k);
+   return {x:(r.left+r.width/2-plane.left)/plane.width,y:(r.top+r.height/2-plane.top)/plane.height};
+  };
+  const home=location('J'),target=location(key);
   const reach=Number(document.querySelector('.air-desk-plane').dataset.keyboardReach);
-  const x=1-(.5+(nx-.5)/reach),y=.5+(ny-.5)/reach;
   const {makeHand,tapFinger}=await import('/tests/fixtures/hand.mjs');
-  const base=makeHand({x,y}),p=closed?tapFinger(base,8,.23):base;
-  window.__hands=[p];window.__poseStart=window.__inferences||0;
+  const base=makeHand({x:.25,palm:true});
+  const width=Math.hypot(base[5].x-base[17].x,base[5].y-base[17].y);
+  const p=base.map(v=>({...v}));
+  p[8].x-=(target.x-home.x)*width/(.37*reach);
+  p[8].y+=(target.y-home.y)*width/(.48*reach);
+  window.__hands=[closed?tapFinger(p,8,.23):p];
+  window.__poseStart=window.__inferences||0;
  },{key,closed});
- await page.waitForFunction(()=>window.__inferences-window.__poseStart>=6);
- if(!closed)await page.waitForFunction(key=>document.querySelector(`[data-holo-key="${key}"]`)?.classList.contains('air-key-hover'),key,{timeout:5000});
+ await page.waitForFunction(n=>window.__inferences-window.__poseStart>=n,frames);
+ if(!closed)await page.waitForFunction(key=>document.querySelector(`[data-holo-key="${key}"]`)?.classList.contains('air-key-hover'),key,{timeout:5500});
 }
 test('floating Air Type: one hand highlights and types CIAO, repeated letters, space and backspace without calibration',async()=>{
  const page=await fixture({path:'gesture-lab'});
@@ -132,7 +140,8 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
   await page.waitForSelector('.air-desk-plane');
   assert.equal(await page.locator('.air-calibrate').count(),0);
-  assert.match(await page.locator('.air-calibration-note').textContent(),/aim at one key/i);
+  await keyboardPose(page,'J',false,17);
+  assert.equal(await page.locator('.air-desk-status').textContent().then(s=>s.includes('HOME-ALIGNED')),true);
   const press=async key=>{await keyboardPose(page,key);await keyboardPose(page,key,true);};
   await keyboardPose(page,'C');assert.equal(await page.locator('[data-holo-key="C"]').evaluate(el=>el.classList.contains('air-key-hover')),true);
   await keyboardPose(page,'C',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'C');
@@ -159,6 +168,7 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   });
   const field=page.getByRole('textbox',{name:'Test native gesture input',exact:true});
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
+  await keyboardPose(page,'J',false,17);
   await press('K');assert.equal(await field.inputValue(),'K');
   assert.equal(await page.locator('.air-desk-output output').textContent(),'K');
  }finally{await page.close();}
