@@ -15,7 +15,7 @@ function run(){
  return {pointer,at,aim};
 }
 test('a shallow edge tremor does not change the selected key',()=>{
- const f=run();assert.equal(f.aim().key,'A');
+ const f=run();assert.equal(f.aim(.48).key,'A');
  for(let i=0;i<5;i++){
   const p=f.at(.503);
   assert.equal(p.key,'A');
