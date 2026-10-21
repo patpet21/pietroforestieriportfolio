@@ -38,7 +38,10 @@ export default function AirKeyboard({
    <div className="air-desk-finger-legend"><span className="left">L · LEFT HAND</span><span className="right">R · RIGHT HAND</span></div>
   </div>
   <p className="air-calibration-note" role="status">
-   <strong>{mode==='push'?'Show both hands, aim at one key, then make a deliberate short forward touch. The key needs to stay highlighted before it can type.':calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
+   <strong>{mode==='push'?(hands>0&&status.includes('ALIGNING')?
+    'AUTO-ALIGN · RELAX YOUR FINGERS BRIEFLY. NO CLICK OR BUTTON IS REQUIRED.':
+    'HOME-ALIGNED · AIM AT A KEY, THEN PUSH FORWARD AND WITHDRAW TO RELEASE.'):
+    calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
    {mode==='tap'&&<span> No simultaneous clicking and hand positioning. This is only an approximate camera-based alignment, not a touch keyboard.</span>}
   </p>
   <div className="air-desk-output"><small>LIVE TYPING · SELECTED FIELD / DEMO BUFFER</small><output aria-live="off">{text||(mode==='push'?'Use small forward taps with any finger.':'Align both hands, then use experimental finger bends.')}</output></div>
