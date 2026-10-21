@@ -28,6 +28,11 @@ export class HandIdentityTracker{
   this.lastAt=now;
   for(const [side,track] of this.tracks)if(now-track.at>IDENTITY_MEMORY_MS)this.tracks.delete(side);
   const detections=hands.filter(h=>h.landmarks.length>=21&&Number.isFinite(h.landmarks[0].x)&&Number.isFinite(h.landmarks[0].y)).slice(0,2);
+  const labels=detections.map(label);
+  // Two confident "Left" predictions do not identify two physical hands.
+  // Use continuous wrist tracks when semantic evidence contradicts itself.
+  const duplicate=labels.length===2&&labels[0]!==null&&labels[0]===labels[1];
+  const evidence=(hand:AirHand)=>duplicate?null:label(hand);
   type Choice={sides:(HandSide|null)[];matched:number;cost:number};
   const choices:Choice[]=[];
   const enumerate=(index:number,sides:(HandSide|null)[],used:Set<HandSide>,matched:number,cost:number)=>{
@@ -40,7 +45,7 @@ export class HandIdentityTracker{
     const elapsed=now-track.at;
     const horizon=elapsed<=320?Math.min(elapsed,160):0;
     const predicted={x:track.wrist.x+track.velocity.x*horizon,y:track.wrist.y+track.velocity.y*horizon};
-    const handedness=label(hand);
+    const handedness=evidence(hand);
     // A single bad label must not exchange spatially distinct hands. Near a
     // crossing, a confident label breaks the otherwise ambiguous assignment.
     const labelCost=handedness&&handedness!==side?.08:0;
@@ -53,7 +58,7 @@ export class HandIdentityTracker{
   const alternative=choices.find(c=>c.matched===best.matched&&c.sides.some((side,i)=>side!==best.sides[i]));
   const ambiguous=!!alternative&&alternative.cost-best.cost<.025;
   const fresh=new Set<number>();
-  const semantic=detections.map(label);
+  const semantic=detections.map(evidence);
   for(const side of SIDES){
    const index=best.sides.indexOf(side);
    const conflict=index>=0&&semantic[index]!==null&&semantic[index]!==side;
@@ -75,7 +80,7 @@ export class HandIdentityTracker{
   let initial:{sides:HandSide[];cost:number}|null=null;
   const initialize=(index:number,sides:HandSide[],reserved:Set<HandSide>,cost:number)=>{
    if(index===missing.length){if(!initial||cost<initial.cost)initial={sides,cost};return;}
-   const hand=detections[missing[index]],handedness=label(hand),wrist=hand.landmarks[0];
+   const hand=detections[missing[index]],handedness=evidence(hand),wrist=hand.landmarks[0];
    for(const side of SIDES){
     if(reserved.has(side))continue;
     const screenSide:HandSide=wrist.x>=.5?'L':'R';
@@ -95,7 +100,7 @@ export class HandIdentityTracker{
   for(let index=0;index<detections.length;index++){
    const side=best.sides[index]!,hand=detections[index],wrist=hand.landmarks[0],previous=this.tracks.get(side);
    const elapsed=previous?now-previous.at:0;
-   const handedness=label(hand);
+   const handedness=evidence(hand);
    const reset=fresh.has(index)||ambiguous||!!(handedness&&handedness!==side)||elapsed>320;
    const velocity=previous&&!reset&&elapsed>0
     ?{x:(wrist.x-previous.wrist.x)/elapsed,y:(wrist.y-previous.wrist.y)/elapsed}:{x:0,y:0};

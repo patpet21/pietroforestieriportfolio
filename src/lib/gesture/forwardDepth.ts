@@ -1,5 +1,5 @@
 import type {Landmark} from './pose.ts';
-export type ForwardDepth={scale:number;fingerDepth:number;shape:number[];indexExtended:boolean};
+export type ForwardDepth={scale:number;fingerDepth:number;jointDepth?:number;shape:number[];indexExtended:boolean};
 const median=(values:number[])=>[...values].sort((a,b)=>a-b)[Math.floor(values.length/2)];
 /** Camera-relative cues, not metric contact sensing. Landmark Z is wrist-relative:
  * translation uses apparent palm size; finger motion uses relative fingertip Z.
@@ -14,6 +14,6 @@ export function measureForwardDepth(points:Landmark[],aspect=1):ForwardDepth|nul
  const path=distance(5,6,true)+distance(6,7,true)+distance(7,8,true);
  const straightness=path>0?distance(5,8,true)/path:0;
  const palmZ=[0,5,9,17].reduce((sum,i)=>sum+points[i].z,0)/4;
- return {scale,fingerDepth:(palmZ-points[8].z)/scale,shape:lengths.map(n=>n/scale),
+ return {scale,fingerDepth:(palmZ-points[8].z)/scale,jointDepth:(palmZ-points[7].z)/scale,shape:lengths.map(n=>n/scale),
   indexExtended:straightness>=.82&&distance(5,8,true)>distance(5,6,true)*1.4};
 }

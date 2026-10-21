@@ -1,6 +1,6 @@
 import{useLayoutEffect}from 'react';
-import type{RefObject,CSSProperties}from 'react';
-import{Keyboard,ScanFace,RefreshCw,Hand,MousePointer2,X,RotateCcw}from 'lucide-react';
+import type{RefObject}from 'react';
+import{Keyboard,ScanFace,RefreshCw,X}from 'lucide-react';
 import type{AirFinger,AirSensitivity,AirTypingMode}from '../lib/AirTypingEngine';
 const rows=['QWERTYUIOP','ASDFGHJKL;','ZXCVBNM'];
 type Props={
@@ -27,10 +27,10 @@ export default function AirKeyboard({
  const control=(value:string,text:string,extra='')=><button type="button" key={value}
   data-holo-key={value}
   className={(hover.has(value)?'air-key-hover ':'')+(pressed.has(value)?'air-key-pressed ':'')+extra}
-  onClick={()=>onKey(value)}>{text}</button>;
+  onClick={()=>value==='SITE'?onClose():onKey(value)}>{text}</button>;
  return <section className="holo-air-console holo-control air-desk" aria-label="Multi-finger air keyboard">
   <div className="air-desk-header">
-   <div className="air-desk-brand"><ScanFace size={19}/><div><b>GESTUREOS / AIR TYPE LAB</b><small>{mode==='push'?'FORWARD TOUCH · TWO HANDS · ONE INDEX EACH':'TEN-FINGER EXPERIMENT · NOT A PHYSICAL KEYBOARD'}</small></div></div>
+   <div className="air-desk-brand"><ScanFace size={19}/><div><b>GESTUREOS / AIR TYPE LAB</b><small>{mode==='push'?'TEN-FINGER TOUCH · SMALL FORWARD TAPS':'FINGER BEND · EXPERIMENT'}</small></div></div>
    <button type="button" className="air-desk-close" aria-label="Close air keyboard" onClick={onClose}><X size={16}/> CLOSE</button>
   </div>
   <div className="air-desk-information">
@@ -38,44 +38,36 @@ export default function AirKeyboard({
    <div className="air-desk-finger-legend"><span className="left">L · LEFT HAND</span><span className="right">R · RIGHT HAND</span></div>
   </div>
   <p className="air-calibration-note" role="status">
-   <strong>{calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
+   <strong>{mode==='push'?(hands>0&&status.includes('ALIGNING')?
+    'AUTO-ALIGN · RELAX YOUR FINGERS BRIEFLY. NO CLICK OR BUTTON IS REQUIRED.':
+    'HOME-ALIGNED · AIM AT A KEY, THEN PUSH FORWARD AND WITHDRAW TO RELEASE.'):
+    calibrationMessage||'AUTO-ALIGN: show both hands and hold still. No button is needed.'}</strong>
    {mode==='tap'&&<span> No simultaneous clicking and hand positioning. This is only an approximate camera-based alignment, not a touch keyboard.</span>}
   </p>
-  <div className="air-desk-output"><small>LIVE TYPING · SELECTED FIELD / DEMO BUFFER</small><output aria-live="off">{text||(mode==='push'?'Aim with either index, push forward to touch, then withdraw.':'Align both hands, then use experimental finger taps.')}</output></div>
-  <div className="air-desk-settings">
-   <div className="air-choice" role="group" aria-label="Air keyboard actuation mode">
-    <button type="button" className={mode==='push'?'active':''} onClick={()=>onMode('push')}><MousePointer2 size={13}/> FORWARD TOUCH</button>
-    <button type="button" className={mode==='tap'?'active':''} onClick={()=>onMode('tap')}><Hand size={13}/> TEN-FINGER TAP · EXPERIMENT</button>
-   </div>
-   {mode==='tap'&&<div className="air-choice air-sensitivity" role="group" aria-label="Finger tap sensitivity">
-    {(['easy','balanced','precise'] as AirSensitivity[]).map(v=><button type="button" key={v}
-      className={sensitivity===v?'active':''} onClick={()=>onSensitivity(v)}>{v.toUpperCase()}</button>)}
-   </div>}
-   <label className="air-reach" title="Expand your hand movements across the virtual keyboard">
-    RANGE <strong>{reach.toFixed(1)}×</strong>
-    <input type="range" aria-label="Typing hand movement range" min=".8" max="2" step=".1" value={reach} onChange={e=>onReach(Number(e.target.value))}/>
-   </label>
-   {mode==='tap'&&<button type="button" className="air-calibrate" onClick={onCalibrate} title="Restart automatic hands-free calibration"><RotateCcw size={13}/> RESTART AUTO-ALIGN</button>}
+  <div className="air-desk-output"><small>LIVE TYPING · SELECTED FIELD / DEMO BUFFER</small><output aria-live="off">{text||(mode==='push'?'Use small forward taps with any finger.':'Align both hands, then use experimental finger bends.')}</output></div>
+  <div className="air-desk-current" aria-label="Current typing configuration">
+   <span>ACTIVE · {({easy:'LIGHT',balanced:'BALANCED',precise:'FIRM'})[sensitivity]} TOUCH</span>
+   <span>RANGE {reach.toFixed(1)}× · ADJUST IN GESTUREOS SETTINGS</span>
   </div>
-  <div className="air-desk-plane" ref={keysRef} data-sample-id={sampleId} aria-label={mode==='push'?'Virtual QWERTY keyboard and two index pointers':'Virtual QWERTY keyboard and ten tracked fingertip pointers'}>
+  <div className="air-desk-plane" ref={keysRef} data-keyboard-reach={reach} data-sample-id={sampleId} aria-label="Virtual QWERTY keyboard and ten tracked fingertip pointers">
    {rows.map((row,i)=><div className={'air-desk-keyrow air-desk-keyrow-'+i} key={row}>
     {row.split('').map(v=>control(v,v))}
    </div>)}
    <div className="air-desk-keyrow air-desk-actions">
     {control('CLEAR','CLEAR','utility')}{control('BACK','⌫ BACK','utility')}{control('SPACE','SPACE','wide')}
-    {control('ENTER','↵ ENTER','utility')}
+    {control('ENTER','↵ ENTER','utility')}{control('SITE','↗ SITE','utility exit-site')}
    </div>
    {fingers.filter(f=>f.pending&&f.contact).map(f=><div key={f.id+'-contact'} className={'air-contact-dot '+(f.hand==='L'?'left':'right')+(f.pressed?' down':'')}
     data-contact-for={f.id} style={{left:(f.contact!.x*100)+'%',top:(f.contact!.y*100)+'%'}} aria-hidden="true"/>)}
    {fingers.map(f=><div className={'air-finger-dot '+(f.hand==='L'?'left':'right')+(f.armed?' armed':'')+(f.pressed?' down':'')}
-    key={f.id} data-finger-id={f.id} data-sample-id={sampleId} style={{left:(f.x*100)+'%',top:(f.y*100)+'%','--air-depth':((f.progress||0)*360)+'deg'} as CSSProperties} title={f.hand+' '+f.name+(f.key?' · '+f.key:'')}>
+    key={f.id} data-finger-id={f.id} data-sample-id={sampleId} style={{left:(f.x*100)+'%',top:(f.y*100)+'%'}} title={f.hand+' '+f.name+(f.key?' · '+f.key:'')}>
      <span>{f.hand+glyph(f.name)}</span>
    </div>)}
   </div>
   <div className="air-desk-footer">
    {mode==='tap'
     ?<span><Keyboard size={14}/> Automatic alignment begins when two steady hands are visible. Finger TAP is experimental; press/release may be inaccurate.</span>
-    :<span><Keyboard size={14}/> Both indices work independently. Push to fill the ring, withdraw to release. The small target marks the contact point.</span>}
+    :<span><Keyboard size={14}/> Tap ↗ SITE or hold two closed fists briefly to return to full-site gesture control. Esc also closes the keyboard.</span>}
    {mode==='tap'&&<span><RefreshCw size={13}/> If alignment drifts, use RESTART before positioning your hands</span>}
   </div>
   <p className="air-desk-disclaimer">A webcam estimates finger movements; this experimental mode cannot replicate the reliability of physical keyboard contact. Mouse and normal keyboard remain available.</p>

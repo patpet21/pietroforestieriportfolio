@@ -58,3 +58,12 @@ test('short disappearance preserves identity metadata, but returning after a lon
  assert.deepEqual(labels(returning),{L:'left',R:'right'});
  assert.equal(returning.find(h=>h.side==='L').reset,true);
 });
+
+test('duplicate model handedness does not permanently reset a spatially stable second hand',()=>{
+ const tracker=new HandIdentityTracker();
+ tracker.update([hand('left',.7,'Left'),hand('right',.3,'Right')],100);
+ for(let i=1;i<8;i++){
+  const f=tracker.update([hand('right',.3,'Left'),hand('left',.7,'Left')],100+i*40);
+  assert.deepEqual(labels(f),{L:'left',R:'right'});assert.equal(f.some(h=>h.reset),false);
+ }
+});

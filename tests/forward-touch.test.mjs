@@ -1,91 +1,80 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ForwardPushController} from '../src/lib/gesture/ForwardPushController.ts';
-import {measureForwardDepth} from '../src/lib/gesture/forwardDepth.ts';
-import {KeyboardPointer} from '../src/lib/gesture/KeyboardPointer.ts';
-import {makeHand} from './fixtures/hand.mjs';
 const target={id:'button'};
-const setup=()=>{
- const controller=new ForwardPushController();let now=100;
- const frame=(overrides={})=>controller.step({now:now+=50,tracking:true,depth:measureForwardDepth(makeHand()),pointing:true,mode:'navigation',target,point:{x:.4,y:.5},...overrides});
- const aim=()=>{for(let i=0;i<7;i++)frame();};
- const push=()=>{frame({depth:measureForwardDepth(makeHand({scale:1.2}))});return frame({depth:measureForwardDepth(makeHand({scale:1.2}))});};
- return {controller,frame,aim,push};
+const depth=(fingerDepth=0,jointDepth=fingerDepth*.6,scale=1)=>({scale,fingerDepth,jointDepth,shape:[1,1,1,1],indexExtended:true});
+const setup=(profile='navigation',travel)=> {
+ const controller=new ForwardPushController(travel,profile);let now=100;
+ const at=(d=depth(),extra={})=>{now=extra.now??now+40;return controller.step({
+  now,tracking:true,depth:d,pointing:true,mode:'navigation',target,point:{x:.4,y:.5},...extra
+ });};
+ const aim=(d=depth())=>{for(let i=0;i<6;i++)at(d);};
+ const press=(d=depth(.18))=>{const first=at(d);const second=at(d);return {first,second};};
+ return {controller,at,aim,press};
 };
-test('aim and forward crossing activates once; holding or lateral movement cannot repeat',()=>{
- const {frame,aim,push}=setup();aim();assert.equal(push().activation,target);
- for(let i=0;i<30;i++)assert.equal(frame({depth:measureForwardDepth(makeHand({scale:1.2})),point:{x:.8,y:.8}}).activation,null);
- frame();frame();assert.equal(push().activation,target);
+test('a single depth spike never clicks; two stable observations confirm a deliberate touch',()=>{
+ const {at,aim,press}=setup();aim();
+ const {first,second}=press();
+ assert.equal(first.activation,null);assert.equal(first.reason,'confirming-touch');
+ assert.equal(second.activation,target);assert.equal(second.confirmationMs,40);
 });
-test('hover forever, thumb/index pinch and wrist-relative Z offset never click',()=>{
- const {frame,aim}=setup();aim();
- for(let i=0;i<40;i++)assert.equal(frame({depth:measureForwardDepth(makeHand({pinch:i%2===0,zOffset:i*.2}))}).activation,null);
+test('press must follow stable aim and cannot activate from a moving target',()=>{
+ const {at,aim}=setup();const other={id:'other'};
+ at();at(depth(.18));at(depth(.18));assert.equal(at(depth(.18)).activation,null);
+ aim();const first=at(depth(.18),{target:other});
+ assert.equal(first.activation,null);
+ assert.equal(at(depth(.18),{target:other}).activation,null);
+ for(let i=0;i<6;i++)at(depth(),{target:other});
+ const renewed=at(depth(.18),{target:other});assert.equal(renewed.activation,null);
+ let confirmed=null;
+ for(let k=0;k<3;k++)confirmed=at(depth(.18),{target:other}).activation||confirmed;
+ assert.equal(confirmed,other);
 });
-test('touch plane progress is spatial; a partial push fills the ring without activating',()=>{
- const {frame,aim}=setup();aim();const partial=frame({depth:measureForwardDepth(makeHand({scale:1.07}))});
- assert.ok(partial.progress>.2&&partial.progress<1);assert.equal(partial.activation,null);
+test('a held contact never repeats and requires retreat and a short cooldown',()=>{
+ const {at,aim,press}=setup();aim();press();
+ for(let i=0;i<12;i++)assert.equal(at(depth(.18)).activation,null);
+ assert.equal(at().phase,'RELEASED');
+ for(let i=0;i<5;i++)assert.equal(at(depth(.18)).activation,null);
+ aim();const done=press();assert.equal(done.second.activation,target);
 });
-test('a noisy depth spike cannot click; crossing needs consecutive confirmation',()=>{
- const {frame,aim,push}=setup();aim();frame({depth:measureForwardDepth(makeHand({scale:1.2}))});frame();frame();assert.equal(push().activation,target);
+test('a slight whole-hand scale shift does not click; larger stable approach can',()=>{
+ const {at,aim}=setup();aim();
+ assert.equal(at(depth(0,0,1.02)).activation,null);
+ for(let i=0;i<5;i++)at();
+ assert.equal(at(depth(0,0,1.07)).activation,null);
+ assert.equal(at(depth(0,0,1.07)).activation,target);
 });
-test('one neutral sample breaks contact confirmation before release completes',()=>{
- const {frame,aim}=setup();aim();const depth=measureForwardDepth(makeHand({scale:1.2}));
- assert.equal(frame({depth}).activation,null);
- frame();
- assert.equal(frame({depth}).activation,null);
- assert.equal(frame({depth}).activation,target);
+test('keyboard ignores whole-hand scaling and single fingertip noise',()=>{
+ const {at,aim}=setup('keyboard',.12);aim();
+ assert.equal(at(depth(0,0,1.12)).activation,null);
+ assert.equal(at(depth(0,0,1.12)).activation,null);
+ for(let i=0;i<6;i++)at();
+ assert.equal(at(depth(.18)).activation,null);
+ assert.equal(at(depth(0)).activation,null);
+ assert.equal(at(depth(.18)).activation,null);
+ assert.equal(at(depth(.18)).activation,target);
 });
-test('keyboard live feedback follows the current sample while contact stays locked',()=>{
- const pointer=new KeyboardPointer();let now=0;
- const keyAt=x=>x<.5?'A':'B';
- const at=(point,scale=1)=>pointer.process(point,measureForwardDepth(makeHand({scale})),now+=50,keyAt);
- at({x:.1,y:.5});
- assert.deepEqual(at({x:.2,y:.5}).livePoint,{x:.2,y:.5});
- for(let i=0;i<6;i++)at({x:.2,y:.5});
- const pushing=at({x:.8,y:.5},1.06);
- assert.deepEqual(pushing.livePoint,{x:.8,y:.5});
- assert.deepEqual(pushing.point,{x:.2,y:.5});
- assert.equal(pushing.key,'A');assert.equal(pushing.pending,true);
- at({x:.8,y:.5},1.2);
- assert.equal(at({x:.8,y:.5},1.2).activation,'A');
+test('hover and small noisy movement do not click',()=>{
+ const {at,aim}=setup();aim();
+ for(let i=0;i<80;i++)assert.equal(at(depth(i*.0005+(i%2)*.002)).activation,null);
 });
-test('finger-relative forward movement also crosses the plane without hand translation',()=>{
- const {frame,aim}=setup();aim();const depth=measureForwardDepth(makeHand());depth.fingerDepth+=.4;
- frame({depth});assert.equal(frame({depth}).activation,target);
+test('uncoordinated tip Z spike is rejected even when repeated',()=>{
+ const {at,aim}=setup();aim();
+ assert.equal(at(depth(.18,0)).reason,'incoherent-tip');
+ assert.equal(at(depth(.18,0)).activation,null);
 });
-for(const mode of ['scroll','zoom','keyboard'])test(`${mode} invalidates the old touch plane`,()=>{
- const {frame,aim,push}=setup();aim();frame({mode});assert.equal(push().activation,null);
+test('moving to another key while held releases instead of typing onto the new target',()=>{
+ const {at,aim,press}=setup();aim();press();
+ const other={id:'other'};
+ assert.equal(at(depth(.18),{target:other}).pending,false);
+ assert.equal(at(depth(.18),{target:other}).activation,null);
 });
-test('missing target, loss, long frame gaps and reset cannot replay a touch',()=>{
- const {frame,aim,push,controller}=setup();aim();frame({tracking:false});assert.equal(push().activation,null);
- aim();controller.reset();assert.equal(push().activation,null);
- frame({now:9999});assert.equal(push().activation,null);
+for(const mode of ['scroll','zoom','keyboard'])test(`${mode} invalidates a pending touch`,()=>{
+ const {at,aim}=setup();aim();at(depth(.18));at(depth(),{mode});assert.equal(at(depth(.18)).activation,null);
 });
-test('rotation, bending and discontinuous scale invalidate the plane',()=>{
- const {frame,aim}=setup();aim();assert.equal(frame({depth:measureForwardDepth(makeHand({yaw:.35}))}).reason,'hand-rotated');
- aim();const folded=makeHand();folded[8]={x:folded[5].x,y:folded[5].y+.04,z:-.13};
- assert.equal(frame({depth:measureForwardDepth(folded)}).reason,'not-pointing');
- aim();assert.equal(frame({depth:measureForwardDepth(makeHand({scale:2}))}).reason,'depth-jump');
-});
-test('target is locked at approach onset, not the sideways-shifted fingertip',()=>{
- const {frame,aim}=setup();aim();frame({depth:measureForwardDepth(makeHand({scale:1.06})),point:{x:.8,y:.8}});
- const depth=measureForwardDepth(makeHand({scale:1.2}));frame({depth,target:{id:'other'}});const pressed=frame({depth});
- assert.equal(pressed.activation,target);assert.deepEqual(pressed.point,{x:.4,y:.5});
-});
-test('withdrawal after reacquisition at the advanced position restores a usable reference',()=>{
- const {frame,push}=setup();
- for(let i=0;i<8;i++)frame({depth:measureForwardDepth(makeHand({scale:1.2}))});
- frame();frame();assert.equal(push().activation,target);
-});
-test('moving between keys shares the existing plane without another calibration wait',()=>{
- const {frame,aim}=setup();aim();const other={id:'next-letter'};
- frame({target:other,point:{x:.6,y:.5}});
- const depth=measureForwardDepth(makeHand({scale:1.2}));frame({target:other,depth});
- assert.equal(frame({target:other,depth}).activation,other);
-});
-test('a slow but continuous 5 Hz tracker can establish the plane and touch',()=>{
- const controller=new ForwardPushController();let now=100;
- const at=scale=>controller.step({now:now+=200,tracking:true,depth:measureForwardDepth(makeHand({scale})),pointing:true,mode:'navigation',target,point:{x:.4,y:.5}});
- for(let i=0;i<5;i++)at(1);assert.equal(controller.ready,true);
- at(1.2);assert.equal(at(1.2).activation,target);
+test('tracking loss, large frame gaps, rotation and depth jumps reset safely',()=>{
+ const {at,aim}=setup();aim();at(depth(),{tracking:false});assert.equal(at(depth(.18)).activation,null);
+ assert.equal(at(depth(.18),{now:9999}).activation,null);
+ assert.equal(at({...depth(.18),shape:[.3,1,1,1]}).reason,'hand-rotated');
+ at();assert.equal(at(depth(1)).reason,'depth-jump');
 });
