@@ -25,7 +25,7 @@ const cards:{
 
 export default function ServiceFolders(){
  const gridRef=useRef<HTMLDivElement>(null);
- const [available,setAvailable]=useState(1160);
+ const [available,setAvailable]=useState(()=>typeof window==='undefined'?1160:Math.max(280,window.innerWidth-44));
  const [openId,setOpenId]=useState<string|null>(null);
  const navigate=useNavigate();
  useEffect(()=>{
