@@ -40,6 +40,7 @@ export default function BookingCalendar(){
  const duration=30;
  const [zone,setZone]=useState<string>(calendarZone);
  const [week,setWeek]=useState(initialWeek);
+ const [mobileDayIndex,setMobileDayIndex]=useState(0);
  const [data,setData]=useState<Reply|null>(null);
  const [status,setStatus]=useState<Status>('loading');
  const [selected,setSelected]=useState<Slot|null>(null);
@@ -49,6 +50,9 @@ export default function BookingCalendar(){
  const [refresh,setRefresh]=useState(0);
  const dates=useMemo(()=>Array.from({length:5},(_,i)=>moveDays(week,i)),[week]);
  const today=dayKey(new Date());
+ const mobileDay=dates[Math.min(mobileDayIndex,dates.length-1)];
+ const mobileSlots=(data?.slots||[]).filter(slot=>slot.date===mobileDay);
+ const mobileFree=mobileSlots.filter(slot=>slot.available).length;
  useEffect(()=>{
   const controller=new AbortController();
   setStatus('loading');setSelected(null);setFeedback('');setConfirmed(null);
@@ -115,6 +119,27 @@ export default function BookingCalendar(){
      <div><small>PRIVATE BOOKING / LIVE AVAILABILITY</small><h2><CalendarDays size={25}/> Choose a time</h2><p>Appointments display in <strong>{zoneLabel(zone)}</strong> when selected. The grid uses New York business time.</p></div>
      <div className="pfc-week-actions"><strong>{dateTitle(dates[0])} – {dateTitle(dates[4])}</strong><div><button type="button" onClick={()=>setWeek(initialWeek())}>Today</button><button type="button" disabled={previousDisabled} aria-label="Previous week" onClick={()=>setWeek(moveDays(week,-7))}><ArrowLeft size={17}/></button><button type="button" disabled={nextDisabled} aria-label="Next week" onClick={()=>setWeek(moveDays(week,7))}><ArrowRight size={17}/></button><button type="button" aria-label="Refresh availability" onClick={()=>setRefresh(v=>v+1)}><RefreshCcw size={16}/></button></div></div>
     </header>
+    <div className="pfc-mobile-booking" aria-label="Mobile booking days and appointments">
+      <div className="pfc-mobile-day-picker" role="group" aria-label="Choose a weekday">
+       {dates.map((day,i)=><button key={day} type="button" className={mobileDayIndex===i?'is-active':''} aria-pressed={mobileDayIndex===i} onClick={()=>{setMobileDayIndex(i);setSelected(null);setFeedback('');}}>
+        <span>{weekday(day)}</span><strong>{isoDate(day).getUTCDate()}</strong><small>{day<today?'PAST':day===today?'TODAY':''}</small>
+       </button>)}
+      </div>
+      <div className="pfc-mobile-day-status"><div><CalendarDays size={16}/><strong>{weekday(mobileDay)}, {dateTitle(mobileDay)}</strong></div><span>{status==='loading'?'Checking availability':mobileFree+' OPEN SLOTS'}</span></div>
+      <div className="pfc-mobile-slot-grid">
+       {status==='ready'&&mobileSlots.length===0&&<div className="pfc-mobile-empty">No availability on this date. Choose another day above.</div>}
+       {status==='ready'&&mobileSlots.map(slot=><button type="button" key={slot.start} disabled={!slot.available}
+        className={'pfc-mobile-slot'+(slot.available?' is-free':' is-busy')+(selected?.start===slot.start?' is-selected':'')}
+        onClick={()=>{setSelected(slot);setConfirmed(null);setFeedback('');}}
+        aria-label={(slot.available?'Select ':'Busy: ')+readable(slot.start,zone)}
+        aria-pressed={selected?.start===slot.start}>
+        <Clock3 size={15}/><span>{timeLabel(slot.start,zone)}</span><small>{slot.available?'30 MIN':'BUSY'}</small>
+       </button>)}
+       {status==='loading'&&<p className="pfc-mobile-empty">Checking available appointments…</p>}
+       {status==='pending'&&<p className="pfc-mobile-empty">Online booking is temporarily unavailable.</p>}
+      </div>
+      <p className="pfc-mobile-timezone">All times above follow your selected timezone: {zoneLabel(zone)}.</p>
+    </div>
     <div className="pfc-grid-wrap"><div className="pfc-timetable">
      <div className="pfc-table-head"><div className="pfc-corner">NY TIME</div>{dates.map(day=><div className={'pfc-table-day'+(today===day?' is-today':'')} key={day}><span>{weekday(day)}</span><strong>{isoDate(day).getUTCDate()}</strong></div>)}</div>
      <div className="pfc-table-scroll"><div className="pfc-table-body">
