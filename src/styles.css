@@ -3202,3 +3202,85 @@ a:focus-visible,button:focus-visible{outline:2px solid #c7ffff;outline-offset:4p
  .gsl-unified-workspace .gsl-cube-options button,
  .gsl-unified-footer-actions button{transition:none}
 }
+
+
+/* V24 | EDITORIAL LUXURY — restrained champagne, electric blue and rich navy.
+   Service artwork and personal photography are the visual anchors. */
+:root{--lux-champagne:#e6c78d;--lux-cream:#f8f5ed;--lux-blue:#a6daff;--lux-night:#0d2744;--lux-border:#dbcca978}
+.header{box-shadow:0 8px 34px #0b1e344a!important;border-bottom:1px solid #d8c69d45!important}
+.hero.pf10-home-hero{background:radial-gradient(ellipse at 84% 24%,#385d8b 0%,#21466c 43%,#102f50 85%)!important}
+.hero .eyebrow,.hero .hero-ny{letter-spacing:.19em}
+.eyebrow{letter-spacing:.14em}
+.eyebrow i{background:var(--lux-champagne)!important;box-shadow:0 0 12px #edd09f69!important}
+.hero .primary,.featured .primary,.btn.primary{background:linear-gradient(112deg,#fff3d7,#e8c78d)!important;border-color:#fff0cb!important;color:#163047!important;box-shadow:0 15px 38px #081f3340!important}
+.hero .primary:hover,.featured .primary:hover,.btn.primary:hover{box-shadow:0 15px 47px #e3cb9555!important}
+.hero .hero-gradient{background:linear-gradient(115deg,#d9f3ff,#86cfff 44%,#e0c28b 85%)!important;-webkit-background-clip:text!important;background-clip:text!important}
+.section-head h2,.about-text h2,.featured h2{letter-spacing:-.075em}
+.section-head p,.about-text p,.featured p{color:#d6e6f2}
+.pf-showcase-section{background:radial-gradient(ellipse at 54% 43%,#28486d 0%,#173856 64%,#132f4d 100%)!important}
+.pf-showcase-section .section-head>.eyebrow{color:var(--lux-champagne)!important}
+.pf-marquee b{color:var(--lux-champagne)!important}
+.pf-luxury-services{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:39px}
+.pf-luxury-card{min-width:0;display:flex;flex-direction:column;position:relative;overflow:hidden;text-decoration:none;border-radius:15px;background:linear-gradient(145deg,#1a3b5c,#27476c);border:1px solid #d9c99b70;color:var(--lux-cream);box-shadow:0 18px 40px #09213b5c;transform:translateZ(0);transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease}
+.pf-luxury-card:hover{transform:translateY(-8px);border-color:#ffe5b2;box-shadow:0 25px 62px #0a1d38a8,0 0 0 1px #e6c78d49}
+.pf-luxury-card:focus-visible{outline:3px solid #ffe7b5;outline-offset:4px}
+.pf-luxury-card-visual{aspect-ratio:1/1;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 40%,#32557b,#102744)}
+.pf-luxury-card-visual::after{content:"";position:absolute;inset:65% 0 0;background:linear-gradient(0deg,#122c46a8,transparent);pointer-events:none}
+.pf-luxury-card-visual img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .65s cubic-bezier(.2,.65,.25,1);filter:saturate(.98) contrast(1.03)}
+.pf-luxury-card:hover img{transform:scale(1.065)}
+.pf-luxury-card-detail{padding:21px 22px 26px;display:flex;flex-direction:column;flex:1;min-height:166px}
+.pf-luxury-card-kicker{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--lux-champagne);font-weight:800;font-size:9px;letter-spacing:1.18px}
+.pf-luxury-card-kicker svg{flex:none;transition:transform .22s ease}
+.pf-luxury-card:hover .pf-luxury-card-kicker svg{transform:translate(3px,-3px)}
+.pf-luxury-card h3{font:650 clamp(19px,1.55vw,26px)/1.16 Manrope,sans-serif;letter-spacing:-.05em;margin:21px 0 10px;color:#f9fcff}
+.pf-luxury-card p{font:450 12px/1.65 Manrope,sans-serif;color:#ccdfef;max-width:270px;margin:0}
+.pf-founder-home-section{padding:104px 0;background:linear-gradient(115deg,#1b3857,#294a71 60%,#183854);border-block:1px solid #e5ceaa39}
+.pf-founder-home{display:grid;grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);gap:clamp(50px,7vw,126px);align-items:center}
+.pf-founder-portrait-frame{max-width:480px;aspect-ratio:4/4.8;position:relative;overflow:hidden;background:#102b48;border:1px solid #e1d0ab9e;border-radius:3px;box-shadow:25px 28px 65px #041c364e,0 0 0 9px #ffffff09}
+.pf-founder-portrait-frame:before{position:absolute;content:"";inset:9px;border:1px solid #f0d3a157;pointer-events:none;z-index:1}
+.pf-founder-portrait-frame img{display:block;width:100%;height:100%;object-fit:cover;object-position:55% 32%;filter:contrast(1.04) saturate(.89)}
+.pf-founder-photo-mark{position:absolute;bottom:15px;left:19px;right:19px;z-index:2;padding:11px 13px;color:#f7f7f3;background:#112f49b8;backdrop-filter:blur(9px);border:1px solid #e3c99268;letter-spacing:1.4px;font-size:9px;font-weight:850}
+.pf-founder-home-copy h2{font:620 clamp(48px,6vw,91px)/1.05 Manrope,sans-serif;letter-spacing:-.07em;margin:25px 0 30px;color:#f9f7f3}
+.pf-founder-home-copy h2 em{font-style:normal;color:var(--lux-champagne)}
+.pf-founder-home-copy>p{color:#deebf4;max-width:530px;font:450 16px/1.85 Manrope,sans-serif}
+.pf-founder-home-copy .pf-founder-note{color:#dfcda8;font-size:11px;letter-spacing:.065em;margin-top:22px}
+.pf-founder-link{display:inline-flex;align-items:center;gap:16px;border-bottom:1px solid var(--lux-champagne);padding:13px 0;margin-top:21px;color:#f7e2b8;font:800 10px Manrope,sans-serif;letter-spacing:1.15px;transition:gap .2s ease}
+.pf-founder-link:hover{gap:24px}
+.pf-about-portrait{display:block;overflow:hidden;padding:0!important;margin:0!important;background:#163751!important;max-width:100%;min-height:0!important;aspect-ratio:4/5;position:relative;border:1px solid #e8d2a8a0!important;border-radius:3px}
+.pf-about-portrait img{width:100%;height:100%;display:block;object-fit:cover;object-position:55% 26%;filter:saturate(.88) contrast(1.03)}
+.pf-about-portrait figcaption{position:absolute;bottom:14px;left:14px;right:14px;display:flex;flex-direction:column;gap:6px;padding:15px;background:linear-gradient(106deg,#17334feb,#1f4566dd);border:1px solid #f8deb18a;backdrop-filter:blur(12px)}
+.pf-about-portrait figcaption span{font-size:11px;font-weight:850;letter-spacing:1.35px;color:#f9f8f3}
+.pf-about-portrait figcaption small{position:static!important;font-size:9px!important;letter-spacing:1px!important;color:#e6d5b3!important}
+.about-grid{gap:7%;align-items:start}
+.about-text .eyebrow{color:var(--lux-champagne)}
+.about-text .about-facts{border-color:#e6c78d70}
+.about-facts strong{color:#fff8e9}
+.svx-brand-image{background:linear-gradient(135deg,#1b355a,#264c74)!important;border:1px solid #e6c78d8c!important;box-shadow:0 20px 52px #0b1e425e}
+.svx-brand-image img{height:auto;max-height:280px;aspect-ratio:1/1;object-fit:contain}
+.svx-selector button{border-radius:8px!important}
+.svx-selector button.active{border-color:#e6c78d!important;box-shadow:inset 0 0 0 1px #e6c78d60}
+.svx-evidence-card{border-radius:12px;overflow:hidden;border-color:#c7dbec80}
+.svx-evidence-card img{transition:transform .45s ease}
+.svx-evidence-card:hover img{transform:scale(1.035)}
+footer{border-top:1px solid #ead19e55}
+@media(max-width:1100px){
+ .pf-luxury-services{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+ .pf-luxury-card-visual{aspect-ratio:1.28}
+ .pf-luxury-card h3{font-size:25px}
+}
+@media(max-width:740px){
+ .pf-luxury-services{grid-template-columns:1fr;gap:18px;margin-top:25px}
+ .pf-luxury-card-visual{aspect-ratio:1.48;max-height:345px}
+ .pf-luxury-card-detail{padding:19px 20px 23px;min-height:auto}
+ .pf-luxury-card h3{margin:12px 0 8px;font-size:24px}
+ .pf-founder-home-section{padding:60px 0}
+ .pf-founder-home{grid-template-columns:1fr;gap:28px}
+ .pf-founder-portrait-frame{width:min(100%,420px);aspect-ratio:4/4.4;margin:auto}
+ .pf-founder-home-copy h2{font-size:clamp(45px,11vw,70px);margin:16px 0}
+ .pf-founder-home-copy>p{font-size:14px}
+ .pf-about-portrait{width:min(100%,500px);margin:0 auto 10px!important}
+ .about-grid{gap:32px}
+}
+@media(prefers-reduced-motion:reduce){
+ .pf-luxury-card,.pf-luxury-card-visual img,.pf-founder-link{transition:none}
+}
