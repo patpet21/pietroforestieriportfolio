@@ -1,4 +1,4 @@
-import {configured,json,monday,policy,candidateSlots,getToken,busyBetween,freeSlot,insertEvent,sameOrigin} from '../lib/google-calendar.mjs';
+import {configured,json,monday,policy,candidateSlots,getToken,busyBetween,freeSlot,insertEvent,sameOrigin,newYorkDay} from '../lib/google-calendar.mjs';
 
 export default async function handler(request){
  if(request.method!=='POST')return json({error:'Method not allowed'},405);
@@ -19,7 +19,7 @@ export default async function handler(request){
   if(typeof start!=='string'||typeof end!=='string'||![15,30,45].includes(duration))return json({error:'Invalid appointment selection'},400);
   if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(start)||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(end))return json({error:'Invalid appointment time'},400);
   // Authoritative slot verification: clients cannot submit arbitrary dates/times.
-  const isoDay=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(start));
+  const isoDay=newYorkDay(new Date(start));
   const slots=candidateSlots(monday(isoDay),duration);
   const exact=slots.find(slot=>slot.start===start&&slot.end===end);
   if(!exact)return json({error:'This time is no longer bookable. Choose another slot.'},409);
