@@ -526,7 +526,9 @@ const MAX_VISIBLE = 4
 const backupPoster = (src: string): string | null =>
   src.includes('i.ibb.co/nqDV6Q2H/') ? '/project-media/ai-pm-lab.webp' :
   src.includes('i.ibb.co/rK4pdpvp/') ? '/project-media/n8n-workflow-detail.webp' :
-  src.includes('i.ibb.co/qMPRTZRn/') ? '/project-media/propertydex-framework.webp' : null;
+  src.includes('i.ibb.co/qMPRTZRn/') || src.includes('i.ibb.co/qLV28zzf/') ? '/project-media/propertydex-framework.webp' :
+  src.includes('i.ibb.co/rfmcfCF5/') ? '/project-media/privacygate-protect.webp' :
+  src.includes('i.ibb.co/nqvcC4J6/') ? '/project-media/ai-pm-lab.webp' : null;
 const handlePosterError = (event: React.SyntheticEvent<HTMLImageElement>) => {
   const element = event.currentTarget;
   const backup = backupPoster(element.currentSrc || element.src);
@@ -755,6 +757,7 @@ export default function GlassFolder({
             className={"gf-front" + (bump ? " gf-front--bump" : "")}
             style={{ clipPath: "path('" + FRONT_PATH + "')" }}
           >
+            {image ? <img className="gf-front-cover" src={image} alt="" draggable={false} onError={handlePosterError}/> : null}
             <div className="gf-tint" aria-hidden="true" />
             <div className="gf-spec" aria-hidden="true" />
             <svg className="gf-rim gf-front-rim" viewBox={"0 0 " + W + " " + FRONT_H} aria-hidden="true">
