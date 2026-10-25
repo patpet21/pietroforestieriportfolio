@@ -1,5 +1,14 @@
 # Portfolio Booking — Cloudflare Workers Free (October 2026)
 
+## Google Meet and Gmail extension
+
+For automatic Google Meet links, confirmation emails to the organizer and guest,
+and reminders approximately 15 minutes before each call, see
+[BOOKING_MEET_EMAIL_SETUP.md](./BOOKING_MEET_EMAIL_SETUP.md).
+
+These features require separate **Google user OAuth** authorization and are
+not active merely because a service account is shared with Calendar.
+
 ## Status
 
 - Portfolio remains hosted on **Netlify**.
