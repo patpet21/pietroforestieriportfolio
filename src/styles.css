@@ -3301,3 +3301,53 @@ footer{border-top:1px solid #ead19e55}
 .svx-evidence-card{background:#1c3d5d}
 .svx-evidence-card>div h3{color:#f5f8fc}
 @media(max-width:620px){.pf-service-brand-art{max-height:290px}}
+
+
+/* SELECTED WORK GALLERY / display the actual supplied posters inside carousel cards.
+   Poster typography is already part of the artwork: don't cover it with duplicate titles. */
+.pf-stage-slide--poster .pf-stage-card{background:linear-gradient(140deg,#0d213a,#18395b);border-color:#e4c793bb}
+.pf-stage-slide--poster .pf-stage-image{opacity:.18;filter:blur(14px) saturate(.8);transform:scale(1.2)}
+.pf-stage-slide--poster .pf-stage-poster-media{
+ display:block;
+ width:100%;
+ height:auto;
+ aspect-ratio:1/1;
+ max-height:none;
+ position:absolute;
+ left:0;
+ top:0;
+ background-color:#0d213a;
+ background-repeat:no-repeat;
+ background-size:200% 200%;
+ border-bottom:1px solid #e0c89683;
+ box-shadow:inset 0 -8px 25px #071b2d33;
+}
+.pf-stage-slide--poster .pf-stage-gradient{
+ background:linear-gradient(180deg,transparent 0%,transparent 70%,#0b1e33a8 90%,#0a1a2cf7 100%);
+}
+.pf-stage-slide--poster .pf-stage-content{
+ left:13px;right:13px;bottom:10px;
+ align-items:center;justify-content:flex-end;gap:0;
+}
+.pf-stage-slide--poster .pf-stage-open{
+ margin:0;
+ min-height:34px;
+ padding:9px 16px;
+ border:1px solid #efd49b;
+ border-radius:4px;
+ color:#132c45;
+ font-size:9px;
+ font-weight:850;
+ background:#f0dab1;
+ box-shadow:0 6px 26px #0004;
+}
+.pf-stage-slide--poster .pf-stage-open:hover{background:#ffe8bb}
+.pf-stage-slide--poster .pf-stage-poster-media{transition:filter .32s ease}
+.pf-stage-slide--poster .pf-stage-card:hover .pf-stage-poster-media{filter:saturate(1.1) brightness(1.06)}
+.pf-stage-slide--poster .pf-stage-card:hover .pf-stage-image{transform:scale(1.2)}
+.pf-stage-slide--poster:not([data-offset="0"]) .pf-stage-content{display:none}
+@media(max-width:740px){
+ .pf-stage-slide--poster .pf-stage-content{bottom:8px}
+ .pf-stage-slide--poster .pf-stage-open{min-height:28px;padding:7px 10px;font-size:7px;gap:7px}
+}
+@media(prefers-reduced-motion:reduce){.pf-stage-slide--poster .pf-stage-poster-media{transition:none}}
