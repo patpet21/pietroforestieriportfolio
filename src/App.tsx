@@ -62,13 +62,13 @@ function Home(){return <><section className="hero pf10-home-hero"><ImmersiveCanv
  <div className="pf-founder-portrait-frame"><img src="https://i.ibb.co/0gGPh6Z/Me-2.png" loading="lazy" alt="Pietro Forestieri at AI PM LAB in New York" onError={e=>{if(!e.currentTarget.src.endsWith('/portfolio-gallery/pietro-portrait.avif'))e.currentTarget.src='/portfolio-gallery/pietro-portrait.avif';}}/><span className="pf-founder-photo-mark">PIETRO FORESTIERI · NYC</span></div>
  <div className="pf-founder-home-copy"><small className="eyebrow"><i/> THE PERSON BEHIND THE WORK</small><h2>Precision.<br/><em>Perspective.</em><br/>Progress.</h2><p>I bring an engineering mindset to projects, operations and digital innovation — from structured coordination to practical AI-enabled solutions.</p><p className="pf-founder-note">Independent professional · New York City · M.S. Project Management candidate</p><Link className="pf-founder-link" to="/about">GET TO KNOW ME <ArrowUpRight size={18}/></Link></div>
  </div></section><ScrollWBSAutomation/><section className="section featured"><div className="wrap featured-grid"><div><small className="eyebrow"><i/> 04 / FEATURED INNOVATION</small><h2>Privacy first.<br/><em>By design.</em></h2><p>PrivacyGate explores a more considered way to work with AI: identify sensitive details, protect them locally, and remain in control of what gets shared.</p><Link className="btn primary" to="/projects/privacygate">EXPLORE PRIVACYGATE <ArrowUpRight/></Link></div><Link to="/projects/privacygate"><Artwork p={projects[0]}/></Link></div></section></>}
-type Subcard={title:string;eyebrow:string;description:string;href?:string;icon:string;note?:string};
+type Subcard={title:string;eyebrow:string;description:string;href?:string;icon:string;image?:string;fallback?:string;note?:string};
 const privacyCards:Subcard[]=[
-{title:'Official Website',eyebrow:'PRODUCT HOME',description:'Explore PrivacyGate, its purpose, workflow, and current product information.',href:'https://privacygate.propertydex.xyz/',icon:'PG',note:'Official site'},
-{title:'Windows Desktop App',eyebrow:'MICROSOFT STORE',description:'The Windows desktop release for local-first sensitive-data protection.',href:'https://apps.microsoft.com/detail/9NMPZCVJLLZ3',icon:'⊞',note:'Published listing'},
-{title:'Browser Protection',eyebrow:'MICROSOFT EDGE ADD-ONS',description:'The browser companion designed to work with the local PrivacyGate desktop environment.',href:'https://microsoftedge.microsoft.com/addons/detail/privacygate-browser-prote/lbdkbiflhmlalbcblmglmccmmajnhfbd',icon:'e',note:'Extension listing'},
-{title:'Gmail Add-on',eyebrow:'GOOGLE WORKSPACE MARKETPLACE',description:'A Gmail-connected protection experience. Check its listing for current availability and compatibility.',href:'https://workspace.google.com/marketplace/app/privacygate/817932149819?flow_type=2',icon:'G',note:'Listing / status may vary'},
-{title:'MCP & Local AI',eyebrow:'INTEGRATION EXPLORATIONS',description:'Read-only MCP connectivity and experiments with on-device models, with privacy controls under active refinement.',icon:'↔',note:'In testing'}
+{title:'Official Website',eyebrow:'PRODUCT HOME',description:'PrivacyGate — privacy-first protection and its real product ecosystem.',href:'https://privacygate.propertydex.xyz/',icon:'PG',image:'https://i.ibb.co/KxpLWHVh/Chat-GPT-Image-Sep-29-2026-04-09-05-PM.png',fallback:'/project-media/privacygate-logo.webp',note:'Official website'},
+{title:'Windows Desktop App',eyebrow:'MICROSOFT STORE',description:'The Windows desktop release for local-first sensitive-data protection.',href:'https://apps.microsoft.com/detail/9nmpzcvjllz3?hl=it-IT&gl=US&ocid=pdpshare',icon:'⊞',image:'https://i.ibb.co/vCyFHYFx/Microsoft-Store.png',fallback:'/project-media/privacygate-store.webp',note:'Microsoft Store listing'},
+{title:'Browser Protection',eyebrow:'MICROSOFT EDGE ADD-ONS',description:'The official browser extension designed to complement the PrivacyGate desktop app.',href:'https://microsoftedge.microsoft.com/addons/detail/privacygate-browser-prote/lbdkbiflhmlalbcblmglmccmmajnhfbd',icon:'e',image:'https://i.ibb.co/Cpqygzmt/edge-extension.png',fallback:'/project-media/privacygate-edge.webp',note:'Edge Add-ons'},
+{title:'Gmail Add-on',eyebrow:'GOOGLE WORKSPACE MARKETPLACE',description:'PrivacyGate integration for Gmail. Listing availability and compatibility may vary.',href:'https://workspace.google.com/marketplace/app/privacygate/817932149819?flow_type=2',icon:'G',image:'https://i.ibb.co/xtxNvqd2/gmail-addon.png',fallback:'/project-media/privacygate-gmail.webp',note:'Google Marketplace'},
+{title:'MCP & Local AI',eyebrow:'INTEGRATION EXPLORATIONS',description:'Read-only MCP connectivity and on-device model experiments; integration remains in testing.',icon:'↔',image:'/project-media/privacygate-mcp.webp',note:'In testing'}
 ];
 const learningCards:Subcard[]=[
 {title:'Private Video Learning Platform',eyebrow:'E-LEARNING PROTOTYPE',description:'An independent course platform concept with private video lessons, course organization, and learner dashboards. Feature availability is not implied.',icon:'▶',note:'Prototype'},
@@ -76,7 +76,26 @@ const learningCards:Subcard[]=[
 {title:'AI PM Lab Resources',eyebrow:'RESOURCE LIBRARY',description:'Browse the dedicated collection of available resources and PDF learning materials.',href:'https://aipmlab.propertydex.xyz/resources',icon:'PDF',note:'Visit resources'}
 ];
 function BrandGlyph({icon}:{icon:string}){return <div className={'brand-glyph '+(icon==='⊞'?'windows-glyph':icon==='e'?'edge-glyph':icon==='G'?'gmail-glyph':'')} aria-hidden="true">{icon==='⊞'?<span className="window-tiles"><i/><i/><i/><i/></span>:icon==='G'?<span className="gmail-m">M</span>:icon}</div>}
-function Ecosystem({title,tag,description,cards}:{title:string;tag:string;description:string;cards:Subcard[]}){return <section className="ecosystem-section"><div className="wrap"><motion.div {...appear} className="ecosystem-heading"><small className="eyebrow"><i/> {tag}</small><h2>{title}</h2><p>{description}</p></motion.div><div className="ecosystem-grid">{cards.map((card,i)=>{const content=<><div className="ecosystem-top"><BrandGlyph icon={card.icon}/>{card.href?<ArrowUpRight size={23}/>:<span className="ecosystem-progress">↗</span>}</div><small className="eyebrow">{String(i+1).padStart(2,'0')} / {card.eyebrow}</small><h3>{card.title}</h3><p>{card.description}</p><span className="ecosystem-cta">{card.href?'OPEN OFFICIAL LINK ↗':card.note?.toUpperCase()}</span><span className="ecosystem-status">{card.note}</span></>;return card.href?<motion.a {...appear} className="ecosystem-card" key={card.title} href={card.href} target="_blank" rel="noopener noreferrer" aria-label={'Open '+card.title+' in new tab'}>{content}</motion.a>:<motion.div {...appear} className="ecosystem-card ecosystem-disabled" key={card.title}>{content}</motion.div>})}</div></div></section>}
+function Ecosystem({title,tag,description,cards}:{title:string;tag:string;description:string;cards:Subcard[]}){
+ const isPrivacy=tag.includes('PRIVACYGATE');
+ return <section className={'ecosystem-section'+(isPrivacy?' ecosystem-privacygate':'')}><div className="wrap">
+ <motion.div {...appear} className="ecosystem-heading">
+  <small className="eyebrow"><i/> {tag}</small>
+  <div className="ecosystem-title-wrap">
+   {isPrivacy&&<a href="https://privacygate.propertydex.xyz/" target="_blank" rel="noopener noreferrer" aria-label="Visit PrivacyGate official website" className="ecosystem-brand-mark"><img src="/project-media/privacygate-logo.webp" alt="PrivacyGate logo" loading="lazy"/></a>}
+   <h2>{title}</h2>
+  </div>
+  <p>{description}</p>
+ </motion.div>
+ <div className="ecosystem-grid">{cards.map((card,i)=>{
+  const content=<><div className="ecosystem-top">
+   {card.image?<img className="ecosystem-icon-asset" src={card.image} alt={card.title+' official image'} loading="lazy" decoding="async" onError={event=>{const img=event.currentTarget;if(card.fallback&&!img.src.endsWith(card.fallback))img.src=card.fallback;}}/>:<BrandGlyph icon={card.icon}/>}
+   {card.href?<ArrowUpRight size={23}/>:<span className="ecosystem-progress">↗</span>}
+  </div><small className="eyebrow">{String(i+1).padStart(2,'0')} / {card.eyebrow}</small><h3>{card.title}</h3><p>{card.description}</p><span className="ecosystem-cta">{card.href?'OPEN OFFICIAL LINK ↗':card.note?.toUpperCase()}</span><span className="ecosystem-status">{card.note}</span></>;
+  return card.href?<motion.a {...appear} className="ecosystem-card" key={card.title} href={card.href} target="_blank" rel="noopener noreferrer" aria-label={'Open '+card.title+' in new tab'}>{content}</motion.a>:<motion.div {...appear} className="ecosystem-card ecosystem-disabled" key={card.title}>{content}</motion.div>
+ })}</div>
+ </div></section>
+}
 const tokenizationCards:Subcard[]=[
 {title:'PropertyDEX Website',eyebrow:'PROJECT OVERVIEW',description:'Explore the broader PropertyDEX direction and real-estate technology research.',href:'https://propertydex.xyz/',icon:'PD',note:'Project site'},
 {title:'PropertyDEX Framework',eyebrow:'PROCESS & EVALUATION',description:'A separate framework resource for property-project structuring, research, and decision support.',href:'https://framework.propertydex.xyz/',icon:'FX',note:'Concept / reference'},
