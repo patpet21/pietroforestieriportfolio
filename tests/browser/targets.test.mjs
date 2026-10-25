@@ -38,7 +38,7 @@ test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links
  assert.deepEqual(result,{nested:true,clicks:1,covered:true,disabled:true,ariaDisabled:true,adjacent:true,removed:true,fieldset:true,inert:true});
 });
 test('portfolio native navigation, fields and experimental entry remain usable',async()=>{
- await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('.holo-natural-control');
+ await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('header nav');
  assert.equal(await page.locator('.gesture-debug').count(),0);
  assert.equal(await page.locator('.holo-natural-control').count(),0,'No camera panel outside Gesture Lab');
  assert.equal(await page.locator('.holo-air-toggle').count(),0);
