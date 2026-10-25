@@ -3387,3 +3387,15 @@ footer{border-top:1px solid #ead19e55}
 .pf-stage-slide[data-offset="0"] .pf-stage-poster-media{backface-visibility:hidden}
 @media(max-width:740px){.pf-stage-slide[data-offset="0"]{transform:translate(-50%,-50%) translateZ(0)}}
 @media(prefers-reduced-motion:reduce){.pf-retail-automation-grid img{transition:none!important}}
+
+/* High-resolution linked posters: preserve the full artwork rather than zooming
+   it into a CSS background. The alt image swaps to a local fallback on error. */
+.pf-stage-slide--poster img.pf-stage-poster-media{
+ display:block;width:100%;height:auto;aspect-ratio:1/1;max-width:none;
+ object-fit:contain;object-position:center center;opacity:1;
+ filter:none;transform:none;image-rendering:auto;
+ background-color:#081b31;border-bottom:1px solid #dac18f5c;
+}
+.pf-stage-slide--poster .pf-stage-card:hover img.pf-stage-poster-media{filter:none;transform:none}
+.pf-stage-slide--poster .pf-stage-gradient{pointer-events:none}
+@media(max-width:740px){.pf-stage-slide--poster img.pf-stage-poster-media{object-fit:contain}}
