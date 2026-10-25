@@ -94,29 +94,7 @@ main{min-width:0}
 .pf-stage-story-detail{border-color:#ceba924d!important}
 .pf-stage-story-detail p{color:#d3cec4!important}
 .pf-stage-story-head h3{color:#f5f0e7!important}
-/* Original 3D demo UI adopts the same warm workspace surfaces. */
-.hero .pf10-hero-grid>.pf3-hero-engine.pfpm-hero{
- background:linear-gradient(140deg,#252823f5,#1d201def 58%,#141815ef)!important;
- border-color:#e0be8665!important;box-shadow:0 26px 66px #070907c9!important;color:#f6f1e8!important;
-}
-.pfpm-network-glow{background:radial-gradient(ellipse at 50% 54%,#b99d5a1d,transparent 73%)!important}
-.pfpm-stage,.pfpm-stage.is-active{background:linear-gradient(145deg,#4b483d,#2a2d28 61%,#21241f)!important;border-color:#bfa5799f!important;box-shadow:0 8px 0 #131711e9,5px 13px 18px #080a08a6,inset 1px 1px #faf3e52b!important}
-.pfpm-stage.is-active{border-color:#f3d89d!important;transform:perspective(620px) rotateX(5deg) rotateY(-5deg) translateY(-5px)}
-.pfpm-stage.is-warning{background:linear-gradient(145deg,#6b4432,#402b27)!important;border-color:#e1ab7a!important}
-.pfpm-stage-icon,.pfpm-stage.is-active .pfpm-stage-icon{color:#e5c997!important}
-.pfpm-stage small{color:#c4bbaa!important}
-.pfpm-readout{background:#151915dd!important;border-color:#d6b78958!important}
-.pfpm-readout>span,.pfpm-topline>span:first-child{color:#dfc393!important}
-.pfpm-readout>strong,.pfpm-stage strong{color:#fff5e6!important}
-.pfpm-readout>p{color:#c7bfb4!important}
-.pfpm-case-metrics strong{color:#f1e8d8!important}
-.pfpm-case-metrics small{color:#bbae9d!important}
-.pfpm-actions button{background:#302d26!important;border-color:#bca4787a!important;color:#f3e1c4!important}
-.pfpm-actions .pfpm-start{background:linear-gradient(115deg,#ffeac1,#cda46b)!important;border-color:#e6c78f!important;color:#211e18!important}
-.pfpm-footer>span{color:#aea28d!important}
-.pfpm-wire-base{stroke:#9b907463!important}
-.pfpm-wire-energy{stroke:#dbbc828a!important}
-.pfpm-wire-progress{stroke:#f4d59b!important;filter:drop-shadow(0 0 5px #e1b87578)}
+/* Project 3D styles now live in HeroRealEstatePipeline.css without global overrides. */
 /* Photos stay vibrant and readable; service folder body becomes mineral gray. */
 .pf-glass-service-card{
  background:linear-gradient(150deg,#33332d,#242824 65%,#20231f)!important;
