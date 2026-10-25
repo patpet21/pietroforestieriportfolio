@@ -12,7 +12,7 @@ before(async()=>{
 });
 after(async()=>{await browser?.close();await server?.close();});
 test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links and stale nodes',async()=>{
- await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('.holo-natural-control');
+ await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('header nav');
  const result=await page.evaluate(async()=>{
   const {findGestureTarget,canActivateTarget}=await import('/src/lib/gesture/targets.ts');
   const {ForwardPushController}=await import('/src/lib/gesture/ForwardPushController.ts');
@@ -40,11 +40,16 @@ test('real DOM hit-testing rejects covers, disabled ancestors, neighboring links
 test('portfolio native navigation, fields and experimental entry remain usable',async()=>{
  await page.goto(origin,{waitUntil:'domcontentloaded'});await page.waitForSelector('.holo-natural-control');
  assert.equal(await page.locator('.gesture-debug').count(),0);
+ assert.equal(await page.locator('.holo-natural-control').count(),0,'No camera panel outside Gesture Lab');
  assert.equal(await page.locator('.holo-air-toggle').count(),0);
  await page.locator('header nav a[href="/contact"]').click();
  await page.waitForURL('**/contact');
  const field=page.locator('input[name="name"]').first();await field.fill('Manual input');assert.equal(await field.inputValue(),'Manual input');
- await page.goto(origin+'?gestureDebug=1',{waitUntil:'domcontentloaded'});await page.waitForSelector('.gesture-debug');
+ await page.goto(origin+'gesture-lab?gestureDebug=1',{waitUntil:'domcontentloaded'});
+ await page.waitForSelector('.holo-natural-control');
+ await page.waitForSelector('.gesture-debug');
+ assert.equal(await page.getByRole('button',{name:'ENABLE GESTURES',exact:true}).count(),1);
+ assert.equal(await page.locator('.gsl-camera-btn').count(),0);
  assert.equal(await page.locator('video').evaluate(v=>v.srcObject),null);
 });
 test('gesture activation follows React Router links and focuses native inputs',async()=>{
