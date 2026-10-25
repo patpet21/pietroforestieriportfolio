@@ -1,3 +1,4 @@
+import HoloNavigator from './HoloNavigator';
 import {KeyboardPointer} from '../lib/gesture/KeyboardPointer';
 import {measureForwardDepth} from '../lib/gesture/forwardDepth';
 import {useCallback,useEffect,useRef,useState} from 'react';
@@ -392,8 +393,19 @@ export default function GestureLab(){
   <div className="wrap">
    <div className="gsl-back"><Link to="/"><ArrowLeft size={16}/> BACK TO PORTFOLIO</Link><span><i/> EXPERIMENTAL INTERACTION LAB / 2026</span></div>
    <header className="gsl-heading"><div><div className="eyebrow"><i/> HUMAN × MACHINE INTERACTION</div><h1>Gesture <em>Lab.</em></h1><p>Move your hands. Control an interface. Explore how computer vision can connect people, projects and intelligent systems.</p></div><div className="gsl-heading-mark"><Hand size={54}/><span>CAMERA-POWERED<br/>INTERACTION STUDY</span></div></header>
-   <div className="gsl-privacy"><ShieldCheck size={18}/><span>Your camera starts <strong>only when you press Enable Camera</strong>. Video frames are processed locally in the browser; this demo does not record or upload them. On first use, MediaPipe model/WASM files are downloaded from external hosts. The MediaPipe SDK may report usage metrics to Google. <strong>Stop Camera</strong> immediately closes the stream.</span></div>
-   <div className="gsl-holo-invite"><Scan size={22}/><span><strong>NAVIGATION + LEGACY EXPERIMENTS</strong> · Enable Spatial Control at the bottom left once. Move an open hand up or down to scroll naturally, point your index at any real site element and push your index forward to click. No remote menu or mode switching. Up to two hands can be tracked. LEGACY EXPERIMENT: the separate camera controls below use different experimental input methods and stop global navigation.</span></div>
+   <div className="gsl-privacy"><ShieldCheck size={18}/><span>The camera starts <strong>only when you enable Spatial Control or an experiment</strong>. Only one camera-based experience runs at a time. Video frames are processed locally in the browser; this demo does not record or upload them. On first use, MediaPipe model/WASM files are downloaded from external hosts. The MediaPipe SDK may report usage metrics to Google. <strong>Stop Camera</strong> immediately closes the stream.</span></div>
+   <section className="gsl-spatial-section" aria-label="Spatial Control gesture navigation">
+    <div className="gsl-spatial-heading">
+     <div>
+      <small className="eyebrow"><i/> 01 / TOUCHLESS NAVIGATION</small>
+      <h2>Spatial <em>Control.</em></h2>
+      <p>Activate the webcam here to explore gesture navigation with the real elements of this page. Aim with your index, push forward to select, move a hand to scroll, and use two fingers to zoom where supported.</p>
+     </div>
+     <div className="gsl-spatial-live"><Scan size={19}/><span>CAMERA OFF UNTIL ACTIVATED</span></div>
+    </div>
+    <HoloNavigator/>
+   </section>
+   <div className="gsl-experiments-heading"><small className="eyebrow"><i/> 02 / EXPERIMENTAL INTERACTIONS</small><p>Air Keyboard, 3D Control and WBS Builder are separate experiments. Starting their camera turns off Spatial Control automatically.</p></div>
    <div className="gsl-mode-tabs" role="group" aria-label="Choose an interactive experiment">{modes.map(({id,title,sub,Icon},i)=><button key={id} type="button" aria-pressed={mode===id} className={mode===id?'active':''} onClick={()=>chooseMode(id)}><span>0{i+1} / EXPERIENCE</span><Icon size={23}/><strong>{title}</strong><small>{sub}</small></button>)}</div>
    <div className="gsl-workspace">
     <div className="gsl-interactive">
