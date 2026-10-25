@@ -7,7 +7,7 @@
 - The existing interactive booking page remains at `/book`.
 - All booking API calls now use **`https://booking.propertydex.xyz`**.
 - **Google secrets live only in Cloudflare Worker Secrets**, not GitHub, browser JS or Netlify.
-- Bookings stay **disabled by default** with `BOOKINGS_ENABLED = "false"`.
+- Bookings stay **disabled by default** until the Cloudflare dashboard variable `BOOKINGS_ENABLED` is set to `true`.
 - No GitHub Actions. No Supabase.
 
 ## 1. Deploy the Worker once (no new app backend provider)
@@ -30,7 +30,8 @@ Wrangler may ask to install its package for this command; this does not create
 a GitHub Actions workflow or move hosting.
 
 The deploy creates `pietro-portfolio-booking` and its SQLite-backed
-`BOOKING_LOCKS` Durable Object. Workers + SQLite Durable Objects and Worker
+`BOOKING_LOCKS` Durable Object. The Worker intentionally has no public
+`workers.dev` URL until you attach the custom domain below. Workers + SQLite Durable Objects and Worker
 Secrets are supported on the Free plan subject to Cloudflare limits.
 
 ## 2. Attach the Cloudflare custom domain
@@ -96,7 +97,6 @@ These defaults are in `cloudflare/wrangler.toml`:
 
 ```toml
 ALLOWED_ORIGINS = "https://pietroforestieri.propertydex.xyz,https://pietroforestieri.netlify.app"
-BOOKINGS_ENABLED = "false"
 BOOKING_START_HOUR = "9"
 BOOKING_END_HOUR = "17"
 BOOKING_WEEKDAYS = "1,2,3,4,5"
@@ -105,7 +105,8 @@ BOOKING_WINDOW_DAYS = "45"
 ```
 
 If your public portfolio URL differs, update `ALLOWED_ORIGINS` to include
-its **exact HTTPS origin**, then redeploy. Incorrect origins will cause a CORS
+its **exact HTTPS origin**, then redeploy. `keep_vars = true` means
+Cloudflare dashboard variables survive future CLI deploys. Incorrect origins will cause a CORS
 error and bookings will remain unavailable. No changes to DNS for the
 Netlify site are needed.
 
@@ -117,9 +118,10 @@ Check these in order:
    should show `true` after secrets and IDs are saved.
 2. Open your published portfolio `/book`. Before enabling booking, it
    should show setup pending and **no selectable slots**.
-3. Add `BOOKINGS_ENABLED = "true"` in `cloudflare/wrangler.toml` and
-   redeploy with Wrangler, or set the value in the Cloudflare dashboard for
-   your running Worker. Keep the config in sync for later deployments.
+3. In Cloudflare → Worker → Settings → Variables and Secrets add
+   `BOOKINGS_ENABLED` as a **Text** variable with value `true`; Deploy.
+   This variable is deliberately absent from Wrangler configuration and
+   `keep_vars = true` preserves it across subsequent CLI deployments.
 4. Refresh the portfolio. Only free 15-, 30- and 45-minute slots should
    be selectable.
 5. Create a busy event on the personal calendar, refresh, and confirm
