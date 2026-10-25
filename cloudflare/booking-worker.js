@@ -236,6 +236,11 @@ export default {
    return new Response(null,{status:204,headers});
   }
   const path=new URL(request.url).pathname;
+  // Human-friendly entry point: this host serves the API, not the booking UI.
+  // Direct visitors to the actual Netlify-hosted calendar.
+  if(path==='/'&&request.method==='GET'){
+   return Response.redirect('https://pietroforestieri.propertydex.xyz/book',302);
+  }
   // Read-only connection check, safe while BOOKINGS_ENABLED is false.
   // Respond with a status only: never return private events, calendar IDs, or credentials.
   if(path==='/api/calendar/check'&&request.method==='GET'){
