@@ -7,6 +7,8 @@ type Slot={date:string;start:string;end:string;available:boolean};
 type Reply={configured:boolean;week:string;days:string[];slots:Slot[];timezone:string;duration:number;startHour:number;endHour:number;message?:string;error?:string};
 type Status='loading'|'ready'|'pending'|'error';
 const calendarZone='America/New_York';
+// Public Cloudflare Worker endpoint; Google credentials are NEVER sent to the browser.
+const bookingAPI='https://booking.propertydex.xyz';
 const zones=[{id:'America/New_York',label:'New York'},{id:'America/Los_Angeles',label:'Los Angeles'},{id:'Europe/London',label:'London'},{id:'Europe/Rome',label:'Rome'}];
 const dayKey=(date:Date)=>{
  const pp=new Intl.DateTimeFormat('en-US',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:calendarZone}).formatToParts(date);
@@ -50,7 +52,7 @@ export default function BookingCalendar(){
  useEffect(()=>{
   const controller=new AbortController();
   setStatus('loading');setSelected(null);setFeedback('');setConfirmed(null);
-  fetch('/api/calendar/availability?week='+encodeURIComponent(week)+'&duration='+duration,{signal:controller.signal,cache:'no-store'})
+  fetch(bookingAPI+'/api/calendar/availability?week='+encodeURIComponent(week)+'&duration='+duration,{signal:controller.signal,cache:'no-store'})
    .then(async res=>{
     const json=await res.json() as Reply;
     if(!res.ok)throw Error(json.error||'Availability is temporarily unavailable.');
@@ -73,7 +75,7 @@ export default function BookingCalendar(){
   const values=new FormData(form);
   const body={name:String(values.get('name')||''),email:String(values.get('email')||''),company:String(values.get('company')||''),notes:String(values.get('notes')||''),website:String(values.get('website')||''),start:selected.start,end:selected.end,duration};
   try{
-   const response=await fetch('/api/calendar/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+   const response=await fetch(bookingAPI+'/api/calendar/book',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
    const result=await response.json();
    if(!response.ok){
     setFeedback(result.error||'This time cannot be booked. Please choose another slot.');
@@ -91,7 +93,7 @@ export default function BookingCalendar(){
  useEffect(()=>{
   if(!refreshAfterBooking)return;
   const controller=new AbortController();
-  fetch('/api/calendar/availability?week='+encodeURIComponent(week)+'&duration='+duration,{signal:controller.signal,cache:'no-store'})
+  fetch(bookingAPI+'/api/calendar/availability?week='+encodeURIComponent(week)+'&duration='+duration,{signal:controller.signal,cache:'no-store'})
    .then(r=>r.ok?r.json():null).then(json=>{if(json?.configured)setData(json as Reply);}).catch(()=>{});
   return()=>controller.abort();
  },[refreshAfterBooking,week,duration]);
@@ -132,7 +134,7 @@ export default function BookingCalendar(){
       </div>)}
      </div></div>
     </div></div>
-    {status==='pending'&&<div className="pfc-system-note" role="status"><CalendarDays size={19}/><div><strong>Calendar integration is ready for setup.</strong><p>Availability will appear here when the Google Calendar connection is configured in Netlify. No unverified times can be selected.</p></div></div>}
+    {status==='pending'&&<div className="pfc-system-note" role="status"><CalendarDays size={19}/><div><strong>Calendar integration is ready for setup.</strong><p>Availability will appear here when the Google Calendar connection is configured in Cloudflare Workers. No unverified times can be selected.</p></div></div>}
     {status==='error'&&<div className="pfc-system-note is-error" role="alert"><div><strong>Calendar currently unavailable</strong><p>{feedback} <Link to="/contact">Send a message instead.</Link></p></div></div>}
     {status==='ready'&&!selected&&!confirmed&&<p className="pfc-calendar-hint"><CheckCircle2 size={16}/> Only available slots are selectable. Select a time to continue.</p>}
     {selected&&<div className="pfc-confirm-card" id="pfc-confirm-form"><div className="pfc-confirm-head"><div><small>STEP 02 / YOUR DETAILS</small><strong>{readable(selected.start,zone)} · {duration} min</strong></div><button onClick={()=>setSelected(null)} type="button" aria-label="Cancel selected time">Change time</button></div>
