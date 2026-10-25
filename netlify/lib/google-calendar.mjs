@@ -26,6 +26,7 @@ const localParts=(date)=>{
  return {year:p.year,month:p.month,day:p.day,hour:p.hour,minute:p.minute};
 };
 export const dateKey=(y,m,d)=>[y,String(m).padStart(2,'0'),String(d).padStart(2,'0')].join('-');
+export const newYorkDay=(date)=>{const p=localParts(date);return dateKey(p.year,p.month,p.day);};
 export function localToUTC(day,hour,minute){
  const [y,m,d]=day.split('-').map(Number);
  const target=Date.UTC(y,m-1,d,hour,minute,0,0);
