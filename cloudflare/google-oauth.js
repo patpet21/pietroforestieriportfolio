@@ -7,6 +7,14 @@ import {DurableObject} from 'cloudflare:workers';
 
 const REDIRECT_URI='https://booking.propertydex.xyz/api/oauth/callback';
 const ADMIN_ORIGIN='https://booking.propertydex.xyz';
+// Same-origin form protection via a host-only, SameSite=Lax double-submit cookie.
+// More robust than rejecting privacy browsers by their Origin/Fetch Metadata headers.
+const SETUP_CSRF_COOKIE='__Host-pf_oauth_setup';
+const getCookie=(request,name)=>{
+ const cookie=request.headers.get('Cookie')||'';
+ const match=cookie.split(';').map(part=>part.trim()).find(part=>part.startsWith(name+'='));
+ return match?match.slice(name.length+1):'';
+};
 const AUTH_SCOPES=[
  'openid','email',
  'https://www.googleapis.com/auth/calendar.events',
@@ -44,7 +52,8 @@ const htmlResponse=(title,body,status=200,headers={})=>new Response('<!doctype h
 const notConfigured=()=>htmlResponse('Not configured','<h1>Google setup not ready</h1><p>First add your OAuth client ID, client secret, organizer email and a random OAuth setup password to Cloudflare Variables and Secrets.</p>',503);
 const invalid=(code='request')=>{
  const reasons={
-  origin:'The browser did not pass the same-origin security check. Open the authorization page directly, not through an embedded frame.',
+  origin:'The browser did not pass the expected security check. Open the authorization page directly.',
+  csrf:'The secure browser session expired or the setup cookie was blocked. Open Connect Google in a normal browser tab, allow cookies for booking.propertydex.xyz and retry.',
   large:'The submitted form was too large. Reload the setup page and try again.',
   password:'The setup password did not match the OAUTH_SETUP_TOKEN secret in Cloudflare. Check the exact saved value; do not paste it into chat.',
   vault:'The Cloudflare OAuth vault could not create a one-time authorization request. Check Worker Observability logs.',
@@ -116,23 +125,26 @@ export async function googleAdminRoute(request,env,path){
   if(!configured(env))return notConfigured();
   const status=new URL(request.url).searchParams.get('status');
   const message=status==='connected'?'<p style="color:#a4f3b8">Google authorization stored successfully. Your next step is to test Calendar and Gmail before enabling automated emails.</p>':status==='error'?'<p style="color:#ffcc9d">Authorization could not be completed. Check the Worker logs and retry.</p>':'<p>Authorize only your own Google account to generate Meet links and send appointment emails.</p>';
-  return htmlResponse('Pietro · Authorize Google','<small>PIETRO FORESTIERI / ADMIN SETUP</small><h1>Connect Google</h1>'+message+'<form action="/admin/google/start" method="post"><label for="code">Your Cloudflare OAuth setup password</label><input id="code" type="password" name="setup_token" autocomplete="off" minlength="24" required><button type="submit">AUTHORIZE GOOGLE</button></form><small>Your setup password is never included in a URL or written to GitHub. Google authorization is restricted to the organizer account.</small>');
+  const csrf=randomToken();
+  return htmlResponse('Pietro · Authorize Google','<small>PIETRO FORESTIERI / ADMIN SETUP</small><h1>Connect Google</h1>'+message+'<form action="/admin/google/start" method="post"><input type="hidden" name="csrf" value="'+csrf+'"><label for="code">Your Cloudflare OAuth setup password</label><input id="code" type="password" name="setup_token" autocomplete="off" minlength="24" required><button type="submit">AUTHORIZE GOOGLE</button></form><small>Your setup password is never included in a URL or written to GitHub. Google authorization is restricted to the organizer account.</small>',200,{
+   'Set-Cookie':SETUP_CSRF_COOKIE+'='+csrf+'; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600'
+  });
  }
  if(path==='/admin/google/start'&&request.method==='POST'){
   if(!configured(env))return notConfigured();
-  // The administrator's password protects this route. Some privacy browsers
-  // omit Origin on same-origin HTML form POSTs, so only reject an Origin that
-  // is explicitly foreign; Fetch Metadata also rejects cross-site submissions.
-  const origin=request.headers.get('Origin');
-  const fetchSite=request.headers.get('Sec-Fetch-Site');
-  if((origin&&origin!==ADMIN_ORIGIN)||(fetchSite&&fetchSite!=='same-origin'&&fetchSite!=='none')){
-   console.warn('Google OAuth setup refused: cross-origin form submission');
-   return invalid('origin');
-  }
+  // Protect the authorization setup from cross-site POSTs by requiring a
+  // host-only CSRF cookie created by GET /admin/google and matching form token.
+  // Do not reject users solely for browser-specific Origin/Fetch Metadata.
   if(Number(request.headers.get('Content-Length')||0)>2048)return invalid('large');
   const raw=await request.text();
   if(raw.length>2048)return invalid('large');
   const form=new URLSearchParams(raw);
+  const formCsrf=form.get('csrf');
+  const cookieCsrf=getCookie(request,SETUP_CSRF_COOKIE);
+  if(!formCsrf||!cookieCsrf||!(await safeEqual(formCsrf,cookieCsrf))){
+   console.warn('Google OAuth setup refused: missing or invalid CSRF cookie');
+   return invalid('csrf');
+  }
   if(!(await safeEqual(form.get('setup_token'),env.OAUTH_SETUP_TOKEN))){
    console.warn('Google OAuth setup refused: invalid setup credential');
    return invalid('password');
@@ -147,10 +159,10 @@ export async function googleAdminRoute(request,env,path){
    state,code_challenge:await makeChallenge(verifier),code_challenge_method:'S256',
    login_hint:env.BOOKING_ORGANIZER_EMAIL
   }))auth.searchParams.set(key,value);
-  return new Response(null,{status:303,headers:{
-   ...sessionHeaders,'Location':auth.toString(),
-   'Set-Cookie':'pf_oauth_session='+browserNonce+'; HttpOnly; Secure; SameSite=Lax; Path=/api/oauth/callback; Max-Age=600'
-  }});
+  const headers=new Headers({...sessionHeaders,'Location':auth.toString()});
+  headers.append('Set-Cookie',SETUP_CSRF_COOKIE+'=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0');
+  headers.append('Set-Cookie','pf_oauth_session='+browserNonce+'; HttpOnly; Secure; SameSite=Lax; Path=/api/oauth/callback; Max-Age=600');
+  return new Response(null,{status:303,headers});
  }
  if(path==='/api/oauth/callback'&&request.method==='GET'){
   const url=new URL(request.url);
