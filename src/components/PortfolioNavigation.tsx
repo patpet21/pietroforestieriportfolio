@@ -102,7 +102,7 @@ export default function PortfolioNavigation(){
     <span>YOUR NEXT STEP / NO OBLIGATION</span>
     <Link to="/book" className="pf-sidebar-book-cta"><CalendarDays size={18}/> BOOK A FREE CONSULTATION <ArrowUpRight size={17}/></Link>
     <Link to="/contact" className="pf-sidebar-message-link">PREFER A MESSAGE? <ArrowRight size={14}/></Link>
-    <small>15 · 30 · 45 MIN · ONLINE</small>
+    <small>30 MIN · ONLINE</small>
    </div>
   </aside>
  </>;
