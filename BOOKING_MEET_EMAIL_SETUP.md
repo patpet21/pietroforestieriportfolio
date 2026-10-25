@@ -8,8 +8,9 @@
 - The existing service account checks the organizer's Google Calendar availability.
 - A new, separate **Cloudflare Durable Object** stores your Google OAuth refresh token
   **encrypted with AES-GCM**. It never appears in repository files or browser URLs.
-- The private setup page starts the Google consent process with PKCE and a one-time
-  state. The callback checks that you used the configured organizer Google account.
+- The private setup page starts the Google consent process using short-lived,
+  AES-GCM authenticated form and OAuth-state tokens plus PKCE. No browser cookies
+  or session database lookups are needed. The callback verifies your Google account.
 - Once connected, new confirmed bookings can create a distinct Google Meet link.
 - When email notifications are enabled, Gmail confirmation emails go to the visitor
   and organizer. Durable Object alarms schedule reminders about 15 minutes before.
@@ -112,10 +113,12 @@ access, Gmail sending, and basic identity. After consent, Google sends
 you back to Cloudflare and you should see a green success message.
 
 This form sends the password via an HTTPS POST body, not a URL.
-The Worker verifies a single-use 10-minute setup form token stored in
-Cloudflare, your administrator password, a one-time OAuth state, PKCE,
-the granted scopes and the Google account email before saving the refresh
-token ciphertext. **No browser cookies are required** for setup or callback.
+The Worker verifies a short-lived AES-GCM authenticated setup form token,
+your administrator password, a separately encrypted OAuth state containing the
+PKCE verifier, the granted scopes and the organizer Google account before
+storing the refresh token ciphertext. Google's authorization code can be
+exchanged only once. **No browser cookies or session database writes are
+required** for setup or callback.
 
 ## Step 5 — Test the live connection
 
