@@ -1,10 +1,11 @@
+import type {ReactNode} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowLeft,ArrowUpRight,CalendarDays,FileText,LockKeyhole,ShieldCheck} from 'lucide-react';
 import './PortfolioLegal.css';
 
 type Kind='privacy'|'terms';
 const updated='October 25, 2026';
-function Heading({children}:{children:React.ReactNode}){return <h2>{children}</h2>}
+function Heading({children}:{children:ReactNode}){return <h2>{children}</h2>}
 
 export default function PortfolioLegal({kind}:{kind:Kind}){
  const privacy=kind==='privacy';
