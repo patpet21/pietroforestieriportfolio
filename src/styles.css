@@ -3284,3 +3284,20 @@ footer{border-top:1px solid #ead19e55}
 @media(prefers-reduced-motion:reduce){
  .pf-luxury-card,.pf-luxury-card-visual img,.pf-founder-link{transition:none}
 }
+
+
+/* Services hero uses the same real AI PM LAB artwork as the Home portfolio cards. */
+.svx-brand-image{display:block!important;padding:11px!important;border-radius:9px!important;background:linear-gradient(135deg,#142e4c,#294b6b)!important;max-width:100%}
+.pf-service-brand-art{
+ width:100%;aspect-ratio:1.08;max-height:345px;
+ border-radius:6px;border:1px solid #dec58b5b;
+ background-image:url("/portfolio-gallery/services-sprite.avif"),url("/project-media/ai-pm-lab.webp");
+ background-repeat:no-repeat,no-repeat;
+ background-position:100% 0%,center;
+ background-size:200% 200%,contain;
+ background-color:#173757;
+}
+.svx-brand-card{border-radius:11px}
+.svx-evidence-card{background:#1c3d5d}
+.svx-evidence-card>div h3{color:#f5f8fc}
+@media(max-width:620px){.pf-service-brand-art{max-height:290px}}
