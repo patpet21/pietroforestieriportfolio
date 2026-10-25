@@ -1,0 +1,55 @@
+.pfl-page{
+ padding:clamp(95px,9vw,145px) 25px 72px;
+ min-height:82svh;
+ background:radial-gradient(ellipse at 85% 4%,rgba(48,105,76,.15),transparent 54%),#171d19;
+ color:#f4f0e8;
+}
+.pfl-wrap{width:min(1090px,100%);margin:0 auto}
+.pfl-top,.pfl-top>span,.pfl-back{display:flex;align-items:center;gap:10px}
+.pfl-top{justify-content:space-between;gap:18px;flex-wrap:wrap;font:800 10px Manrope,system-ui,sans-serif;letter-spacing:1.1px;color:#acb8a8}
+.pfl-back{color:#edcd9c;text-decoration:none}
+.pfl-back:hover{color:#f9e6c6}
+.pfl-top>span{color:#9bceac}
+.pfl-hero{border-bottom:1px solid #d8b98250;padding:60px 0 40px}
+.pfl-kicker{color:#eac991;font:800 10px Manrope,system-ui,sans-serif;letter-spacing:1.6px}
+.pfl-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:35px;align-items:center}
+.pfl-hero h1{font:700 clamp(42px,7vw,85px)/1.07 Manrope,system-ui,sans-serif;letter-spacing:-.065em;margin:19px 0;color:#f7f6ed}
+.pfl-hero h1 em{color:#bfe3ad;font-style:normal}
+.pfl-hero p{color:#c4c5ba;font:500 clamp(14px,1.5vw,18px)/1.65 Manrope,system-ui,sans-serif;max-width:700px}
+.pfl-emblem{width:155px;height:155px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;
+ background:linear-gradient(143deg,#26382d,#1c2923);
+ border:1px solid #c4aa7897;border-radius:25px;box-shadow:0 22px 30px #050a0770,inset 0 1px #edf8e51a;
+ transform:perspective(480px) rotateY(-12deg) rotateX(7deg)
+}
+.pfl-emblem svg{color:#d7bf8f}
+.pfl-emblem span{color:#a3cead;font:800 9px Manrope,system-ui,sans-serif;letter-spacing:1.1px}
+.pfl-updated{font:700 10px Manrope,system-ui,sans-serif;color:#9bbaaa;letter-spacing:.2px}
+.pfl-paper{padding:38px 0 30px;width:min(770px,100%)}
+.pfl-paper h2{color:#f0e2c7;font:700 clamp(19px,2vw,24px)/1.35 Manrope,system-ui,sans-serif;letter-spacing:-.025em;margin:29px 0 10px}
+.pfl-paper p{font:500 14px/1.85 Manrope,system-ui,sans-serif;color:#c5c9c0;margin:0 0 14px}
+.pfl-paper a{color:#a6efc2;text-decoration:underline;text-underline-offset:3px}
+.pfl-paper a:hover{color:#defde8}
+.pfl-end{padding:20px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid #a7d5ac62;border-radius:15px;background:#1d2f23}
+.pfl-end>div{display:flex;align-items:center;gap:15px}
+.pfl-end>div svg{color:#b2ecc5}
+.pfl-end>div span{display:flex;flex-direction:column;gap:5px}
+.pfl-end>div strong{font:750 16px Manrope,system-ui,sans-serif}
+.pfl-end>div small{font:500 12px Manrope,system-ui,sans-serif;color:#bacdbc}
+.pfl-end>a{padding:15px 18px;border:1px solid #f0d7a9;display:flex;align-items:center;gap:14px;white-space:nowrap;text-decoration:none;color:#161f16;background:linear-gradient(115deg,#fae8c7,#ddbe8c);font:800 10px Manrope,system-ui,sans-serif;letter-spacing:.4px}
+.pfl-end>a:hover{filter:brightness(1.07)}
+.pfl-links{display:flex;gap:24px;flex-wrap:wrap;padding-top:26px}
+.pfl-links a{font:750 10px Manrope,system-ui,sans-serif;color:#b8c3ae;text-decoration:none;text-transform:uppercase;letter-spacing:.4px}
+.pfl-links a[aria-current=page]{color:#e3c68a}
+.pfl-links a:hover{color:#e6d5b9}
+.pfl-page :is(a,button):focus-visible{outline:2px solid #9ef5c1;outline-offset:3px}
+@media(max-width:670px){
+ .pfl-page{padding-inline:18px;padding-top:98px}
+ .pfl-hero{padding:35px 0}
+ .pfl-hero-grid{grid-template-columns:1fr}
+ .pfl-emblem{display:none}
+ .pfl-hero h1{font-size:clamp(39px,11vw,55px)}
+ .pfl-paper p{font-size:13px}
+ .pfl-end{flex-direction:column;align-items:stretch}
+ .pfl-end>a{justify-content:center;white-space:normal}
+ .pfl-top>span{font-size:8px}
+}
