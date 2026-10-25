@@ -11,16 +11,19 @@ const order=['privacygate','privatestone','propertydex','propertydex-framework',
 const slides:Project[]=order.map(id=>projects.find(p=>p.id===id)).filter((p):p is Project=>Boolean(p));
 /**
  * The SELECTED WORK carousel is a visual project gallery (not the services grid).
- * Each artwork below comes from the supplied portfolio images already checked
- * into the repo. Positions correspond to the four panels of services-sprite.avif.
- * The legacy BrandImage remains behind artwork as a browser fallback.
+ * User-supplied project posters are shown at full card resolution.
+ * Deployed project artwork remains available as a fallback when an external image fails.
  */
 const featuredArtwork:Record<string,{src:string;fallback:string;label:string}>={
  'privacygate':{src:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',fallback:'/project-media/privacygate-protect.webp',label:'PrivacyGate privacy-first AI product screens'},
  'propertydex':{src:'/portfolio-gallery/propertydex-poster.avif',fallback:'/project-media/propertydex-symbol.webp',label:'PropertyDEX real estate research'},
  'propertydex-framework':{src:'https://i.ibb.co/qLV28zzf/framework.png',fallback:'/portfolio-gallery/propertydex-framework-poster.avif',label:'PropertyDEX Framework property project analysis'},
  'e-learning':{src:'https://i.ibb.co/nqvcC4J6/workflow-pmlab.png',fallback:'/project-media/ai-pm-lab.webp',label:'AI PM Lab project-management learning resources'},
- 'n8n-automation':{src:'https://i.ibb.co/rK4pdpvp/workflow-pm.png',fallback:'/project-media/n8n-workflow-detail.webp',label:'n8n workflow automation publishing and cleanup'}
+ 'n8n-automation':{src:'https://i.ibb.co/rK4pdpvp/workflow-pm.png',fallback:'/project-media/n8n-workflow-detail.webp',label:'n8n workflow automation publishing and cleanup'},
+ 'privatestone':{src:'https://i.ibb.co/j9rCVcg6/Private-Stone-Tuscany-to-New-Markets.png',fallback:'/project-covers/privatestone.svg',label:'PrivateStone off-market professional real estate network'},
+ 'retail-it':{src:'https://i.ibb.co/wrWFJ9YF/NYC-Retail-IT-Coordination-Dashboard.png',fallback:'/project-covers/retail-it.svg',label:'NYC Retail IT coordination illustration'},
+ 'lead-rescue':{src:'https://i.ibb.co/MFYdzbC/Social-Media-Lab-Strategy-to-Growth.png',fallback:'/project-covers/lead-rescue.svg',label:'Lead Rescue related social media growth concept illustration'},
+ 'websites':{src:'https://i.ibb.co/XfJGQVd6/Luxury-Booking-Solutions-Dashboard.png',fallback:'/project-covers/websites.svg',label:'Business websites and luxury booking solutions concept'}
 };
 
 
