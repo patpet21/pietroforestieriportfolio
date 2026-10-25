@@ -11,7 +11,7 @@ As requested, the page is now organized as:
 
 There is no separate Air Keyboard tab, duplicated large typing stage, camera settings panel or second camera permission path. Only one `HoloNavigator` is mounted and it owns the MediaPipe capture and the AirKeyboard component. The old experiment-specific camera engine was removed from GestureLab rather than merely hidden behind CSS.
 
-The Air Keyboard toggle is available on mobile as well as desktop **inside the Spatial Control session**. Mobile tracking remains experimental; no precision guarantees are implied.
+The Air Keyboard toggle is available on mobile as well as desktop **inside the Spatial Control session**. The Spatial Control panel stays expanded inside the page on mobile instead of collapsing into a floating status pill, so its existing camera and typing controls remain accessible. Mobile tracking remains experimental; no precision guarantees are implied.
 
 ## Quality and safety notes
 - No second getUserMedia call exists in GestureLab.
