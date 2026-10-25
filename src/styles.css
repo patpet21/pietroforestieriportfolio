@@ -3420,3 +3420,18 @@ footer{border-top:1px solid #ead19e55}
 }
 /* Portrait sourced from the supplied new personal photo, backed by the local original. */
 .pf-founder-portrait-frame img,.pf-about-portrait img{object-position:center 26%}
+
+
+/* PrivacyGate ecosystem: owner-supplied original product and store imagery. */
+.ecosystem-heading .ecosystem-title-wrap{grid-column:2;grid-row:1;display:flex;align-items:center;gap:24px;min-width:0}
+.ecosystem-heading .ecosystem-title-wrap h2{margin:0 0 20px}
+.ecosystem-heading .ecosystem-brand-mark{display:flex;flex:none;align-items:center;justify-content:center;width:88px;height:88px;border:1px solid rgba(184,255,155,.38);border-radius:18px;background:#142722;box-shadow:0 12px 36px rgba(38,206,122,.10);overflow:hidden}
+.ecosystem-brand-mark img{width:100%;height:100%;object-fit:contain}
+.ecosystem-privacygate .ecosystem-card{background:linear-gradient(135deg,#19231f,#101c17 70%);border-color:#395348}
+.ecosystem-privacygate .ecosystem-top{align-items:start;gap:14px;min-height:116px;margin-bottom:6px}
+.ecosystem-privacygate .ecosystem-icon-asset{display:block;width:105px;height:100px;object-fit:contain;object-position:left center;border-radius:10px;filter:drop-shadow(0 6px 18px rgba(30,180,110,.12))}
+.ecosystem-privacygate .ecosystem-card[href]:focus-visible{outline:3px solid #a2ffc4;outline-offset:4px}
+.ecosystem-privacygate .ecosystem-card[href]:hover .ecosystem-icon-asset{transform:translateY(-3px) scale(1.035);transition:transform .24s ease}
+@media(max-width:1000px){.ecosystem-heading .ecosystem-title-wrap{gap:14px}.ecosystem-heading .ecosystem-brand-mark{width:68px;height:68px}}
+@media(max-width:760px){.ecosystem-heading .ecosystem-title-wrap{display:flex;align-items:center;gap:14px;margin-bottom:15px}.ecosystem-heading .ecosystem-title-wrap h2{margin:0}.ecosystem-heading .ecosystem-brand-mark{width:62px;height:62px}.ecosystem-privacygate .ecosystem-top{min-height:100px}.ecosystem-privacygate .ecosystem-icon-asset{height:84px;width:84px}}
+@media(prefers-reduced-motion:reduce){.ecosystem-privacygate .ecosystem-icon-asset{transform:none!important;transition:none!important}}
