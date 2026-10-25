@@ -16,7 +16,7 @@ const slides:Project[]=order.map(id=>projects.find(p=>p.id===id)).filter((p):p i
  * The legacy BrandImage remains behind artwork as a browser fallback.
  */
 const featuredArtwork:Record<string,{position:string;src?:string;label:string}>={
- 'privacygate':{position:'0% 100%',label:'PrivacyGate product and privacy-first AI screens'},
+ 'privacygate':{position:'center',src:'/portfolio-gallery/privacygate-poster.avif',label:'PrivacyGate product and privacy-first AI screens'},
  'propertydex':{position:'100% 100%',label:'PropertyDEX real estate tokenization concept'},
  'propertydex-framework':{position:'center',src:'/portfolio-gallery/propertydex-framework-poster.avif',label:'PropertyDEX Framework — deal structure, stakeholders, feasibility and execution'},
  'e-learning':{position:'100% 0%',label:'AI PM LAB digital project and learning resources'}
