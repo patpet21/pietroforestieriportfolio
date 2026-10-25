@@ -2811,3 +2811,245 @@ main{zoom:var(--spatial-site-zoom,1)}
 /* Passive gesture cheat sheet; never intercepts the site's own buttons. */
 .holo-natural-legend{margin:0;font:800 8px/1.6 Manrope,sans-serif;color:#c5efff;letter-spacing:.35px;opacity:.95}
 @media(max-width:760px){.holo-natural-legend{font-size:7px;line-height:1.4}}
+
+
+/* V18 · VIVID BLUE EXPERIENCE · ALL PORTFOLIO PAGES
+   Brighter, saturated cobalt/azure surfaces rather than charcoal black.
+   Keeps text contrast and existing layouts/interactive components. */
+:root{
+ --pf-blue:#91f0ff;
+ --pf-purple:#d0a6ff;
+ --pf-pink:#ffacd9;
+ --pf-vivid-accent:#a2fbff;
+ --pf-vivid-lime:#d1ff8d;
+ --pf-vivid-ink:#0e2746;
+ --pf-vivid-surface:#234367;
+ --pf-vivid-surface-2:#1d395b;
+ --pf-vivid-text:#f6fbff;
+ color:var(--pf-vivid-text);
+ background:#193755;
+ color-scheme:dark;
+}
+html,body,#root{background:#193755;color:var(--pf-vivid-text)}
+::selection{background:#b1f6ff;color:#0e2947}
+.header{
+ background:linear-gradient(90deg,#193b5ff2,#254978e8 56%,#1b355cea)!important;
+ border-bottom:1px solid #9de8ff68!important;
+ box-shadow:0 8px 28px #06172b38;
+}
+.header nav a{color:#d3edff}
+.header nav a.active,.header nav a:hover,.logo span,.header-contact svg{color:#a5f9ff}
+.header nav a.active{text-shadow:0 0 15px #92eeff74}
+.hero.pf10-home-hero,.hero{
+ background:radial-gradient(ellipse at 79% 38%,#435b9f 0%,#285282 31%,#1c385e 64%,#152d4c 100%)!important;
+}
+.hero:after{
+ background:linear-gradient(90deg,#152d4ce8 2%,#183957ac 30%,#204c7958 62%,transparent 93%)!important;
+}
+.hero:before{opacity:.52}
+.hero-bottom p,.hero .hero-bottom p{color:#e3f0ff}
+.hero .secondary{
+ background:#3a629d86!important;border:1px solid #b0efff9c!important;
+ color:#f2fbff;box-shadow:inset 0 0 30px #72c7ff16;
+}
+.hero .primary,.featured .primary,.btn.primary,.gsl-home-promo a{
+ background:linear-gradient(120deg,#abf7ff,#8acbff)!important;
+ border:1px solid #c6faff!important;
+ color:#0b2945!important;
+ box-shadow:0 8px 28px #67dfff35;
+}
+.hero .primary:hover,.featured .primary:hover,.btn.primary:hover,.gsl-home-promo a:hover{
+ box-shadow:0 14px 42px #74dfff67;
+}
+.hero .hero-gradient{
+ background:linear-gradient(104deg,#b2faff 0%,#a3dcff 37%,#ddaafa 72%,#ffc0d4 100%);
+ -webkit-background-clip:text;background-clip:text;
+}
+.section.work,.work,.pf-showcase-section{
+ background:radial-gradient(ellipse at 12% 9%,#33577d 0%,#234568 47%,#1b3a60 100%)!important;
+}
+.section.services,.services{
+ background:linear-gradient(143deg,#244873,#1f3e67 45%,#294d75 100%)!important;
+}
+.section.approach,.approach{
+ background:linear-gradient(142deg,#1f4168,#2d547d 58%,#284575)!important;
+}
+.section.featured,.featured{
+ background:radial-gradient(ellipse at 75% 27%,#416594 0%,#2e4d76 50%,#233e68 100%)!important;
+}
+.quote{background:linear-gradient(125deg,#2d4e7b,#3c5385 60%,#294a73)!important}
+.page-head,.case-head{
+ background:linear-gradient(118deg,#294b70 0%,#244b73 58%,#354d82 100%)!important;
+ border-bottom-color:#c5edff54;
+}
+.ccase-details,.case-row{border-color:#a4d8f24d}
+.pf-marquee{
+ background:linear-gradient(90deg,#274c74,#415890 48%,#254d7c)!important;
+ border-color:#bde9ff58;
+}
+.pf-marquee-inner{color:#f4faff}
+.pf-marquee b{color:#ffd2e6}
+.pf10-scroll-section{background:#214369!important}
+.pf10-scroll-sticky{
+ background:radial-gradient(ellipse at 26% 42%,#385c80d9 0%,#28466de0 50%,#193656 100%)!important;
+}
+.pf10-scroll-story,.pf10-scroll-story h3,.pf10-scroll-story h4{color:#f3faff}
+footer{
+ background:linear-gradient(135deg,#183858 0%,#224974 60%,#253b65 100%)!important;
+ border-top:1px solid #9fe4ff56;
+}
+footer em,.featured em,.page-head em,.quote em{color:#b7f9ff}
+.footer-arrow{border-color:#a8f9ff;color:#a8f9ff;background:#80e8ff0c}
+.eyebrow,.section-head p,.page-head p,.case-head>p,
+.about-text p,.contact-grid>div>p,.service-row p,.featured p,
+.section-head p,.card>p,.muted{color:#d4e7f7}
+.eyebrow i,.section-head i,.steps i:before{background:#b2f5ff;box-shadow:0 0 13px #96edff55}
+.service-rows,.service-row,.about-facts,.facts,.case-row{border-color:#b0daf265}
+.service-row>span,.service-row svg,.card-title svg,.underlink svg{color:#acf5ff}
+.service-row:hover{background:#a4e6ff12}
+.service-row{transition:background .25s ease}
+.portrait{
+ background:radial-gradient(circle at 50% 30%,#537e9b 0%,#2a5377 55%,#203e66 100%);
+ border:1px solid #c8e9fa70;
+}
+.portrait b{color:#aff2ff}
+.art,.pf-stage-card{
+ background-color:#294a6a;
+ border-color:#b9e8ff5e;
+ box-shadow:0 18px 45px #11223e43;
+}
+.pf-card-details,.pf3-workflow-detail{
+ background:linear-gradient(145deg,#30527c,#253e65 80%)!important;
+ border-color:#bce7ff71!important;
+}
+.contact-grid input,.contact-grid textarea,.contact-grid select{
+ background:#2d527a!important;
+ border-color:#a5d5f08c!important;
+ color:#f4fbff!important;
+}
+.contact-grid input::placeholder,.contact-grid textarea::placeholder{color:#bdd9ed}
+.contact-grid input:focus,.contact-grid textarea:focus,.contact-grid select:focus{
+ outline:2px solid #97f4ff!important;outline-offset:2px;
+}
+.filters button{border-color:#b5d7e773;color:#e2f3ff;background:#25466e8e}
+.filters button.active,.filters button:hover{background:#b3f8ff;border-color:#b3f8ff;color:#15324e}
+.gsl-home-promo{
+ background:linear-gradient(114deg,#2d527e 0%,#365e91 49%,#334a85 100%)!important;
+ border-color:#b2e8ff7f;
+}
+.gsl-home-promo h2 em{color:#b4f9ff}
+.gsl-home-promo p{color:#e0efff}
+.gsl-home-hand{
+ background:radial-gradient(circle,#4f86b8,#2b5a92 73%);
+ border-color:#bef5ff;
+ box-shadow:0 0 78px #9decff55,inset 0 0 26px #b1eaff27;
+ color:#d9ffff;
+}
+.gsl-home-orbit{border-color:#d3f5ffb5;box-shadow:0 0 30px #9be5ff42}
+.gsl-home-tag{background:#24466de8;border-color:#b6efffbd;color:#efffff}
+.gsl-page{
+ background:radial-gradient(ellipse at 75% 7%,#426b9c 0%,#2b527a 36%,#1b395f 82%)!important;
+ color:#f3fbff;
+}
+.gsl-heading p,.gsl-privacy span{color:#d4e7f7}
+.gsl-privacy{background:#2b4e73e5;border-color:#aedff58c}
+.gsl-mode-tabs button{
+ background:linear-gradient(138deg,#365d87,#27496f)!important;
+ border-color:#b5e5f47d!important;
+}
+.gsl-mode-tabs button.active{
+ background:linear-gradient(140deg,#4779a6,#315681)!important;
+ border-color:#b6f9ff!important;
+ box-shadow:0 0 29px #7cdaff28,inset 0 0 18px #a6e7ff18;
+}
+.gsl-mode-tabs button strong{color:#f5fcff}
+.gsl-mode-tabs button small,.gsl-mode-tabs button>span{color:#cee9fa}
+.gsl-interactive,.gsl-camera-panel,.gsl-guide{
+ background:linear-gradient(140deg,#315477,#27476d 70%)!important;
+ border-color:#b3e1f484!important;
+}
+.gsl-stage{border-color:#c7ebff77}
+.gsl-stage-top,.gsl-stage-footer{color:#deeffa}
+.gsl-back a{color:#cef5ff}
+
+/* Spatial Control is now exclusively part of /gesture-lab.
+   It stays in document flow, rather than becoming a fixed overlay on every route. */
+.gsl-spatial-section{
+ position:relative;isolation:isolate;
+ margin:7px 0 31px;padding:26px;
+ border:1px solid #b9efffb0;border-radius:23px;
+ background:linear-gradient(126deg,#315f8f,#3a6091 48%,#315279 100%);
+ box-shadow:0 18px 55px #0c284a3d,0 0 42px #9adaff27,inset 0 0 36px #bce9ff11;
+}
+.gsl-spatial-section:before{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;
+ border-radius:23px;
+ background-image:linear-gradient(#c3eeff0d 1px,transparent 1px),linear-gradient(90deg,#c3eeff0d 1px,transparent 1px);
+ background-size:30px 30px;
+}
+.gsl-spatial-heading{
+ display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+ margin-bottom:20px;
+}
+.gsl-spatial-heading h2{
+ font:800 clamp(30px,3.9vw,51px)/1.11 Manrope,sans-serif;
+ letter-spacing:-.06em;margin:10px 0;
+}
+.gsl-spatial-heading h2 em{font-style:normal;color:#b3f7ff}
+.gsl-spatial-heading p{font-size:13px;line-height:1.7;max-width:820px;color:#e1f0ff;margin:0}
+.gsl-spatial-live{
+ flex:none;display:flex;align-items:center;gap:8px;
+ border:1px solid #aeedff89;border-radius:999px;
+ padding:10px 13px;color:#d7f8ff;background:#17385680;
+ font-size:9px;letter-spacing:.65px;font-weight:850;
+}
+.gsl-spatial-section .holo-natural-control{
+ position:relative!important;inset:auto!important;
+ display:flex!important;flex-direction:column;
+ z-index:1!important;max-height:none!important;
+ width:100%!important;max-width:none!important;
+ margin:0!important;padding:19px 20px!important;
+ background:linear-gradient(120deg,#23557f,#1c416a 72%)!important;
+ border:1px solid #bcf6ffb5!important;
+ border-radius:17px!important;
+ box-shadow:0 12px 28px #092a4c55,inset 0 0 29px #88dfff15!important;
+ overflow:visible!important;
+}
+.gsl-spatial-section .holo-natural-title{color:#ecfaff;font-size:12px}
+.gsl-spatial-section .holo-natural-start{
+ align-self:flex-start;width:auto;min-width:210px;
+ background:linear-gradient(110deg,#a2f7ff,#89cfff)!important;
+ border-color:#d1fcff!important;color:#0f3150!important;
+ box-shadow:0 8px 29px #75e3ff40;
+}
+.gsl-spatial-section .holo-natural-stop{align-self:flex-start;width:auto;min-width:210px}
+.gsl-spatial-section .holo-natural-preview.on{
+ width:100%!important;max-width:740px!important;
+ height:auto!important;max-height:330px!important;
+ aspect-ratio:16/9;object-fit:cover;position:relative!important;
+}
+.gsl-spatial-section .holo-natural-status{font-size:11px;line-height:1.5}
+.gsl-spatial-section .holo-natural-legend{color:#d4f7ff;font-size:10px;letter-spacing:.55px}
+.gsl-spatial-section .holo-natural-privacy{color:#c5e1f3;font-size:10px}
+.gsl-experiments-heading{display:flex;gap:25px;align-items:end;justify-content:space-between;margin:0 0 18px}
+.gsl-experiments-heading p{max-width:650px;color:#d4e6f7;font-size:12px;line-height:1.6;margin:0}
+a:focus-visible,button:focus-visible{outline:2px solid #c7ffff;outline-offset:4px}
+
+@media(max-width:850px){
+ .gsl-spatial-section{padding:16px;margin-bottom:23px}
+ .gsl-spatial-heading{flex-direction:column;gap:14px}
+ .gsl-experiments-heading{flex-direction:column;align-items:flex-start;gap:8px}
+}
+@media(max-width:620px){
+ .gsl-spatial-section{padding:12px;border-radius:16px}
+ .gsl-spatial-heading h2{font-size:34px}
+ .gsl-spatial-heading p{font-size:11px}
+ .gsl-spatial-live{font-size:8px;padding:8px 10px}
+ .gsl-spatial-section .holo-natural-control{padding:13px!important}
+ .gsl-spatial-section .holo-natural-start,.gsl-spatial-section .holo-natural-stop{width:100%;min-width:0}
+ .gsl-spatial-section .holo-natural-preview.on{aspect-ratio:4/3;max-height:245px!important}
+ .gsl-spatial-section .holo-natural-status{font-size:9px}
+ .gsl-home-promo{padding:38px 0}
+ .gsl-home-promo p{font-size:12px}
+ .page-head{padding-bottom:60px}
+}
