@@ -1,4 +1,4 @@
-name = "pietro-portfolio-booking"
+name = "pietroforestieriportfolio"
 main = "booking-worker.js"
 compatibility_date = "2026-10-20"
 workers_dev = false
