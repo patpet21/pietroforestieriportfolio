@@ -5,9 +5,9 @@ import GlassFolder from './GlassFolder';
 import type {FolderFile} from './GlassFolder';
 import './ServiceFolders.css';
 
-const AI='https://i.ibb.co/nqDV6Q2H/Chat-GPT-Image-Oct-25-2026-10-57-02-AM-2.png';
+const AI='https://i.ibb.co/nqvcC4J6/workflow-pmlab.png';
 const N8N='https://i.ibb.co/rK4pdpvp/workflow-pm.png';
-const FRAMEWORK='https://i.ibb.co/qMPRTZRn/framework-prdx.png';
+const FRAMEWORK='https://i.ibb.co/qLV28zzf/framework.png';
 
 const cards:{
  id:string;number:string;category:string;title:string;description:string;folder:string;
@@ -17,8 +17,8 @@ const cards:{
  files:[{name:'AI PM Lab',meta:'Learning & tools',image:AI,href:'/projects/e-learning'},{name:'Project delivery',meta:'Planning · WBS',href:'/services'},{name:'Discuss a project',meta:'Start here',href:'/contact'}]},
  {id:'automation',number:'02',category:'PROCESS & AUTOMATION',title:'Workflow automation',description:'Design useful automations for repetitive business processes.',folder:'Automations',image:N8N,href:'/projects/n8n-automation',meta:'N8N · WORKFLOWS',
  files:[{name:'n8n workflow',meta:'Publishing & cleanup',image:N8N,href:'/projects/n8n-automation'},{name:'Process map',meta:'Original workflow',image:'/project-media/n8n-workflow-overview.webp',href:'/projects/n8n-automation'}]},
- {id:'privacy',number:'03',category:'PRIVACY-FIRST SOFTWARE',title:'Thoughtful AI solutions',description:'Build privacy-aware tools that make AI safer to use.',folder:'Privacy & AI',image:'/portfolio-gallery/privacygate-poster.avif',href:'/projects/privacygate',meta:'PRODUCT · SYSTEMS',
- files:[{name:'PrivacyGate',meta:'Privacy-first AI',image:'/project-media/privacygate-protect.webp',href:'/projects/privacygate'},{name:'Product journey',meta:'Protect · Restore',href:'/projects/privacygate'}]},
+ {id:'privacy',number:'03',category:'PRIVACY-FIRST SOFTWARE',title:'Thoughtful AI solutions',description:'Build privacy-aware tools that make AI safer to use.',folder:'Privacy & AI',image:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',href:'/projects/privacygate',meta:'PRODUCT · SYSTEMS',
+ files:[{name:'PrivacyGate',meta:'Privacy-first AI',image:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',href:'/projects/privacygate'},{name:'Product journey',meta:'Protect · Restore',href:'/projects/privacygate'}]},
  {id:'realestate',number:'04',category:'PROPTECH RESEARCH',title:'Real estate innovation',description:'Explore practical digital frameworks for property and off-market work.',folder:'Real Estate Tech',image:FRAMEWORK,href:'/projects/propertydex-framework',meta:'PROPTECH · RESEARCH',
  files:[{name:'PropertyDEX',meta:'Framework',image:FRAMEWORK,href:'/projects/propertydex-framework'},{name:'PrivateStone',meta:'Off-market network',image:'/project-covers/privatestone.svg',href:'/projects/privatestone'}]}
 ];
