@@ -174,10 +174,12 @@ Check these in order:
 7. Attempt to book the same or overlapping slot again. It must reject.
 8. Verify that Contact still sends to Formspree independently.
 
-A Google Calendar event is created in the organizer's calendar, not an
-automatic Meet meeting. Visitors are not automatically emailed an invite or
-a Meet URL with this service-account-only integration. Arrange the meeting
-link separately until OAuth/email functionality is explicitly added.
+The service-account-only setup handles availability and creates Calendar
+appointments. To generate real Google Meet links and send Gmail confirmation
+and reminder emails, follow the **separate organizer OAuth process** in
+[BOOKING_MEET_EMAIL_SETUP.md](./BOOKING_MEET_EMAIL_SETUP.md). OAuth code is
+implemented, but these features are not operational until the organizer
+connects Google and verifies a real end-to-end booking.
 
 ## 6. Booking integrity and limitations
 
