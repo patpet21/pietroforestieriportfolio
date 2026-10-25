@@ -216,3 +216,92 @@ footer{background:linear-gradient(145deg,#161917,#292b25 66%,#1d211c)!important;
  .section-head h2,.pf-showcase-section .section-head h2{overflow-wrap:break-word}
  .hero .pf10-hero-copy h1{font-size:clamp(41px,11vw,65px)!important}
 }
+
+/* Free consultation / booking call-to-action, responsive across site navigation. */
+.pf-hero-actions{
+ display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;
+ gap:12px;margin-top:4px;
+}
+.hero .pf-hero-actions .pf-hero-book-cta{
+ display:inline-flex;align-items:center;justify-content:center;gap:9px;
+ background:linear-gradient(112deg,#fff1d2 0%,#e5c590 56%,#cca16a 100%)!important;
+ color:#1c201b!important;border:1px solid #f7d99e!important;
+ box-shadow:0 9px 26px rgba(12,11,8,.38),inset 0 1px rgba(255,255,255,.5)!important;
+ font-weight:900;letter-spacing:.6px;padding:15px 18px;
+ transition:transform .23s ease,box-shadow .23s ease!important;
+}
+.hero .pf-hero-actions .pf-hero-book-cta:hover{
+ transform:translateY(-3px);
+ box-shadow:0 15px 31px rgba(12,11,8,.48),0 0 22px rgba(231,190,129,.25)!important;
+}
+.hero .pf-hero-actions .pf-hero-book-cta svg{flex:none}
+.hero .pf-hero-actions .pf-hero-portfolio-cta{padding:15px 18px;color:#f1e5d2!important}
+.pf-hero-book-note{
+ display:inline-flex;align-items:center;gap:7px;
+ margin-top:12px;line-height:1.5;
+ font:650 10px/1.5 Manrope,system-ui,sans-serif;
+ letter-spacing:.3px;color:#e1d3be;
+}
+.pf-hero-book-note svg{flex:none;color:#e1c18c}
+.pf-rail-link.pf-rail-book{
+ margin-top:10px;color:#27251e!important;
+ background:linear-gradient(130deg,#f8e5bf,#d2ae75)!important;
+ border-color:#efcd8d!important;
+ box-shadow:0 7px 18px rgba(215,174,114,.23);
+}
+.pf-rail-link.pf-rail-book:hover,.pf-rail-link.pf-rail-book.is-active{
+ background:linear-gradient(135deg,#fff0d3,#e9c28a)!important;
+ transform:translateY(-1px);
+}
+.pf-rail-link.pf-rail-book .pf-rail-tooltip{color:#f4e0bf}
+.pf-sidebar-item.pf-sidebar-book-item{
+ margin-top:7px;color:#f8e1b6;
+ background:linear-gradient(90deg,rgba(221,185,126,.22),rgba(221,185,126,.065));
+ border-color:#d6b3778c;
+}
+.pf-sidebar-item.pf-sidebar-book-item svg:first-child{color:#ebcc95}
+.pf-sidebar-item.pf-sidebar-book-item:hover,.pf-sidebar-item.pf-sidebar-book-item.is-active{
+ background:linear-gradient(90deg,rgba(221,185,126,.34),rgba(221,185,126,.12));
+ border-color:#efc88f;
+}
+.pf-sidebar-footer>a.pf-sidebar-book-cta{
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ text-align:center;padding:14px 9px;
+ background:linear-gradient(115deg,#f9e8c3,#d6ae75)!important;
+ color:#1d201b!important;font-size:9px;
+}
+.pf-sidebar-footer>a.pf-sidebar-book-cta svg{flex:none}
+.pf-sidebar-footer>a.pf-sidebar-book-cta svg:last-child{margin-left:auto}
+.pf-sidebar-footer>a.pf-sidebar-message-link{
+ background:transparent!important;color:#e1c698!important;
+ border:1px solid #cfb17d5c!important;
+ box-shadow:none!important;justify-content:center;font-size:9px;
+ padding:11px;
+}
+.pf-sidebar-footer>a.pf-sidebar-message-link:hover{
+ background:rgba(227,196,145,.12)!important;
+}
+.pf-shell-contact{
+ border-color:#e0bf88!important;
+ background:linear-gradient(110deg,rgba(224,186,128,.19),rgba(224,186,128,.06))!important;
+ color:#f7e5c4!important;
+}
+.pf-shell-contact:hover{background:rgba(224,186,128,.25)!important}
+@media(max-width:900px){
+ .pf-hero-actions{gap:10px}
+ .hero .pf-hero-actions .pf-hero-book-cta,
+ .hero .pf-hero-actions .pf-hero-portfolio-cta{font-size:10px;padding:14px 13px}
+}
+@media(max-width:600px){
+ .pf-hero-actions{align-items:stretch;flex-direction:column;width:100%;max-width:390px}
+ .hero .pf-hero-actions .pf-hero-book-cta,
+ .hero .pf-hero-actions .pf-hero-portfolio-cta{width:100%;min-height:47px;justify-content:center}
+ .pf-hero-book-note{font-size:9px;max-width:330px}
+ .pf-shell-contact{font-size:8px!important;letter-spacing:0!important}
+}
+@media(max-width:375px){
+ .pf-shell-contact{padding:9px 6px!important;gap:4px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero .pf-hero-actions .pf-hero-book-cta,.pf-rail-link.pf-rail-book{transition:none!important}
+}
