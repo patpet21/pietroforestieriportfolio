@@ -241,7 +241,10 @@ export default {
    try{return await availability(request,env,origin)}
    catch(error){console.error('Availability failed:',error?.message||'Unknown');return respond({error:'Availability temporarily unavailable. Try the contact form.'},503,origin);}
   }
-  if(path==='/api/calendar/book'&&request.method==='POST')return booking(request,env,origin);
+  if(path==='/api/calendar/book'&&request.method==='POST'){
+   try{return await booking(request,env,origin)}
+   catch(error){console.error('Booking request failed:',error?.message||'Unknown');return respond({error:'Booking service temporarily unavailable. Please use the contact form.'},503,origin);}
+  }
   return respond({error:'Not found'},404,origin);
  }
 };
