@@ -272,3 +272,60 @@
 @media(prefers-reduced-motion:reduce){
  .pfc-shell .pfc-time-slot:hover{transform:none!important}
 }
+
+
+/* Mobile native scheduler: no horizontal scrolling or tiny 5-column grid. */
+.pfc-mobile-booking{display:none}
+@media(max-width:660px){
+ .pfc-grid-wrap{display:none!important}
+ .pfc-mobile-booking{display:block;margin-top:2px;width:100%;min-width:0}
+ .pfc-mobile-day-picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:17px}
+ .pfc-mobile-day-picker button{
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;
+  min-width:0;min-height:72px;border:1px solid #49745e;
+  border-radius:10px;background:linear-gradient(145deg,#1d2a23,#18221d);
+  color:#bfd4c4;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;
+ }
+ .pfc-mobile-day-picker button span{font:700 11px Manrope,sans-serif}
+ .pfc-mobile-day-picker button strong{font:850 20px Manrope,sans-serif;color:#edfff1}
+ .pfc-mobile-day-picker button small{min-height:7px;color:#89b39b;font:800 6px Manrope,sans-serif;letter-spacing:.4px}
+ .pfc-mobile-day-picker button.is-active{border-color:#92ffbc;background:linear-gradient(138deg,#265a3e,#1e4a36);box-shadow:inset 0 0 0 1px #a1ffd547,0 0 17px #4fe99829}
+ .pfc-mobile-day-picker button.is-active strong{color:#a8ffd3}
+ .pfc-mobile-day-status{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+ .pfc-mobile-day-status>div{display:flex;gap:8px;align-items:center}
+ .pfc-mobile-day-status svg{color:#8de6ad}
+ .pfc-mobile-day-status strong{font:800 12px Manrope,sans-serif;color:#f0fbef}
+ .pfc-mobile-day-status>span{font:800 8px Manrope,sans-serif;color:#91e9ad;letter-spacing:.5px;white-space:nowrap}
+ .pfc-mobile-slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ .pfc-mobile-slot{
+  min-width:0;min-height:56px;display:flex;align-items:center;justify-content:flex-start;gap:9px;padding:10px 13px;
+  border:1px solid #65c895;border-radius:0;
+  clip-path:polygon(0 0,calc(100% - 15px) 0,100% 15px,100% 100%,15px 100%,0 calc(100% - 15px));
+  background:linear-gradient(135deg,#193b2b,#215d40);
+  color:#d9ffe9;cursor:pointer;transition:filter .2s,transform .2s;
+ }
+ .pfc-mobile-slot svg{color:#9dffd0;flex:none}
+ .pfc-mobile-slot span{font:850 clamp(12px,3.5vw,17px) Manrope,sans-serif;letter-spacing:.2px}
+ .pfc-mobile-slot small{margin-left:auto;font:800 8px Manrope,sans-serif;color:#9fdfbb}
+ .pfc-mobile-slot.is-selected{background:linear-gradient(135deg,#82f7b2,#3de1a0);color:#092a17;filter:drop-shadow(0 0 8px #4fd892a6)}
+ .pfc-mobile-slot.is-selected small,.pfc-mobile-slot.is-selected svg{color:#16402a}
+ .pfc-mobile-slot.is-busy{border-color:#384940;background:#1d2520;color:#84948a;cursor:not-allowed;opacity:.7}
+ .pfc-mobile-slot.is-busy svg,.pfc-mobile-slot.is-busy small{color:#687c6e}
+ .pfc-mobile-empty{grid-column:1/-1;font:500 12px/1.6 Manrope,sans-serif;padding:24px;text-align:center;color:#bad8c4;border:1px dashed #52725a;border-radius:12px}
+ .pfc-mobile-timezone{font:500 10px/1.5 Manrope,sans-serif;margin:14px 2px 3px;color:#90b9a2}
+ .pfc-schedule-heading{flex-direction:column}
+ .pfc-week-actions{width:100%;display:flex;flex-direction:row;align-items:center;justify-content:space-between}
+ .pfc-week-actions>div{gap:4px}
+ .pfc-week-actions button{min-height:40px;min-width:38px}
+ .pfc-schedule{padding:21px 13px 25px}
+ .pfc-fields label input{min-height:47px}
+ .pfc-book-cta{width:100%;min-height:49px}
+ .pfc-confirm-card{scroll-margin-top:100px}
+}
+@media(max-width:385px){
+ .pfc-mobile-slot-grid{gap:7px}
+ .pfc-mobile-slot{padding:7px;gap:6px}
+ .pfc-mobile-slot small{font-size:7px}
+ .pfc-mobile-day-picker{gap:3px}
+ .pfc-mobile-day-picker button{min-height:65px}
+}
