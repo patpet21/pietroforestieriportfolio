@@ -141,9 +141,9 @@ async function gmailSend(env,recipient,subject,message,reference){
   'Subject: '+subject,
   'MIME-Version: 1.0',
   'Content-Type: text/plain; charset=utf-8',
-  'Content-Transfer-Encoding: base64',
+  'Content-Transfer-Encoding: 8bit',
   '',
-  toBase64Url(new TextEncoder().encode(message))
+  message
  ].join('\r\n');
  await googleRequest('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',token,'POST',{
   raw:toBase64Url(new TextEncoder().encode(body))
