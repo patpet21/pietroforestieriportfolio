@@ -76,7 +76,7 @@ export class GoogleOAuthVault extends DurableObject{
  }
  async consumeForm(token){
   if(typeof token!=='string'||!/^[-_A-Za-z0-9]{40,64}$/.test(token))return false;
-  const row=this.ctx.storage.sql.exec('SELECT expires FROM oauth_setup_forms WHERE token = ?',token).one();
+  const row=this.ctx.storage.sql.exec('SELECT expires FROM oauth_setup_forms WHERE token = ?',token).toArray()[0];
   if(row)this.ctx.storage.sql.exec('DELETE FROM oauth_setup_forms WHERE token = ?',token);
   return !!row&&Date.now()<=row.expires;
  }
@@ -90,7 +90,7 @@ export class GoogleOAuthVault extends DurableObject{
  }
  async consume(state){
   if(typeof state!=='string'||!/^[-_A-Za-z0-9]{40,64}$/.test(state))return null;
-  const row=this.ctx.storage.sql.exec('SELECT verifier,expires FROM oauth_pending WHERE state = ?',state).one();
+  const row=this.ctx.storage.sql.exec('SELECT verifier,expires FROM oauth_pending WHERE state = ?',state).toArray()[0];
   if(row)this.ctx.storage.sql.exec('DELETE FROM oauth_pending WHERE state = ?',state);
   return row&&Date.now()<=row.expires?row.verifier:null;
  }
@@ -101,9 +101,9 @@ export class GoogleOAuthVault extends DurableObject{
   const envelope=bytesToB64url(iv)+'.'+bytesToB64url(encrypted);
   this.ctx.storage.sql.exec('INSERT INTO oauth_tokens (id,encrypted,email) VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET encrypted=excluded.encrypted,email=excluded.email','owner',envelope,email);
  }
- async hasToken(){return !!this.ctx.storage.sql.exec("SELECT id FROM oauth_tokens WHERE id='owner'").one();}
+ async hasToken(){return !!this.ctx.storage.sql.exec("SELECT id FROM oauth_tokens WHERE id='owner'").toArray()[0];}
  async readToken(){
-  const row=this.ctx.storage.sql.exec("SELECT encrypted FROM oauth_tokens WHERE id='owner'").one();
+  const row=this.ctx.storage.sql.exec("SELECT encrypted FROM oauth_tokens WHERE id='owner'").toArray()[0];
   if(!row)return null;
   const [iv,ciphertext]=row.encrypted.split('.');
   const opened=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64urlToBytes(iv)},await this.key(),b64urlToBytes(ciphertext));
@@ -146,7 +146,13 @@ export async function googleAdminRoute(request,env,path){
   const raw=await request.text();
   if(raw.length>2048)return invalid('large');
   const form=new URLSearchParams(raw);
-  if(!(await vault(env).consumeForm(form.get('csrf')))){
+  let formAccepted=false;
+  try{formAccepted=await vault(env).consumeForm(form.get('csrf'));}
+  catch(error){
+   console.error('OAuth setup form validation failed:',error?.message||'Unknown');
+   return invalid('vault');
+  }
+  if(!formAccepted){
    console.warn('Google OAuth setup refused: expired or reused form token');
    return invalid('csrf');
   }
@@ -172,7 +178,12 @@ export async function googleAdminRoute(request,env,path){
   const bounce=(result)=>new Response(null,{status:303,headers:{...sessionHeaders,Location:'/admin/google?status='+result}});
   if(!configured(env)||!state||!code||url.searchParams.has('error'))return bounce('error');
   // Single-use 256-bit state plus PKCE, organizer email verification.
-  const verifier=await vault(env).consume(state);
+  let verifier;
+  try{verifier=await vault(env).consume(state);}
+  catch(error){
+   console.error('OAuth callback state validation failed:',error?.message||'Unknown');
+   return bounce('error');
+  }
   if(!verifier)return bounce('error');
   try{
    const tokenResponse=await fetch('https://oauth2.googleapis.com/token',{
