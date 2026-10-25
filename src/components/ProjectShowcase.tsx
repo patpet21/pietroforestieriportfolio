@@ -9,6 +9,19 @@ import type {Project} from '../data/projects';
 
 const order=['privacygate','privatestone','propertydex','propertydex-framework','websites','retail-it','lead-rescue','e-learning'];
 const slides:Project[]=order.map(id=>projects.find(p=>p.id===id)).filter((p):p is Project=>Boolean(p));
+/**
+ * The SELECTED WORK carousel is a visual project gallery (not the services grid).
+ * Each artwork below comes from the supplied portfolio images already checked
+ * into the repo. Positions correspond to the four panels of services-sprite.avif.
+ * The legacy BrandImage remains behind artwork as a browser fallback.
+ */
+const featuredArtwork:Record<string,{position:string;label:string}>={
+ 'privacygate':{position:'0% 100%',label:'PrivacyGate product and privacy-first AI screens'},
+ 'propertydex':{position:'100% 100%',label:'PropertyDEX real estate tokenization concept'},
+ 'propertydex-framework':{position:'100% 100%',label:'PropertyDEX real estate framework concept'},
+ 'e-learning':{position:'100% 0%',label:'AI PM LAB digital project and learning resources'}
+};
+
 
 export default function ProjectShowcase(){
  const [active,setActive]=useState(0);
@@ -49,21 +62,24 @@ export default function ProjectShowcase(){
    {slides.map((p,i)=>{
     const offset=offsetFor(i),far=Math.abs(offset)>(mobile?1:2),center=offset===0;
     const highlight=projectHighlights[p.id];
+    const poster=featuredArtwork[p.id];
     const inside=<>
      <BrandImage key={p.id+'cover'} project={p.id} alt="" className="pf-stage-image" loading={center?'eager':'lazy'} decoding="async"/>
+     {poster&&<span className="pf-stage-poster-media" role="img" aria-label={poster.label}
+      style={{backgroundPosition:poster.position,backgroundImage:'url("/portfolio-gallery/services-sprite.avif")'}}/>}
      <span className="pf-stage-gradient" aria-hidden="true"/>
-     <span className="pf-stage-top">
+     {!poster&&<span className="pf-stage-top">
       <span className="pf-stage-brand"><BrandImage key={p.id+'brand'} project={p.id} kind="logo" alt="" className="pf-stage-brand-mark" loading="lazy"/><span>{String(i+1).padStart(2,'0')} / SELECTED PROJECT</span></span>
       <span>↗</span>
-     </span>
+     </span>}
      <span className="pf-stage-content">
-      <small>{p.category.toUpperCase()} · {p.year}</small>
-      <strong>{highlight.shortTitle}</strong>
-      {center&&<span className="pf-stage-teaser">{highlight.teaser}</span>}
+      {!poster&&<small>{p.category.toUpperCase()} · {p.year}</small>}
+      {!poster&&<strong>{highlight.shortTitle}</strong>}
+      {!poster&&center&&<span className="pf-stage-teaser">{highlight.teaser}</span>}
       {center&&<span className="pf-stage-open">EXPLORE PROJECT <ArrowUpRight size={16}/></span>}
      </span>
     </>;
-    return <div key={p.id} className="pf-stage-slide" data-offset={offset} aria-hidden={far}
+    return <div key={p.id} className={'pf-stage-slide'+(poster?' pf-stage-slide--poster':'')} data-offset={offset} aria-hidden={far}
       style={{'--slide-accent':p.accent} as CSSProperties}>
       {center?<Link className="pf-stage-card" to={'/projects/'+p.id} aria-label={'View '+p.title}>{inside}</Link>
        :<button type="button" className="pf-stage-card" onClick={()=>setActive(i)} tabIndex={far?-1:0}
