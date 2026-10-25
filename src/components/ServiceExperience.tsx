@@ -31,7 +31,7 @@ export default function ServiceExperience(){
    </div>
    <div className="svx-brand-card">
     <div className="svx-brand-header"><span>AI PM LAB / TRIGOSAT CONSULTING</span><span>INDEPENDENT PRACTICE</span></div>
-    <div className="svx-brand-image"><img src="/project-media/trigosat-consulting.webp" alt="Trigosat Consulting brand artwork" loading="lazy"/></div>
+    <div className="svx-brand-image"><div className="pf-service-brand-art" role="img" aria-label="AI PM LAB by Trigosat Consulting — project and workflow consulting artwork"/></div>
     <div className="svx-brand-bottom"><span>PROJECTS</span><b>×</b><span>PROCESS</span><b>×</b><span>AI TOOLS</span></div>
     <div className="svx-orbit svx-orbit-one" aria-hidden="true"/>
     <div className="svx-orbit svx-orbit-two" aria-hidden="true"/>
