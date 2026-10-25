@@ -89,8 +89,7 @@ export function CompactCaseHero({project:p}:{project:Project}){
  const theme=themes[p.id];
  const highlight=projectHighlights[p.id];
  const brand=brandMedia[p.id];
- const isConcept=p.id==='lead-rescue'||brand.gallery.length===0;
- const pictures=isConcept?[{src:brand?.backup??'/project-covers/'+p.id+'.svg',title:'Illustrative project visual'}]:brand.gallery;
+ const pictures=brand.gallery.length?brand.gallery:[{src:brand.backup??'/project-covers/'+p.id+'.svg',title:'Illustrative project visual'}];
  const [mode,setMode]=useState<'visual'|'method'|'status'>('visual');
  const [mediaIndex,setMediaIndex]=useState(0);
  const [zoom,setZoom]=useState(false);
@@ -130,7 +129,7 @@ export function CompactCaseHero({project:p}:{project:Project}){
      {mode==='visual'?<>
       <div className="ccase-image-wrap">
        <button type="button" className="ccase-zoom-target" aria-label={'Expand '+selected.title} onClick={()=>setZoom(true)}>
-        <img key={selected.src} src={selected.src} alt={selected.title} loading="lazy" decoding="async" />
+        <img key={selected.src} src={selected.src} alt={selected.title} loading="lazy" decoding="async" onError={e=>{if(!e.currentTarget.src.endsWith(brand.backup))e.currentTarget.src=brand.backup;}} />
         <span className="ccase-zoom-hint"><Maximize2 size={15}/> ENLARGE VISUAL</span>
        </button>
        <span className="ccase-picture-tag">{label}</span>
@@ -144,7 +143,7 @@ export function CompactCaseHero({project:p}:{project:Project}){
   {zoom&&<div className="ccase-lightbox" role="presentation" onClick={()=>setZoom(false)}>
    <div role="dialog" aria-modal="true" aria-label={'Enlarged visual: '+selected.title} className="ccase-lightbox-content" onClick={e=>e.stopPropagation()}>
     <div className="ccase-lightbox-header"><div><small>PROJECT VISUAL / {label}</small><strong>{selected.title}</strong></div><button type="button" aria-label="Close enlarged image" autoFocus onClick={()=>setZoom(false)}><X size={20}/></button></div>
-    <img src={selected.src} alt={selected.title}/>
+    <img src={selected.src} alt={selected.title} onError={e=>{if(!e.currentTarget.src.endsWith(brand.backup))e.currentTarget.src=brand.backup;}}/>
     <p>ESC TO CLOSE · {mediaIndex+1} / {pictures.length}</p>
    </div>
   </div>}
