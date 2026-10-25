@@ -279,7 +279,20 @@ async function booking(request,env,origin){
   const event=await createEvent(env,token,{start,end,name,email,company,notes});
   if(event.duplicate){await lock.finish(reservation.id,true);return respond({error:'That slot is already booked.'},409,origin);}
   await lock.finish(reservation.id,true);
-  return respond({ok:true,eventId:event.id,start,end,message:'Appointment saved to the organizer’s Google Calendar; video-call details are arranged separately.'},201,origin);
+  let notificationQueued=false;
+  if(notificationReady(env)){
+   try{
+    await lock.enqueueNotice({id:event.id,start,email,name,meetUrl:event.meetUrl||''});
+    notificationQueued=true;
+   }catch(error){console.error('Notification scheduling failed:',error?.message||'Unknown');}
+  }
+  return respond({
+   ok:true,eventId:event.id,start,end,
+   meetUrl:event.meetUrl||null,notificationQueued,
+   message:event.meetUrl
+    ?(notificationQueued?'Appointment confirmed. Meet link available; email confirmations are queued.':'Appointment booked with Google Meet. Email notifications are not yet enabled.')
+    :'Appointment saved to Google Calendar. Google Meet and automated email notifications still require Google OAuth setup.'
+  },201,origin);
  }catch(error){
   console.error('Booking failed:',error?.message||'Unknown error');
   await lock.finish(reservation.id,false).catch(()=>{});
@@ -294,8 +307,12 @@ async function booking(request,env,origin){
 export class BookingGate extends DurableObject {
  constructor(ctx,env){
   super(ctx,env);
+  this.env=env;
   this.ctx.storage.sql.exec(
    'CREATE TABLE IF NOT EXISTS reservations (id TEXT PRIMARY KEY,start_ms INTEGER NOT NULL,end_ms INTEGER NOT NULL,expires_ms INTEGER NOT NULL)'
+  );
+  this.ctx.storage.sql.exec(
+   'CREATE TABLE IF NOT EXISTS booking_messages (id TEXT PRIMARY KEY,start_iso TEXT NOT NULL, guest TEXT NOT NULL, name TEXT NOT NULL, meet_url TEXT NOT NULL, guest_confirm INTEGER NOT NULL DEFAULT 0,host_confirm INTEGER NOT NULL DEFAULT 0,guest_remind INTEGER NOT NULL DEFAULT 0,host_remind INTEGER NOT NULL DEFAULT 0, retry_at INTEGER NOT NULL DEFAULT 0, retries INTEGER NOT NULL DEFAULT 0)'
   );
  }
  async reserve(slot){
@@ -318,6 +335,79 @@ export class BookingGate extends DurableObject {
   const now=Date.now();
   this.ctx.storage.sql.exec('DELETE FROM reservations WHERE expires_ms < ?',now);
   return this.ctx.storage.sql.exec('SELECT start_ms AS start,end_ms AS end FROM reservations').toArray();
+ }
+ async enqueueNotice(data){
+  if(!notificationReady(this.env))throw Error('Notification integration not ready');
+  const sql=this.ctx.storage.sql;
+  sql.exec('INSERT OR IGNORE INTO booking_messages (id,start_iso,guest,name,meet_url,retry_at) VALUES (?,?,?,?,?,?)',
+   data.id,data.start,data.email,data.name,data.meetUrl||'',Date.now()+2000);
+  await this.planAlarm();
+ }
+ async planAlarm(){
+  const rows=this.ctx.storage.sql.exec('SELECT * FROM booking_messages').toArray();
+  if(!rows.length)return;
+  const now=Date.now(),options=[];
+  for(const row of rows){
+   const confirmNeeded=!row.guest_confirm||!row.host_confirm;
+   const remindNeeded=!row.guest_remind||!row.host_remind;
+   if(confirmNeeded)options.push(Math.max(now+1000,row.retry_at||now+1000));
+   if(remindNeeded)options.push(Math.max(now+1000,Date.parse(row.start_iso)-15*60000,row.retry_at||0));
+  }
+  if(options.length)await this.ctx.storage.setAlarm(Math.min(...options));
+ }
+ async alarm(){
+  const sql=this.ctx.storage.sql,now=Date.now();
+  const rows=sql.exec('SELECT * FROM booking_messages').toArray();
+  for(const row of rows){
+   const start=Date.parse(row.start_iso);
+   if(start+30*60000<now){sql.exec('DELETE FROM booking_messages WHERE id = ?',row.id);continue;}
+   if(now<row.retry_at)continue;
+   const reminderDue=now>=start-15*60000&&now<start;
+   let eventExists=true;
+   if(reminderDue&&(!row.guest_remind||!row.host_remind)){
+    try{
+     const token=await userAccessToken(this.env);
+     const url='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(this.env.GOOGLE_CALENDAR_ID)+'/events/'+encodeURIComponent(row.id);
+     const response=await fetch(url,{headers:{Authorization:'Bearer '+token}});
+     if(response.status===404||response.status===410)eventExists=false;
+     else if(!response.ok)throw Error('Calendar reminder event check returned '+response.status);
+     else{const event=await response.json();if(event.status==='cancelled')eventExists=false;}
+    }catch(error){
+     console.error('Reminder could not verify calendar event:',error?.message||'Unknown');
+     sql.exec('UPDATE booking_messages SET retry_at = ?,retries = retries + 1 WHERE id = ?',now+60000,row.id);
+     continue;
+    }
+   }
+   if(!eventExists){sql.exec('DELETE FROM booking_messages WHERE id = ?',row.id);continue;}
+   const data={id:row.id,start:row.start_iso,email:row.guest,name:row.name,meet_url:row.meet_url};
+   let failed=false;
+   for(const [column,to,host,reminder] of [
+    ['guest_confirm',row.guest,false,false],['host_confirm',this.env.BOOKING_ORGANIZER_EMAIL,true,false],
+    ['guest_remind',row.guest,false,true],['host_remind',this.env.BOOKING_ORGANIZER_EMAIL,true,true]
+   ]){
+    if(row[column]||(reminder&&!reminderDue))continue;
+    if(reminder&&now>=start)continue;
+    if(!reminder&&now>=start){sql.exec('UPDATE booking_messages SET '+column+' = 1 WHERE id = ?',row.id);continue;}
+    try{
+     const subject=reminder?'Your consultation starts in 15 minutes':host?'New portfolio consultation booking':'Your free consultation is confirmed';
+     await gmailSend(this.env,to,subject,emailCopy(data,host,reminder),row.id+':'+column);
+     sql.exec('UPDATE booking_messages SET '+column+' = 1,retry_at = 0,retries = 0 WHERE id = ?',row.id);
+    }catch(error){
+     failed=true;console.error('Gmail notification failed:',error?.message||'Unknown');
+     break;
+    }
+   }
+   if(failed){
+    const retryDelay=Math.min(15,2**Math.min(row.retries,4))*60000;
+    sql.exec('UPDATE booking_messages SET retry_at = ?,retries = retries + 1 WHERE id = ?',now+retryDelay,row.id);
+   }else{
+    const state=sql.exec('SELECT * FROM booking_messages WHERE id = ?',row.id).toArray()[0];
+    if(state&&state.guest_confirm&&state.host_confirm&&state.guest_remind&&state.host_remind){
+     sql.exec('DELETE FROM booking_messages WHERE id = ?',row.id);
+    }
+   }
+  }
+  await this.planAlarm();
  }
 }
 export default {
