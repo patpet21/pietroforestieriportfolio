@@ -420,17 +420,22 @@ export class BookingGate extends DurableObject {
 }
 export default {
  async fetch(request,env){
+  const path=new URL(request.url).pathname;
+  // The private Google OAuth flow is a navigation/redirect, NOT the public
+  // cross-origin booking API. A Google consent callback may carry an Origin
+  // different from the portfolio's allowed CORS origins; validate that flow
+  // separately with admin password, PKCE, one-time state and HttpOnly cookie.
+  if(path==='/admin/google'||path==='/admin/google/start'||path==='/api/oauth/callback'){
+   return googleAdminRoute(request,env,path);
+  }
   const origin=allowedOrigin(request,env);
-  // CORS is not authentication, but it prevents third-party browser embedding.
+  // CORS guards browser calls to the public booking API only.
   if(request.headers.has('Origin')&&!origin&&request.headers.get('Origin')!==new URL(request.url).origin)return respond({error:'Origin not permitted'},403);
   if(request.method==='OPTIONS'){
    if(!origin)return respond({error:'Origin not permitted'},403);
    const headers=new Headers(JSON_HEADERS);headers.set('Access-Control-Allow-Origin',origin);headers.set('Access-Control-Allow-Methods','GET, POST, OPTIONS');headers.set('Access-Control-Allow-Headers','Content-Type');headers.set('Access-Control-Max-Age','3600');
    return new Response(null,{status:204,headers});
   }
-  const path=new URL(request.url).pathname;
-  const adminRoute=await googleAdminRoute(request,env,path);
-  if(adminRoute)return adminRoute;
   // Human-friendly entry point: this host serves the API, not the booking UI.
   // Direct visitors to the actual Netlify-hosted calendar.
   if(path==='/'&&request.method==='GET'){
