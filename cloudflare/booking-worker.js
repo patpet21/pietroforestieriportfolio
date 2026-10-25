@@ -211,26 +211,50 @@ async function availability(request,env,origin){
  const allBusy=busy.concat(locks.flat());
  return respond({...common,slots:slots.map(s=>({...s,available:notBusy(s,allBusy)}))},200,origin);
 }
-async function createEvent(env,token,data){
+async function createEvent(env,serviceToken,data){
  const bytes=new TextEncoder().encode(env.GOOGLE_CALENDAR_ID+'|'+data.start+'|'+data.end);
  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
  const id=Array.from(hash.slice(0,16),b=>b.toString(16).padStart(2,'0')).join('');
+ const useUser=oauthReady(env);
+ const token=useUser?await userAccessToken(env):serviceToken;
+ const base='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'/events';
  const event={
   id,summary:'Portfolio Intro Call · '+data.name,
   description:['Booking through Pietro Forestieri portfolio','Name: '+data.name,'Contact email: '+data.email,
    data.company?'Company: '+data.company:'',data.notes?'Discussion topic: '+data.notes:'',
-   'Video call details to be arranged separately.'].filter(Boolean).join('\n'),
+   '30-minute free consultation'].filter(Boolean).join('\n'),
   start:{dateTime:data.start,timeZone:ZONE},end:{dateTime:data.end,timeZone:ZONE},transparency:'opaque',
   reminders:{useDefault:false,overrides:[{method:'popup',minutes:15}]}
  };
- const resp=await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'/events?sendUpdates=none',{
+ if(useUser){
+  event.conferenceData={createRequest:{
+   requestId:crypto.randomUUID().replace(/-/g,''),
+   conferenceSolutionKey:{type:'hangoutsMeet'}
+  }};
+ }
+ const url=base+'?sendUpdates=none'+(useUser?'&conferenceDataVersion=1':'');
+ const resp=await fetch(url,{
   method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(event)
  });
  if(resp.status===409)return {duplicate:true};
  if(!resp.ok)throw Error('Google event insert error '+resp.status);
- const result=await resp.json();
- return {id:result.id||id};
+ let result=await resp.json();
+ const meetLink=v=>v.hangoutLink||v.conferenceData?.entryPoints?.find(x=>x.entryPointType==='video')?.uri||'';
+ if(useUser){
+  // Calendar may generate the conference asynchronously. Do not invent a URL.
+  for(let i=0;i<5&&!meetLink(result)&&result.conferenceData?.createRequest?.status?.statusCode==='pending';i++){
+   await new Promise(resolve=>setTimeout(resolve,350*(i+1)));
+   result=await googleRequest(base+'/'+encodeURIComponent(id)+'?conferenceDataVersion=1',token);
+  }
+  if(!meetLink(result)){
+   // Never leave an appointment without a promised Meet URL when OAuth is enabled.
+   await fetch(base+'/'+encodeURIComponent(id),{method:'DELETE',headers:{Authorization:'Bearer '+token}}).catch(()=>{});
+   throw Error('Google Meet conference generation is unavailable');
+  }
+ }
+ return {id:result.id||id,meetUrl:meetLink(result),mode:useUser?'google-user-oauth':'service-account'};
 }
+
 async function booking(request,env,origin){
  if(!ready(env)||env.BOOKINGS_ENABLED!=='true')return respond({error:'Online booking is not enabled yet. Please use the contact form.'},503,origin);
  if(Number(request.headers.get('Content-Length')||0)>4096)return respond({error:'Request too large'},413,origin);
