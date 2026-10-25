@@ -128,8 +128,9 @@ async function availability(request,env,origin){
  const {first,last,windowDays}=policy(env);
  if(week<advance(monday(today),-7)||week>advance(monday(today),windowDays+7))return respond({error:'Week outside booking window'},400,origin);
  const days=Array.from({length:7},(_,i)=>advance(week,i));
- const common={configured:ready(env),week,days,timezone:ZONE,duration,startHour:first,endHour:last};
- if(!ready(env))return respond({...common,slots:[],message:'Cloudflare booking backend is awaiting Google Calendar configuration.'},200,origin);
+ const enabled=ready(env)&&env.BOOKINGS_ENABLED==='true';
+ const common={configured:enabled,week,days,timezone:ZONE,duration,startHour:first,endHour:last};
+ if(!enabled)return respond({...common,slots:[],message:'Cloudflare booking backend is awaiting Google Calendar configuration.'},200,origin);
  const slots=slotsForWeek(env,week,duration);
  if(!slots.length)return respond({...common,slots:[]},200,origin);
  const token=await accessToken(env);
@@ -229,7 +230,11 @@ export default {
   const origin=allowedOrigin(request,env);
   // CORS is not authentication, but it prevents third-party browser embedding.
   if(request.headers.has('Origin')&&!origin)return respond({error:'Origin not permitted'},403);
-  if(request.method==='OPTIONS')return respond({ok:true},204,origin);
+  if(request.method==='OPTIONS'){
+   if(!origin)return respond({error:'Origin not permitted'},403);
+   const headers=new Headers(JSON_HEADERS);headers.set('Access-Control-Allow-Origin',origin);headers.set('Access-Control-Allow-Methods','GET, POST, OPTIONS');headers.set('Access-Control-Allow-Headers','Content-Type');headers.set('Access-Control-Max-Age','3600');
+   return new Response(null,{status:204,headers});
+  }
   const path=new URL(request.url).pathname;
   if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true'},200,origin);
   if(path==='/api/calendar/availability'&&request.method==='GET'){
