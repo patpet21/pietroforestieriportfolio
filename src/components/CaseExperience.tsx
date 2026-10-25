@@ -37,6 +37,16 @@ const themes:Record<string,CaseTheme>={
    {title:'Shape the experience',description:'Design usable mobile-friendly screens'},
    {title:'Create a prototype',description:'Connect visitor journeys to clear next actions'}
   ]},
+ 'n8n-automation':{
+  eyebrow:'AUTOMATION / N8N WORKFLOW EXPLORATION',
+  claim:'Structure the checks before automating the handoff.',
+  visualLabel:'WORKFLOW CAPTURE / EXPERIMENT',
+  steps:[
+   {title:'Define the trigger',description:'Set up the timing and workflow starting conditions'},
+   {title:'Verify conditions',description:'Check file status and eligibility before any cleanup step'},
+   {title:'Document outcomes',description:'Show every branch, exception and follow-up in the workflow map'}
+  ]
+ },
  'lead-rescue':{
   eyebrow:'AUTOMATION / EXPERIMENTAL PROTOTYPE',
   claim:'Make overlooked enquiries easier to spot.',
