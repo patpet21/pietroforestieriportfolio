@@ -283,3 +283,9 @@ footer{background:linear-gradient(145deg,#161917,#292b25 66%,#1d211c)!important;
 @media(prefers-reduced-motion:reduce){
  .hero .pf-hero-actions .pf-hero-book-cta,.pf-rail-link.pf-rail-book{transition:none!important}
 }
+
+/* Public OAuth-facing legal navigation, present on every portfolio page. */
+.pf-legal-footer-links{display:flex;align-items:center;gap:clamp(10px,2vw,23px);flex-wrap:wrap}
+.pf-legal-footer-links a{color:#d8c3a0!important;text-decoration:none;font:800 9px Manrope,system-ui,sans-serif;letter-spacing:.8px}
+.pf-legal-footer-links a:hover{color:#b2f8ca!important}
+@media(max-width:700px){.pf-legal-footer-links{gap:18px;justify-content:center}.pf-legal-footer-links a{font-size:9px}}
