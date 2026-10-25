@@ -101,6 +101,77 @@ async function accessToken(env){
  tokenCache={value:data.access_token,until:Date.now()+Math.max(60,Number(data.expires_in||3600)-120)*1000,signature:keyHint};
  return tokenCache.value;
 }
+
+/**
+ * Meet creation and Gmail notifications use a one-time USER OAuth consent.
+ * This is distinct from the existing service-account free/busy authorization.
+ * Never put Google OAuth secrets in repository or Netlify.
+ */
+let userTokenCache={token:'',expires:0,key:''};
+const oauthReady=env=>!!(env.GOOGLE_OAUTH_CLIENT_ID&&env.GOOGLE_OAUTH_CLIENT_SECRET&&env.GOOGLE_OAUTH_REFRESH_TOKEN);
+const notificationReady=env=>oauthReady(env)&&env.EMAIL_NOTIFICATIONS_ENABLED==='true'&&!!env.BOOKING_ORGANIZER_EMAIL;
+async function userAccessToken(env){
+ if(!oauthReady(env))throw Error('Google user OAuth has not been configured');
+ const hint=env.GOOGLE_OAUTH_CLIENT_ID;
+ if(userTokenCache.token&&userTokenCache.key===hint&&Date.now()<userTokenCache.expires)return userTokenCache.token;
+ const response=await fetch('https://oauth2.googleapis.com/token',{
+  method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+  body:new URLSearchParams({
+   client_id:env.GOOGLE_OAUTH_CLIENT_ID,
+   client_secret:env.GOOGLE_OAUTH_CLIENT_SECRET,
+   refresh_token:env.GOOGLE_OAUTH_REFRESH_TOKEN,
+   grant_type:'refresh_token'
+  })
+ });
+ const data=await response.json();
+ if(!response.ok||!data.access_token)throw Error('Google OAuth refresh failed: '+response.status);
+ userTokenCache={token:data.access_token,key:hint,expires:Date.now()+(Math.max(60,Number(data.expires_in||3600)-120))*1000};
+ return data.access_token;
+}
+async function googleRequest(url,token,method='GET',payload){
+ const response=await fetch(url,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:payload?JSON.stringify(payload):undefined});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error('Google API returned '+response.status);
+ return data;
+}
+async function gmailSend(env,recipient,subject,message,reference){
+ const token=await userAccessToken(env);
+ const body=[
+  'To: '+recipient,
+  'Subject: '+subject,
+  'MIME-Version: 1.0',
+  'Content-Type: text/plain; charset=utf-8',
+  'Content-Transfer-Encoding: base64',
+  '',
+  toBase64Url(new TextEncoder().encode(message))
+ ].join('\r\n');
+ await googleRequest('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',token,'POST',{
+  raw:toBase64Url(new TextEncoder().encode(body))
+ });
+ console.log('Booking notification accepted by Gmail',reference);
+}
+const messageDate=iso=>new Intl.DateTimeFormat('en-US',{timeZone:ZONE,weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(iso));
+function emailCopy(data,isHost,reminder){
+ const date=messageDate(data.start);
+ const heading=reminder?'Your consultation starts in 15 minutes':'Your 30-minute consultation is booked';
+ const name=isHost?'Pietro':data.name;
+ const who=isHost?'\nGuest: '+data.name+'\nGuest email: '+data.email+'\n':'';
+ const meet=data.meet_url?'\nJoin Google Meet: '+data.meet_url+'\n':'\nGoogle Meet details will be provided separately.\n';
+ return [
+  'Hello '+name+',','',
+  isHost?(reminder?'Your upcoming portfolio call starts in 15 minutes.':'A guest has booked a free portfolio consultation.'):(reminder?'Your free consultation begins in 15 minutes.':'Thanks for booking a complimentary consultation.'),
+  '',
+  'When: '+date,
+  'Duration: 30 minutes (New York time zone reference).',
+  who,
+  meet,
+  reminder?'Please join the call using the link above.':'You will receive a reminder approximately 15 minutes before the call.',
+  '',
+  'Pietro Forestieri · Project Management, AI & Real Estate',
+  'https://pietroforestieri.propertydex.xyz'
+ ].join('\n');
+}
+
 async function calendarBusy(env,token,from,to){
  const list=calendarIds(env);
  const resp=await fetch('https://www.googleapis.com/calendar/v3/freeBusy',{
