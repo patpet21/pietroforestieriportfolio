@@ -47,6 +47,8 @@ export default function BookingCalendar(){
  const [sending,setSending]=useState(false);
  const [feedback,setFeedback]=useState('');
  const [confirmed,setConfirmed]=useState<Slot|null>(null);
+ const [confirmedMeet,setConfirmedMeet]=useState('');
+ const [notificationsQueued,setNotificationsQueued]=useState(false);
  const [refresh,setRefresh]=useState(0);
  const dates=useMemo(()=>Array.from({length:5},(_,i)=>moveDays(week,i)),[week]);
  const today=dayKey(new Date());
@@ -55,7 +57,7 @@ export default function BookingCalendar(){
  const mobileFree=mobileSlots.filter(slot=>slot.available).length;
  useEffect(()=>{
   const controller=new AbortController();
-  setStatus('loading');setSelected(null);setFeedback('');setConfirmed(null);
+  setStatus('loading');setSelected(null);setFeedback('');setConfirmed(null);setConfirmedMeet('');setNotificationsQueued(false);
   fetch(bookingAPI+'/api/calendar/availability?week='+encodeURIComponent(week)+'&duration='+duration,{signal:controller.signal,cache:'no-store'})
    .then(async res=>{
     const json=await res.json() as Reply;
@@ -86,8 +88,10 @@ export default function BookingCalendar(){
     if(response.status===409){setSelected(null);setRefresh(v=>v+1);}
     return;
    }
-   setConfirmed(selected);setSelected(null);form.reset();
-   setFeedback('Appointment saved successfully to Google Calendar.');
+   setConfirmed(selected);setConfirmedMeet(typeof result.meetUrl==='string'?result.meetUrl:'');
+   setNotificationsQueued(result.notificationQueued===true);
+   setSelected(null);form.reset();
+   setFeedback(result.message||'Appointment saved to Google Calendar.');
    setRefreshAfterBooking(v=>v+1);
   }catch{setFeedback('Booking could not be confirmed. Please retry or use the contact form.');}
   finally{setSending(false);}
@@ -165,7 +169,10 @@ export default function BookingCalendar(){
     {selected&&<div className="pfc-confirm-card" id="pfc-confirm-form"><div className="pfc-confirm-head"><div><small>STEP 02 / YOUR DETAILS</small><strong>{readable(selected.start,zone)} · {duration} min</strong></div><button onClick={()=>setSelected(null)} type="button" aria-label="Cancel selected time">Change time</button></div>
       <form onSubmit={onConfirm}><div className="pfc-fields"><label>YOUR NAME<input name="name" autoComplete="name" required maxLength={100}/></label><label>EMAIL ADDRESS<input name="email" type="email" autoComplete="email" required maxLength={200}/></label><label>COMPANY (OPTIONAL)<input name="company" autoComplete="organization" maxLength={120}/></label><label>TOPIC (OPTIONAL)<input name="notes" placeholder="What would you like to discuss?" maxLength={800}/></label></div><div className="pfc-trap" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off"/></label></div><p className="pfc-privacy">Your details are used to arrange this call and are stored with the calendar event.</p><button type="submit" className="pfc-book-cta" disabled={sending}>{sending?<><LoaderCircle className="pfc-spin" size={17}/> Confirming...</>:<>CONFIRM INTRO CALL <ArrowUpRight size={18}/></>}</button></form>
     </div>}
-    {confirmed&&<div className="pfc-booking-success" role="status"><CalendarCheck size={29}/><div><strong>Appointment confirmed</strong><p>{readable(confirmed.start,zone)} · {duration} minutes. Saved to the organizer's Google Calendar. Video-call details will be arranged separately.</p></div></div>}
+    {confirmed&&<div className="pfc-booking-success" role="status"><CalendarCheck size={29}/><div><strong>Appointment confirmed</strong><p>{readable(confirmed.start,zone)} · {duration} minutes.</p>
+     {confirmedMeet?<a className="pfc-meet-link" href={confirmedMeet} rel="noopener noreferrer" target="_blank"><Video size={18}/> JOIN GOOGLE MEET <ArrowUpRight size={16}/></a>:<p>Google Meet setup is pending. Video details will be arranged separately.</p>}
+     <p>{notificationsQueued?'Confirmation emails are queued for you and the organizer. A reminder is scheduled around 15 minutes before your call.':'Automated email notifications are not enabled yet. Please save your appointment details.'}</p>
+    </div></div>}
     {feedback&&!confirmed&&selected&&<p className="pfc-booking-error" role="alert">{feedback}</p>}
    </section>
   </div>
