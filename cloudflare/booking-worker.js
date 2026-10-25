@@ -361,6 +361,9 @@ export class BookingGate extends DurableObject {
   for(const row of rows){
    const start=Date.parse(row.start_iso);
    if(start+30*60000<now){sql.exec('DELETE FROM booking_messages WHERE id = ?',row.id);continue;}
+   // A delayed alarm must never loop every second on a missed reminder.
+   // Late reminders are skipped instead of sent after the meeting begins.
+   if(now>=start){sql.exec('UPDATE booking_messages SET guest_remind=1,host_remind=1 WHERE id = ?',row.id);}
    if(now<row.retry_at)continue;
    const reminderDue=now>=start-15*60000&&now<start;
    let eventExists=true;
