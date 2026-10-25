@@ -1,0 +1,25 @@
+name = "pietro-portfolio-booking"
+main = "booking-worker.js"
+compatibility_date = "2026-10-20"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "BOOKING_LOCKS"
+class_name = "BookingGate"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BookingGate"]
+
+[vars]
+ALLOWED_ORIGINS = "https://pietroforestieri.propertydex.xyz,https://pietroforestieri.netlify.app"
+BOOKINGS_ENABLED = "false"
+BOOKING_START_HOUR = "9"
+BOOKING_END_HOUR = "17"
+BOOKING_WEEKDAYS = "1,2,3,4,5"
+BOOKING_MIN_NOTICE_HOURS = "24"
+BOOKING_WINDOW_DAYS = "45"
+
+# Add calendar IDs and service account credentials only in Cloudflare
+# Workers & Pages -> Worker -> Settings -> Variables and Secrets.
+# Do not commit private keys or a .dev.vars file.
