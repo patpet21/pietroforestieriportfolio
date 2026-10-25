@@ -129,6 +129,24 @@ Netlify site are needed.
 
 ## 5. Enable bookings only AFTER verification
 
+Before enabling bookings, test the read-only Google integration:
+
+```
+https://booking.propertydex.xyz/api/calendar/check
+```
+
+Expected response after Cloudflare deploys the latest GitHub version and both
+calendars are correctly shared:
+
+```json
+{"googleConnected":true,"calendarsChecked":2,"bookingsEnabled":false}
+```
+
+This invokes Google authentication and its freeBusy API but **cannot book
+events** or expose calendar contents. If it returns a 404, the new Worker
+version has not been deployed yet. If it returns a 503, inspect the Worker
+logs; missing service-account sharing or an invalid private key are possible.
+
 Check these in order:
 
 1. Open `https://booking.propertydex.xyz/health`; Google configuration
