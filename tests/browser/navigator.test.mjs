@@ -9,7 +9,7 @@ before(async()=>{
  browser=await chromium.launch({headless:true});
 });
 after(async()=>{await browser?.close();await server?.close();});
-async function fixture({mobile=false,cpu=false,denied=false,path=''}={}){
+async function fixture({mobile=false,cpu=false,denied=false,path='gesture-lab'}={}){
  const page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:900}});
  await mockRemoteFonts(page);
  await page.route(/@mediapipe_tasks-vision/,route=>route.fulfill({contentType:'text/javascript',body:`
@@ -70,16 +70,17 @@ test('integrated camera → relaxed pointing → forward touch clicks once, lose
   await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>window.__closed),2);
  }finally{await page.close();}
 });
-test('mobile CPU fallback processes synthetic frames with compact preview and opt-in diagnostics',async()=>{
+test('mobile CPU fallback keeps dedicated Spatial Control and Air Keyboard available',async()=>{
  const page=await fixture({mobile:true,cpu:true});
  try{
   await pose(page,'aim');await pose(page,'push');assert.equal(await page.evaluate(()=>window.__clicks),1);
-  assert.equal(await page.locator('.holo-mobile-compact').count(),1);
-  assert.equal(await page.locator('.holo-air-toggle').count(),0);
+  assert.equal(await page.locator('.holo-mobile-compact').count(),0);
+  assert.equal(await page.locator('.holo-air-toggle').count(),1);
+  assert.equal(await page.locator('.gsl-camera-btn').count(),0);
   await page.waitForFunction(()=>document.querySelector('.gesture-debug pre').textContent.includes('processedFps'));
   const metrics=JSON.parse(await page.locator('.gesture-debug pre').textContent());
   assert.equal(metrics.backend,'CPU');assert.ok(metrics.counters.clicks>=1);assert.ok(metrics.timings.inferenceMs.samples>0);
-  await page.getByRole('button',{name:'Stop mobile camera'}).click();
+  await page.getByRole('button',{name:'STOP CAMERA',exact:true}).click();
   assert.equal(await page.evaluate(()=>window.__streams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
  }finally{await page.close();}
 });
@@ -104,11 +105,15 @@ test('a covered target, route transition and competing camera never replay a hel
   assert.equal(await page.evaluate(()=>window.__clicks||0),0);
   await pose(page,'aim');await pose(page,'push');assert.equal(await page.evaluate(()=>window.__clicks),1);
   await page.locator('header nav a[href="/contact"]').click();await page.waitForURL('**/contact*');
-  await pose(page,'push');assert.equal(await page.evaluate(()=>window.__clicks),1);
+  assert.equal(await page.locator('.holo-natural-control').count(),0,'Spatial Control is dedicated to Gesture Lab');
+  assert.equal(await page.evaluate(()=>window.__streams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
+  assert.equal(await page.evaluate(()=>window.__closed),1);
+  await page.goto(origin+'gesture-lab?gestureDebug=1',{waitUntil:'domcontentloaded'});
+  await page.getByRole('button',{name:'ENABLE GESTURES',exact:true}).click();
+  await page.waitForSelector('.holo-natural-status');
   await page.evaluate(()=>window.dispatchEvent(new Event('pf-lab-camera-start')));
   await page.waitForSelector('.holo-natural-start');
   assert.equal(await page.evaluate(()=>window.__streams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
-  assert.equal(await page.evaluate(()=>window.__closed),1);
  }finally{await page.close();}
 });
 async function keyboardPose(page,key,closed=false){
@@ -150,38 +155,41 @@ test('floating Air Type: one hand highlights and types CIAO, repeated letters, s
   await keyboardPose(page,'K',true);assert.equal(await page.locator('.air-desk-output output').textContent(),'CIAO Q');
   await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
   assert.equal(await page.locator('.air-desk-plane').count(),0);
-  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
-  await field.fill('');
+  await page.evaluate(()=>{
+   const field=document.createElement('textarea');
+   field.id='fixture-native-input';field.setAttribute('aria-label','Native fixture input');
+   document.querySelector('.gsl-spatial-section').append(field);field.focus();
+  });
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
-  await press('K');assert.equal(await field.inputValue(),'K');
+  await press('K');
+  assert.equal(await page.locator('#fixture-native-input').inputValue(),'K');
   assert.equal(await page.locator('.air-desk-output output').textContent(),'K');
+  assert.equal(await page.evaluate(()=>window.__streams.length),1);
  }finally{await page.close();}
 });
-test('in-page Gesture Lab keyboard uses the same forward touch instead of pinch or bending',async()=>{
- const page=await fixture({path:'gesture-lab'});
+test('one Spatial Control camera, no duplicate keyboard and preserved 3D/WBS examples',async()=>{
+ const page=await fixture();
  try{
-  await page.evaluate(()=>document.getElementById('fixture-target').remove());
-  await page.locator('.gsl-camera-btn').click();await page.waitForSelector('.gsl-camera-stop');
-  await page.locator('.gsl-stage').evaluate(el=>el.scrollIntoView({block:'center'}));
-  const poseKey=async(scale=1,pinch=false)=>{
-   await page.evaluate(async({scale,pinch})=>{
-    const video=document.querySelector('.gsl-stage video'),stage=document.querySelector('.gsl-stage').getBoundingClientRect();
-    const key=document.querySelector('[data-air-key="A"]').getBoundingClientRect();
-    const cover=Math.max(stage.width/video.videoWidth,stage.height/video.videoHeight);
-    const w=video.videoWidth*cover,h=video.videoHeight*cover;
-    const gain=Number(document.querySelector('[aria-label="Hand pointer reach"]').value);
-    const vx=(key.left+key.width/2-stage.left+(w-stage.width)/2)/w,vy=(key.top+key.height/2-stage.top+(h-stage.height)/2)/h;
-    const x=1-(.5+(vx-.5)/gain),y=.5+(vy-.5)/gain;
-    const {makeHand}=await import('/tests/fixtures/hand.mjs');
-    window.__hands=[makeHand({x,y,scale,pinch})];window.__poseStart=window.__inferences;
-   },{scale,pinch});
-   await page.waitForFunction(()=>window.__inferences-window.__poseStart>=9);
-   if(scale===1)await page.waitForFunction(()=>document.querySelector('[data-air-key="A"]')?.classList.contains('gsl-key-target'),null,{timeout:5000});
-  };
-  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
-  await poseKey();await poseKey(1,true);assert.equal(await field.inputValue(),'');
-  await poseKey(1.2);assert.equal(await field.inputValue(),'A');
-  await poseKey(1.2);assert.equal(await field.inputValue(),'A');
-  await poseKey();await poseKey(1.2);assert.equal(await field.inputValue(),'AA');
+  await page.evaluate(()=>document.getElementById('fixture-target')?.remove());
+  assert.equal(await page.locator('.holo-natural-control').count(),1);
+  assert.equal(await page.locator('.gsl-camera-btn').count(),0);
+  assert.equal(await page.locator('.gsl-keyboard-panel').count(),0);
+  assert.equal(await page.locator('.gsl-mode-tabs button').count(),2);
+  assert.equal(await page.evaluate(()=>window.__streams.length),1);
+  await page.getByRole('button',{name:/3D Control/}).click();
+  const cube=page.locator('.gsl-3d-object');
+  await cube.waitFor({state:'visible'});
+  await page.getByRole('button',{name:'EXPAND',exact:true}).click();
+  assert.match(await cube.getAttribute('style'),/scale\(1\.22\)/);
+  await page.getByRole('button',{name:'RESET',exact:true}).click();
+  assert.match(await cube.getAttribute('style'),/scale\(1\)/);
+  await page.getByRole('button',{name:/WBS Builder/}).click();
+  assert.equal(await page.locator('.gsl-wbs-node').count(),4);
+  await page.locator('[data-task-id="A"]').click();
+  await page.locator('[data-task-id="C"]').click();
+  assert.equal(await page.locator('.gsl-wbs-wires line').count(),2);
+  await page.getByRole('button',{name:'RESET WBS',exact:true}).click();
+  assert.equal(await page.locator('.gsl-wbs-wires line').count(),1);
+  assert.equal(await page.evaluate(()=>window.__streams.length),1,'3D and WBS never start a second camera');
  }finally{await page.close();}
 });
