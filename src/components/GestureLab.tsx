@@ -1,462 +1,152 @@
-import HoloNavigator from './HoloNavigator';
-import {KeyboardPointer} from '../lib/gesture/KeyboardPointer';
-import {measureForwardDepth} from '../lib/gesture/forwardDepth';
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useRef,useState} from 'react';
 import type {CSSProperties,PointerEvent as ReactPointerEvent} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,Camera,CameraOff,Scan,Check,Copy,Hand,Keyboard,Layers3,Link2,MousePointer2,RotateCcw,ShieldCheck,Sparkles,Trash2,Video,Workflow,Zap} from 'lucide-react';
+import {ArrowLeft,ArrowRight,Hand,Layers3,Link2,MousePointer2,RotateCcw,Scan,ShieldCheck,Workflow,Zap} from 'lucide-react';
+import HoloNavigator from './HoloNavigator';
 
-type Mode='keyboard'|'cube'|'workflow';
-type CameraStatus='off'|'loading'|'ready'|'error';
-type Point={x:number;y:number;z:number};
-type Tracker={detectForVideo:(video:HTMLVideoElement,timestamp:number)=>{landmarks:Point[][]};close:()=>void};
-type Cursor={x:number;y:number;pinching:boolean;dwell:number};
-type InputMethod='tap'|'push'|'dwell';
-type Sensitivity='easy'|'balanced'|'precise';
+type Mode='cube'|'workflow';
 type Task={id:string;name:string;detail:string;x:number;y:number;done:boolean};
-const wasmUrl='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm';
-const modelUrl='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+type DragInfo={id:string;pointerId:number;startX:number;startY:number;originX:number;originY:number;moved:boolean};
 const starterTasks:Task[]=[
  {id:'A',name:'Requirements',detail:'Scope & acceptance',x:22,y:30,done:true},
- {id:'B',name:'WBS design',detail:'Work packages',x:72,y:26,done:false},
- {id:'C',name:'Automation',detail:'Rules & triggers',x:28,y:71,done:false},
- {id:'D',name:'Quality review',detail:'Risks & controls',x:77,y:70,done:false}
+ {id:'B',name:'WBS design',detail:'Work packages',x:73,y:27,done:false},
+ {id:'C',name:'Automation',detail:'Rules & triggers',x:29,y:72,done:false},
+ {id:'D',name:'Quality review',detail:'Risks & controls',x:77,y:72,done:false}
 ];
-const rows=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
-const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
-const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.y-b.y);
-const modes:{id:Mode;title:string;sub:string;Icon:typeof Keyboard}[]=[
- {id:'keyboard',title:'Air Keyboard',sub:'Type in the air',Icon:Keyboard},
- {id:'cube',title:'3D Control',sub:'Rotate an object',Icon:Layers3},
- {id:'workflow',title:'WBS Builder',sub:'Link work packages',Icon:Workflow}
+const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
+const modes:{id:Mode;title:string;sub:string;Icon:typeof Layers3}[]=[
+ {id:'cube',title:'3D Control',sub:'Manipulate a spatial object',Icon:Layers3},
+ {id:'workflow',title:'WBS Builder',sub:'Connect project work packages',Icon:Workflow}
 ];
+
 export default function GestureLab(){
- const [mode,setMode]=useState<Mode>('keyboard');
- const [status,setStatus]=useState<CameraStatus>('off');
- const [error,setError]=useState('');
- const [tracking,setTracking]=useState(false);
- const [cursor,setCursor]=useState<Cursor|null>(null);
- const [typing,setTyping]=useState('');
- const [hint,setHint]=useState('Start the camera or use your mouse to try the demo.');
- const [cubeAngles,setCubeAngles]=useState({x:-21,y:31});
- const [cubeExpanded,setCubeExpanded]=useState(false);
+ const [mode,setMode]=useState<Mode>('cube');
+ const [angles,setAngles]=useState({x:-21,y:31});
+ const [expanded,setExpanded]=useState(false);
  const [tasks,setTasks]=useState<Task[]>(starterTasks);
  const [connections,setConnections]=useState<[string,string][]>([['A','B']]);
- const [linkFrom,setLinkFrom]=useState<string|null>(null);
- const [copied,setCopied]=useState(false);
- const videoRef=useRef<HTMLVideoElement|null>(null);
+ const [selected,setSelected]=useState<string|null>(null);
+ const [notice,setNotice]=useState('Drag the 3D object with your mouse or touch. Use the same Spatial Control above to navigate this page by gestures.');
+ const cubeGrab=useRef<{pointerId:number;x:number;y:number;rx:number;ry:number;moved:boolean}|null>(null);
  const stageRef=useRef<HTMLDivElement|null>(null);
- const streamRef=useRef<MediaStream|null>(null);
- const trackerRef=useRef<Tracker|null>(null);
- const rafRef=useRef(0);
- const sessionRef=useRef(0);
- const pinchRef=useRef(false);
- const lastActionRef=useRef(0);
- const smoothRef=useRef({x:.5,y:.5});
- const modeRef=useRef(mode);
- const tasksRef=useRef(tasks);
- const handGrabRef=useRef<string|null>(null);
- const pointerGrabRef=useRef<{id:string;moved:boolean}|null>(null);
- const [gpuStatus,setGpuStatus]=useState('');
- const [hoveredKey,setHoveredKey]=useState<string|null>(null);
- const [inputMethod,setInputMethod]=useState<InputMethod>('push');
- const [sensitivity,setSensitivity]=useState<Sensitivity>('easy');
- const [pinchMeter,setPinchMeter]=useState(0);
- const [tapMessage,setTapMessage]=useState('EXTEND INDEX TO AIM');
- const [reach,setReach]=useState(1.0);
- const [rotationSpeed,setRotationSpeed]=useState(1.25);
- const keyboardKeysRef=useRef<HTMLDivElement|null>(null);
- const hoveredKeyRef=useRef<string|null>(null);
- const keyCandidateRef=useRef({key:'',since:0});
- const dwellRef=useRef({key:'',since:0,locked:false});
- const pinchCandidateRef=useRef({value:false,frames:0});
- const inputMethodRef=useRef(inputMethod);
- const sensitivityRef=useRef(sensitivity);
- const rotationSpeedRef=useRef(rotationSpeed);
- const cubeMotionRef=useRef<{x:number;y:number}|null>(null);
- const airTapRef=useRef({down:false,candidate:false,frames:0});
- const lastAimRef=useRef({x:0,y:0,key:''});
- const touchRef=useRef(new KeyboardPointer());
- const reachRef=useRef(reach);
- inputMethodRef.current=inputMethod;
- sensitivityRef.current=sensitivity;
- rotationSpeedRef.current=rotationSpeed;
- reachRef.current=reach;
- modeRef.current=mode;
- tasksRef.current=tasks;
- const keyAction=useCallback((value:string)=>{
-  if(value==='CLEAR')setTyping('');
-  else if(value==='BACK')setTyping(s=>s.slice(0,-1));
-  else if(value==='SPACE')setTyping(s=>(s+' ').slice(0,220));
-  else setTyping(s=>(s+value).slice(0,220));
-  setHint(value==='BACK'?'Backspace':value==='SPACE'?'Space':value==='CLEAR'?'Text cleared':'Typed: '+value);
- },[]);
- const moveTask=useCallback((id:string,x:number,y:number)=>{
-  setTasks(old=>{const updated=old.map(t=>t.id===id?{...t,x:clamp(x*100,12,88),y:clamp(y*100,16,85)}:t);tasksRef.current=updated;return updated;});
- },[]);
- const addLink=useCallback((from:string,to:string)=>{
-  if(from===to)return;
-  setConnections(old=>old.some(pair=>pair[0]===from&&pair[1]===to)?old:[...old,[from,to]]);
-  setHint('Dependency connected: '+from+' → '+to);
- },[]);
- const nearestTask=useCallback((from:string,x:number,y:number)=>{
-  const other=tasksRef.current.filter(t=>t.id!==from).map(t=>({id:t.id,d:Math.hypot(t.x/100-x,t.y/100-y)})).sort((a,b)=>a.d-b.d)[0];
-  if(other&&other.d<.16)addLink(from,other.id);
- },[addLink]);
- const applyGesture=useCallback((x:number,y:number,isPinching:boolean,started:boolean,ended:boolean)=>{
-  const activeMode=modeRef.current;
-  if(activeMode==='keyboard')return;
-  if(activeMode==='cube'){
-   if(started){setCubeExpanded(v=>!v);setHint('Pinch detected · cube size changed');}
-   const prev=cubeMotionRef.current;
-   cubeMotionRef.current={x,y};
-   if(prev&&!isPinching){
-    const dx=clamp(x-prev.x,-.09,.09),dy=clamp(y-prev.y,-.09,.09);
-    if(Math.abs(dx)+Math.abs(dy)>.0015){
-     const speed=rotationSpeedRef.current;
-     setCubeAngles(v=>({x:clamp(v.x-dy*330*speed,-84,84),y:v.y+dx*540*speed}));
-    }
-   }
-   return;
-  }
-  if(activeMode==='workflow'){
-   if(started){
-    const nearest=tasksRef.current.map(t=>({id:t.id,d:Math.hypot(t.x/100-x,t.y/100-y)})).sort((a,b)=>a.d-b.d)[0];
-    handGrabRef.current=nearest&&nearest.d<.17?nearest.id:null;
-    if(handGrabRef.current){setLinkFrom(handGrabRef.current);setHint('Moving work package '+handGrabRef.current);}
-   }else if(isPinching&&handGrabRef.current){
-    moveTask(handGrabRef.current,x,y);
-   }else if(ended&&handGrabRef.current){
-    nearestTask(handGrabRef.current,x,y);
-    handGrabRef.current=null;
-   }
-  }
- },[keyAction,moveTask,nearestTask]);
- const gestureRef=useRef(applyGesture);
- gestureRef.current=applyGesture;
- const release=useCallback(()=>{
-  cancelAnimationFrame(rafRef.current);
-  rafRef.current=0;
-  trackerRef.current?.close();
-  trackerRef.current=null;
-  streamRef.current?.getTracks().forEach(track=>track.stop());
-  streamRef.current=null;
-  if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
-  touchRef.current.reset();
-  pinchRef.current=false;
-  pinchCandidateRef.current={value:false,frames:0};
-  airTapRef.current={down:false,candidate:false,frames:0};
-  cubeMotionRef.current=null;
-  handGrabRef.current=null;
-  hoveredKeyRef.current=null;
-  keyCandidateRef.current={key:'',since:0};
-  dwellRef.current={key:'',since:0,locked:false};
- },[]);
- useEffect(()=>()=>{sessionRef.current++;release();},[release]);
- const stop=()=>{
-  sessionRef.current++;
-  release();
-  setStatus('off');setTracking(false);setCursor(null);setGpuStatus('');setPinchMeter(0);setHoveredKey(null);
-  setHint('Camera stopped. Use mouse, touch or keyboard to continue.');
+ const dragRef=useRef<DragInfo|null>(null);
+ const suppressClickRef=useRef<string|null>(null);
+
+ const switchMode=(next:Mode)=>{
+  setMode(next);setSelected(null);dragRef.current=null;cubeGrab.current=null;
+  setNotice(next==='cube'?'Drag to rotate. Select the object or Expand to resize.':'Select two cards to connect them, or drag a card to reposition it.');
  };
- const start=async()=>{
-  if(status==='loading'||status==='ready')return;
-  window.dispatchEvent(new Event('pf-lab-camera-start'));
-  if(!navigator.mediaDevices?.getUserMedia){
-   setError('Camera access needs a modern browser on HTTPS or localhost.');
-   setStatus('error');return;
-  }
-  const token=++sessionRef.current;
-  setStatus('loading');setError('');setHint('Requesting webcam permission…');
-  try{
-   const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user'},audio:false});
-   if(token!==sessionRef.current){stream.getTracks().forEach(t=>t.stop());return;}
-   streamRef.current=stream;
-   const video=videoRef.current;
-   if(!video)throw new Error('Camera preview unavailable.');
-   video.srcObject=stream;
-   await video.play();
-   setHint('Loading hand-tracking model. This may take a few seconds…');
-   const {FilesetResolver,HandLandmarker}=await import('@mediapipe/tasks-vision');
-   if(token!==sessionRef.current)return;
-   const fileset=await FilesetResolver.forVisionTasks(wasmUrl);
-   if(token!==sessionRef.current)return;
-   let tracker:Tracker;
-   let useCpu=false;
-   try{
-    tracker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:modelUrl,delegate:'GPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minTrackingConfidence:.55}) as Tracker;
-    setGpuStatus('GPU');
-   }catch{
-    useCpu=true;
-    tracker=await HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:modelUrl,delegate:'CPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minTrackingConfidence:.55}) as Tracker;
-    setGpuStatus('CPU');
-   }
-   if(token!==sessionRef.current){tracker.close();return;}
-   trackerRef.current=tracker;
-   setStatus('ready');setHint('Show your hand. Aim with the index and push forward to touch a key.');
-   let lastFrame=0,lastVideoTime=-1;
-   const tick=(time:number)=>{
-    if(token!==sessionRef.current)return;
-    rafRef.current=requestAnimationFrame(tick);
-    if(document.hidden){touchRef.current.reset();return;}
-    if(time-lastFrame<(useCpu?56:37)||!video.videoWidth||video.currentTime===lastVideoTime)return;
-    lastFrame=time;lastVideoTime=video.currentTime;
-    try{
-     const result=tracker.detectForVideo(video,time);
-     const hand=result.landmarks?.[0];
-     if(!hand){
-      touchRef.current.reset();
-      setTracking(false);setCursor(null);setPinchMeter(0);
-      pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};
-      cubeMotionRef.current=null;handGrabRef.current=null;
-      hoveredKeyRef.current=null;setHoveredKey(null);
-      keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
-      airTapRef.current={down:false,candidate:false,frames:0};
-      return;
-     }
-     setTracking(true);
-     const finger=hand[8],thumb=hand[4],leftPalm=hand[5],rightPalm=hand[17];
-     if(!finger||!thumb||!leftPalm||!rightPalm)return;
-     const sm=smoothRef.current;
-     const x=sm.x=sm.x*.36+clamp(1-finger.x,0,1)*.64;
-     const y=sm.y=sm.y*.36+clamp(finger.y,0,1)*.64;
-     const ratio=distance(finger,thumb)/Math.max(.065,distance(leftPalm,rightPalm));
-     const limits=sensitivityRef.current==='easy'?[.68,.88]:sensitivityRef.current==='balanced'?[.54,.76]:[.42,.64];
-     const was=pinchRef.current;
-     const candidateClosed=was?ratio<limits[1]:ratio<limits[0];
-     const candidate=pinchCandidateRef.current;
-     if(candidate.value!==candidateClosed){candidate.value=candidateClosed;candidate.frames=1;}
-     else candidate.frames++;
-     const pinching=candidate.frames>=2?candidateClosed:was;
-     const started=pinching&&!was&&time-lastActionRef.current>240;
-     const ended=was&&!pinching;
-     pinchRef.current=pinching;
-     if(started)lastActionRef.current=time;
-     setPinchMeter(Math.round(clamp(1-ratio/1.3,0,1)*100));
-     let px=x,py=y,dwell=0;
-     const activeMode=modeRef.current;
-     if(activeMode==='keyboard'&&inputMethodRef.current==='push'){
-      const stage=stageRef.current,keys=keyboardKeysRef.current;
-      if(!stage||!keys){touchRef.current.reset();return;}
-      const sr=stage.getBoundingClientRect(),cover=Math.max(sr.width/video.videoWidth,sr.height/video.videoHeight);
-      const visibleW=video.videoWidth*cover,visibleH=video.videoHeight*cover,gain=reachRef.current;
-      const projectedX=(clamp((1-finger.x-.5)*gain+.5,0,1)*visibleW-(visibleW-sr.width)/2)/sr.width;
-      const projectedY=(clamp((finger.y-.5)*gain+.5,0,1)*visibleH-(visibleH-sr.height)/2)/sr.height;
-      const keyAt=(nx:number,ny:number)=>{
-       const key=document.elementFromPoint(sr.left+nx*sr.width,sr.top+ny*sr.height)?.closest<HTMLButtonElement>('[data-air-key]');
-       return key&&keys.contains(key)&&!key.matches(':disabled')&&!key.closest('[inert],[aria-disabled="true"]')?key.dataset.airKey||null:null;
-      };
-      const touch=touchRef.current.process({x:projectedX,y:projectedY},measureForwardDepth(hand,video.videoWidth/video.videoHeight),time,keyAt);
-      const readyKey=touch.armed||touch.pending?touch.key:null;
-      hoveredKeyRef.current=readyKey;setHoveredKey(readyKey);
-      if(touch.activation)keyAction(touch.activation);
-      else setHint(touch.pending?'Push forward to touch · withdraw to release':touch.armed?'Virtual surface ready · push index forward':'Aim briefly at a key to position the virtual surface');
-      setCursor({x:touch.point.x,y:touch.point.y,pinching:touch.down,dwell:touch.progress});
-      return;
-     }
-     if(activeMode==='keyboard'){
-      // Index finger bends toward the palm to emulate pressing a physical key.
-      // A webcam estimates finger geometry, not contact with a real surface.
-      const knuckle=hand[5],middleJoint=hand[6];
-      let tapStarted=false;
-      if(knuckle&&middleJoint){
-       const ratio=distance(finger,knuckle)/Math.max(.04,distance(middleJoint,knuckle));
-       const old=airTapRef.current.down;
-       const candidate=old?ratio<2.28:ratio<1.95;
-       const t=airTapRef.current;
-       if(t.candidate!==candidate){t.candidate=candidate;t.frames=1;}else t.frames++;
-       const down=t.frames>=2?candidate:old;
-       tapStarted=down&&!old;t.down=down;
-       if(inputMethodRef.current==='tap'){
-        setTapMessage(down?'INDEX PRESSED · RELEASE TO RESET':ratio>2.28?'FINGER EXTENDED · READY':'STRAIGHTEN YOUR INDEX');
-       }
-      }
-      // Trigger from the previously highlighted key, before bending moves the tip.
-      if(inputMethodRef.current==='tap'&&tapStarted){
-       const key=lastAimRef.current.key;
-       if(key&&time-lastActionRef.current>380){keyAction(key);lastActionRef.current=time;}
-       else if(!key)setHint('Aim at a highlighted letter, then bend your index.');
-      }
-      const keys=keyboardKeysRef.current,stage=stageRef.current;
-      if(keys&&stage){
-       const sr=stage.getBoundingClientRect();
-       // Preview uses object-fit: cover and a horizontally mirrored webcam.
-       // Project MediaPipe fingertip into the same visible camera pixels.
-       const nativeW=video.videoWidth,nativeH=video.videoHeight;
-       const cover=Math.max(sr.width/nativeW,sr.height/nativeH);
-       const visibleW=nativeW*cover,visibleH=nativeH*cover;
-       const gain=reachRef.current;
-       const projectedX=sr.left+(((clamp((x-.5)*gain+.5,0,1))*visibleW)-(visibleW-sr.width)/2);
-       const projectedY=sr.top+(((clamp((y-.5)*gain+.5,0,1))*visibleH)-(visibleH-sr.height)/2);
-       const locked=inputMethodRef.current==='tap'&&airTapRef.current.down&&lastAimRef.current.key;
-       const targetX=locked?lastAimRef.current.x:projectedX;
-       const targetY=locked?lastAimRef.current.y:projectedY;
-       px=clamp((targetX-sr.left)/sr.width,0,1);
-       py=clamp((targetY-sr.top)/sr.height,0,1);
-       let key='',nearest=Infinity;
-       keys.querySelectorAll<HTMLButtonElement>('[data-air-key]').forEach(button=>{
-        const r=button.getBoundingClientRect();
-        const margin=12;
-        if(targetX<r.left-margin||targetX>r.right+margin||targetY<r.top-margin||targetY>r.bottom+margin)return;
-        const dx=clamp(targetX,r.left,r.right)-targetX;
-        const dy=clamp(targetY,r.top,r.bottom)-targetY;
-        const d=dx*dx+dy*dy;
-        if(d<nearest){nearest=d;key=button.dataset.airKey||'';}
-       });
-       const candidateKey=keyCandidateRef.current;
-       if(candidateKey.key!==key){candidateKey.key=key;candidateKey.since=time;}
-       // Requiring a stable target prevents random letters being typed during movement.
-       if(time-candidateKey.since>=130&&hoveredKeyRef.current!==key){
-        hoveredKeyRef.current=key||null;
-        setHoveredKey(key||null);
-        dwellRef.current={key,since:time,locked:false};
-       }
-       const activeKey=hoveredKeyRef.current;
-       if(!airTapRef.current.down)lastAimRef.current={x:targetX,y:targetY,key:activeKey||''};
-       if(inputMethodRef.current==='dwell'&&activeKey){
-        const state=dwellRef.current;
-        if(state.key!==activeKey){state.key=activeKey;state.since=time;state.locked=false;}
-        dwell=state.locked?1:clamp((time-state.since)/1000,0,1);
-        if(dwell>=1&&!state.locked){
-         state.locked=true;keyAction(activeKey);
-        }
-       }
-      }
-     }else if(activeMode==='workflow'){
-      px=clamp((x-.12)/.76,0,1);
-      py=clamp((y-.12)/.76,0,1);
-     }
-     setCursor({x:px,y:py,pinching,dwell});
-     gestureRef.current(px,py,pinching,started,ended);
-    }catch(e){
-     console.warn('Hand tracking paused:',e);
-     setTracking(false);
-    }
-   };
-   rafRef.current=requestAnimationFrame(tick);
-  }catch(e){
-   if(token!==sessionRef.current)return;
-   release();
-   const name=e instanceof DOMException?e.name:'';
-   setError(name==='NotAllowedError'?'Camera permission was denied. You can still use mouse and touch.':name==='NotFoundError'?'No compatible webcam found.':e instanceof Error?e.message:'Could not start the camera.');
-   setStatus('error');setTracking(false);setCursor(null);setHint('Camera unavailable; demo controls still work without it.');
-  }
+ const onCubeDown=(event:ReactPointerEvent<HTMLDivElement>)=>{
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  cubeGrab.current={pointerId:event.pointerId,x:event.clientX,y:event.clientY,rx:angles.x,ry:angles.y,moved:false};
+  event.currentTarget.setPointerCapture(event.pointerId);
  };
- useEffect(()=>{
-  const releaseForHolo=()=>stop();
-  window.addEventListener('pf-holo-enable',releaseForHolo);
-  return()=>window.removeEventListener('pf-holo-enable',releaseForHolo);
- });
- const chooseMode=(next:Mode)=>{
-  modeRef.current=next;setMode(next);
-  pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};
-  airTapRef.current={down:false,candidate:false,frames:0};
-  handGrabRef.current=null;cubeMotionRef.current=null;
-  hoveredKeyRef.current=null;setHoveredKey(null);
-  keyCandidateRef.current={key:'',since:0};dwellRef.current={key:'',since:0,locked:false};
-  setHint(next==='keyboard'?'Aim briefly at a key, push the index forward to touch, then withdraw.':next==='cube'?'Move your hand to rotate continuously; pinch to change size.':'Pinch a WBS card, move it and release near another card to link them.');
+ const onCubeMove=(event:ReactPointerEvent<HTMLDivElement>)=>{
+  const g=cubeGrab.current;
+  if(!g||g.pointerId!==event.pointerId)return;
+  const dx=event.clientX-g.x,dy=event.clientY-g.y;
+  if(Math.abs(dx)+Math.abs(dy)>5)g.moved=true;
+  setAngles({x:clamp(g.rx-dy*.48,-360,360),y:g.ry+dx*.58});
  };
- const pointerCoords=(e:ReactPointerEvent<HTMLElement>)=>{
-  const r=stageRef.current?.getBoundingClientRect();if(!r)return null;
-  return {x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)};
+ const onCubeUp=(event:ReactPointerEvent<HTMLDivElement>)=>{
+  const g=cubeGrab.current;if(!g||g.pointerId!==event.pointerId)return;
+  cubeGrab.current=null;
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
- const downTask=(e:ReactPointerEvent<HTMLButtonElement>,id:string)=>{
-  const selected=linkFrom;
-  if(selected&&selected!==id){addLink(selected,id);setLinkFrom(null);}
-  else setLinkFrom(id);
-  pointerGrabRef.current={id,moved:false};
-  e.currentTarget.setPointerCapture(e.pointerId);
+ const onTaskDown=(event:ReactPointerEvent<HTMLButtonElement>,task:Task)=>{
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  event.currentTarget.setPointerCapture(event.pointerId);
+  dragRef.current={id:task.id,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,originX:task.x,originY:task.y,moved:false};
  };
- const dragTask=(e:ReactPointerEvent<HTMLButtonElement>)=>{
-  if(!pointerGrabRef.current)return;
-  const xy=pointerCoords(e);if(!xy)return;
-  pointerGrabRef.current.moved=true;
-  moveTask(pointerGrabRef.current.id,xy.x,xy.y);
+ const onTaskMove=(event:ReactPointerEvent<HTMLButtonElement>)=>{
+  const g=dragRef.current,rect=stageRef.current?.getBoundingClientRect();
+  if(!g||!rect||g.pointerId!==event.pointerId)return;
+  const dx=event.clientX-g.startX,dy=event.clientY-g.startY;
+  if(Math.hypot(dx,dy)<6&&!g.moved)return;
+  g.moved=true;
+  const x=clamp(g.originX+dx/rect.width*100,13,87);
+  const y=clamp(g.originY+dy/rect.height*100,16,84);
+  setTasks(items=>items.map(t=>t.id===g.id?{...t,x,y}:t));
  };
- const endTask=(e:ReactPointerEvent<HTMLButtonElement>)=>{
-  const grab=pointerGrabRef.current;pointerGrabRef.current=null;
-  const xy=pointerCoords(e);
-  if(grab?.moved&&xy)nearestTask(grab.id,xy.x,xy.y);
-  if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
+ const onTaskUp=(event:ReactPointerEvent<HTMLButtonElement>)=>{
+  const g=dragRef.current;
+  if(!g||g.pointerId!==event.pointerId)return;
+  if(g.moved){suppressClickRef.current=g.id;setNotice('Card repositioned. Select two cards to link them.');}
+  dragRef.current=null;
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
- const downCube=useRef<{x:number;y:number;rx:number;ry:number}|null>(null);
- const cubeMove=(e:ReactPointerEvent<HTMLDivElement>)=>{
-  if(!downCube.current)return;
-  const dx=e.clientX-downCube.current.x,dy=e.clientY-downCube.current.y;
-  setCubeAngles({x:clamp(downCube.current.rx-dy*.42,-55,55),y:downCube.current.ry+dx*.62});
+ const onTaskClick=(id:string)=>{
+  if(suppressClickRef.current===id){suppressClickRef.current=null;return;}
+  if(!selected){setSelected(id);setNotice('Now select another work package to create a dependency.');return;}
+  if(selected===id){setSelected(null);setNotice('Selection cleared.');return;}
+  const from=selected;
+  setConnections(items=>items.some(([a,b])=>a===from&&b===id||a===id&&b===from)?items:[...items,[from,id]]);
+  setSelected(null);setNotice('Dependency connected: '+from+' → '+id+'.');
  };
- const copy=async()=>{
-  try{await navigator.clipboard.writeText(typing);setCopied(true);setTimeout(()=>setCopied(false),1600);}
-  catch{setHint('Clipboard unavailable. Select and copy the text manually.');}
+ const reset=()=>{
+  setTasks(starterTasks);setConnections([['A','B']]);setSelected(null);
+  suppressClickRef.current=null;dragRef.current=null;
+  setNotice('WBS reset to the original layout.');
  };
- return <section className="gsl-page">
+ return <section className="gsl-page gsl-unified-page">
   <div className="wrap">
    <div className="gsl-back"><Link to="/"><ArrowLeft size={16}/> BACK TO PORTFOLIO</Link><span><i/> EXPERIMENTAL INTERACTION LAB / 2026</span></div>
-   <header className="gsl-heading"><div><div className="eyebrow"><i/> HUMAN × MACHINE INTERACTION</div><h1>Gesture <em>Lab.</em></h1><p>Move your hands. Control an interface. Explore how computer vision can connect people, projects and intelligent systems.</p></div><div className="gsl-heading-mark"><Hand size={54}/><span>CAMERA-POWERED<br/>INTERACTION STUDY</span></div></header>
-   <div className="gsl-privacy"><ShieldCheck size={18}/><span>The camera starts <strong>only when you enable Spatial Control or an experiment</strong>. Only one camera-based experience runs at a time. Video frames are processed locally in the browser; this demo does not record or upload them. On first use, MediaPipe model/WASM files are downloaded from external hosts. The MediaPipe SDK may report usage metrics to Google. <strong>Stop Camera</strong> immediately closes the stream.</span></div>
+   <header className="gsl-heading">
+    <div><div className="eyebrow"><i/> HUMAN × MACHINE INTERACTION</div><h1>Gesture <em>Lab.</em></h1><p>One spatial control system for navigating, interacting and experimenting with camera-powered interfaces. No duplicate camera or keyboard.</p></div>
+    <div className="gsl-heading-mark"><Hand size={54}/><span>CAMERA-POWERED<br/>INTERACTION STUDY</span></div>
+   </header>
+   <div className="gsl-privacy"><ShieldCheck size={18}/><span>The camera starts <strong>only when you enable Spatial Control</strong>. Gesture recognition runs locally in the browser. This website does not record or upload webcam video; the MediaPipe model is downloaded externally and its SDK may report usage metrics. Stop Camera closes the stream.</span></div>
    <section className="gsl-spatial-section" aria-label="Spatial Control gesture navigation">
-    <div className="gsl-spatial-heading">
-     <div>
-      <small className="eyebrow"><i/> 01 / TOUCHLESS NAVIGATION</small>
-      <h2>Spatial <em>Control.</em></h2>
-      <p>Activate the webcam here to explore gesture navigation with the real elements of this page. Aim with your index, push forward to select, move a hand to scroll, and use two fingers to zoom where supported.</p>
-     </div>
-     <div className="gsl-spatial-live"><Scan size={19}/><span>CAMERA OFF UNTIL ACTIVATED</span></div>
-    </div>
+    <div className="gsl-spatial-heading"><div>
+     <small className="eyebrow"><i/> 01 / SPATIAL CONTROL</small>
+     <h2>One control. <em>Every gesture.</em></h2>
+     <p>Start the front camera once. Use your hands to navigate the actual page and try the experimental Air Keyboard directly inside Spatial Control, without opening a second camera or separate typing stage.</p>
+    </div><div className="gsl-spatial-live"><Scan size={19}/><span>ONE CAMERA · ONE SESSION</span></div></div>
     <HoloNavigator/>
    </section>
-   <div className="gsl-experiments-heading"><small className="eyebrow"><i/> 02 / EXPERIMENTAL INTERACTIONS</small><p>Air Keyboard, 3D Control and WBS Builder are separate experiments. Starting their camera turns off Spatial Control automatically.</p></div>
-   <div className="gsl-mode-tabs" role="group" aria-label="Choose an interactive experiment">{modes.map(({id,title,sub,Icon},i)=><button key={id} type="button" aria-pressed={mode===id} className={mode===id?'active':''} onClick={()=>chooseMode(id)}><span>0{i+1} / EXPERIENCE</span><Icon size={23}/><strong>{title}</strong><small>{sub}</small></button>)}</div>
-   <div className="gsl-workspace">
+   <div className="gsl-experiments-heading">
+    <small className="eyebrow"><i/> 02 / MORE INTERACTIVE EXPERIMENTS</small>
+    <p>Explore a 3D object and a project dependency diagram. Both remain usable with mouse and touch; Spatial Control can select their normal buttons without a second camera.</p>
+   </div>
+   <div className="gsl-mode-tabs gsl-unified-tabs" role="group" aria-label="Choose a spatial experiment">
+    {modes.map(({id,title,sub,Icon},i)=><button type="button" key={id} aria-pressed={mode===id} className={mode===id?'active':''} onClick={()=>switchMode(id)}><span>0{i+1} / EXPERIMENT</span><Icon size={23}/><strong>{title}</strong><small>{sub}</small></button>)}
+   </div>
+   <div className="gsl-workspace gsl-unified-workspace">
     <div className="gsl-interactive">
-     <div className="gsl-stage-top"><span><i/> {mode==='keyboard'?'AIR KEYBOARD':mode==='cube'?'SPATIAL CONTROL':'PROJECT FLOW CANVAS'}</span><b>{status==='ready'?(tracking?'HAND TRACKED':'WAITING FOR HAND'):'POINTER CONTROLS READY'}</b></div>
+     <div className="gsl-stage-top"><span><i/> {mode==='cube'?'3D OBJECT CONTROL':'WBS / PROJECT FLOW'}</span><b>INTERACTIVE · NO EXTRA CAMERA</b></div>
      <div className={'gsl-stage gsl-stage-'+mode} ref={stageRef}>
-      <video ref={videoRef} playsInline muted autoPlay className={'gsl-stage-webcam '+(status==='ready'&&mode==='keyboard'?'on':'')} aria-hidden="true"/>
-      {mode==='keyboard'&&<div className="gsl-keyboard-panel">
-       {status!=='ready'&&<div className="gsl-vision-placeholder" aria-hidden="true"><Camera size={24}/><span>{status==='loading'?'LOADING COMPUTER VISION…':'ENABLE CAMERA TO SEE YOUR HAND BEHIND THE KEYS'}</span></div>}
-       <div className="gsl-typed"><div><span>LIVE INPUT / AIR TYPING</span><button type="button" onClick={copy} aria-label="Copy typed text">{copied?<Check size={16}/>:<Copy size={16}/>} {copied?'COPIED':'COPY'}</button></div><textarea value={typing} onChange={e=>setTyping(e.target.value.slice(0,220))} aria-label="Text composed on virtual keyboard" placeholder="Your text appears here…" rows={3}/><small>{typing.length} / 220 CHARACTERS</small></div>
-       <div className="gsl-keyboard-hud"><span>{status==='ready'?(hoveredKey?'TARGET: '+(hoveredKey==='SPACE'?'SPACE':hoveredKey):tracking?'MOVE INDEX ONTO A KEY':'SHOW YOUR INDEX FINGER IN THIS CAMERA VIEW'):'CAMERA OPTIONAL'}</span><strong className="gsl-target-glyph" aria-live="off">{status==='ready'?(hoveredKey||'◎'):'◇'}</strong><span>{inputMethod==='tap'?'BEND INDEX = CLICK':inputMethod==='dwell'?'HOLD 1 SEC TO TYPE':'PINCH TO TYPE'}</span></div>
-       <div className="gsl-keys" ref={keyboardKeysRef}>{rows.map((row,i)=><div className="gsl-key-row" key={i}>{row.split('').map(char=><button type="button" data-air-key={char} key={char} className={hoveredKey===char&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction(char)}>{char}</button>)}</div>)}
-        <div className="gsl-key-row gsl-key-functions"><button type="button" data-air-key="CLEAR" className={hoveredKey==='CLEAR'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('CLEAR')}><Trash2 size={16}/> CLEAR</button><button type="button" data-air-key="SPACE" className={hoveredKey==='SPACE'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('SPACE')}>SPACE</button><button type="button" data-air-key="BACK" className={hoveredKey==='BACK'&&status==='ready'?'gsl-key-target':''} onClick={()=>keyAction('BACK')}>⌫ BACKSPACE</button></div>
-       </div><p className="gsl-stage-caption">Aim at a virtual key, push your index forward to touch it, then withdraw. The cursor ring shows approach depth.</p>
-      </div>}
       {mode==='cube'&&<div className="gsl-cube-panel">
-       <div className="gsl-cube-scene"><div className="gsl-cube-orbit"/><div className="gsl-3d-object" style={{transform:'rotateX('+cubeAngles.x+'deg) rotateY('+cubeAngles.y+'deg) scale('+(cubeExpanded?1.22:1)+')'}} onPointerDown={e=>{downCube.current={x:e.clientX,y:e.clientY,rx:cubeAngles.x,ry:cubeAngles.y};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={cubeMove} onPointerUp={e=>{downCube.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}} onPointerCancel={()=>{downCube.current=null;}}>
-        {['AI + PM','AUTOMATION','WORKFLOWS','WBS','COORDINATION','DELIVERY'].map((s,i)=><div key={s} className={'gsl-cube-face gsl-cube-face-'+i}><Zap size={26}/><strong>{s}</strong><small>GESTURE / SPATIAL UI</small></div>)}
-       </div><span>3D INTERACTION FIELD / 01</span></div>
-       <div className="gsl-cube-options"><button onClick={()=>setCubeAngles(v=>({...v,y:v.y-35}))} aria-label="Rotate cube left"><ArrowLeft size={18}/></button><button onClick={()=>setCubeAngles(v=>({...v,y:v.y+35}))} aria-label="Rotate cube right"><ArrowRight size={18}/></button><button onClick={()=>setCubeExpanded(v=>!v)}>{cubeExpanded?'SHRINK':'EXPAND'}</button><button onClick={()=>{setCubeAngles({x:-21,y:31});setCubeExpanded(false);}}><RotateCcw size={17}/> RESET</button></div>
-       <p className="gsl-stage-caption">Move your hand to rotate continuously · pinch to resize · drag with mouse/touch.</p>
+       <div className="gsl-cube-scene"><div className="gsl-cube-orbit"/>
+        <div className="gsl-3d-object" role="button" tabIndex={0} aria-label="3D cube: select to expand or shrink; drag to rotate"
+         style={{transform:'rotateX('+angles.x+'deg) rotateY('+angles.y+'deg) scale('+(expanded?1.22:1)+')'}}
+         onClick={()=>{if(!cubeGrab.current)setExpanded(v=>!v);}}
+         onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setExpanded(v=>!v);}}}
+         onPointerDown={onCubeDown} onPointerMove={onCubeMove} onPointerUp={onCubeUp} onPointerCancel={onCubeUp}>
+         {['AI + PM','AUTOMATION','WORKFLOWS','WBS','COORDINATION','DELIVERY'].map((name,i)=><div key={name} className={'gsl-cube-face gsl-cube-face-'+i}><Zap size={26}/><strong>{name}</strong><small>SPATIAL / DIGITAL SYSTEMS</small></div>)}
+        </div><span>3D INTERACTION FIELD / 01</span>
+       </div>
+       <div className="gsl-cube-options"><button type="button" onClick={()=>setAngles(v=>({...v,y:v.y-35}))}><ArrowLeft size={18}/> LEFT</button><button type="button" onClick={()=>setAngles(v=>({...v,y:v.y+35}))}>RIGHT <ArrowRight size={18}/></button><button type="button" onClick={()=>setExpanded(v=>!v)}>{expanded?'SHRINK':'EXPAND'}</button><button type="button" onClick={()=>{setAngles({x:-21,y:31});setExpanded(false);}}><RotateCcw size={16}/> RESET</button></div>
+       <p className="gsl-stage-caption">Drag the cube to rotate. Select it to resize, or use the controls. The hand pointer can select these controls when Spatial Control is active.</p>
       </div>}
       {mode==='workflow'&&<div className="gsl-wbs-panel">
-       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="gsl-wbs-wires" aria-hidden="true">{connections.map(([a,b])=>{const x=tasks.find(t=>t.id===a),y=tasks.find(t=>t.id===b);if(!x||!y)return null;return <line key={a+'-'+b} x1={x.x} y1={x.y} x2={y.x} y2={y.y}/>;})}</svg>
-       {tasks.map(t=><button key={t.id} type="button" data-task-id={t.id} className={'gsl-wbs-node '+(linkFrom===t.id?'selected':'')}
-        style={{left:t.x+'%',top:t.y+'%'} as CSSProperties} onPointerDown={e=>downTask(e,t.id)} onPointerMove={dragTask} onPointerUp={endTask} onPointerCancel={()=>{pointerGrabRef.current=null;}}>
-        <small>WBS / {t.id}</small><strong>{t.name}</strong><span>{t.detail}</span><i>{t.done?'REVIEWED':'PLANNED'}</i></button>)}
+       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="gsl-wbs-wires" aria-hidden="true">{connections.map(([a,b])=>{
+        const p=tasks.find(t=>t.id===a),q=tasks.find(t=>t.id===b);
+        return p&&q?<line key={a+'-'+b} x1={p.x} y1={p.y} x2={q.x} y2={q.y}/>:null;
+       })}</svg>
+       {tasks.map(task=><button type="button" key={task.id} data-task-id={task.id} className={'gsl-wbs-node '+(selected===task.id?'selected':'')}
+        style={{left:task.x+'%',top:task.y+'%'} as CSSProperties}
+        onPointerDown={e=>onTaskDown(e,task)} onPointerMove={onTaskMove} onPointerUp={onTaskUp} onPointerCancel={onTaskUp} onClick={()=>onTaskClick(task.id)}>
+        <small>WBS / {task.id}</small><strong>{task.name}</strong><span>{task.detail}</span><i>{task.done?'REVIEWED':'PLANNED'}</i>
+       </button>)}
        <div className="gsl-wbs-corner">PROJECT CONTROL / DEPENDENCY MAP</div>
       </div>}
-      {cursor&&status==='ready'&&<div className={'gsl-hand-cursor '+(cursor.pinching?'pinching':'')+((inputMethod==='dwell'||inputMethod==='push')&&mode==='keyboard'?' gsl-dwell-cursor':'')} style={{left:(cursor.x*100)+'%',top:(cursor.y*100)+'%','--gsl-dwell-deg':(cursor.dwell*360)+'deg'} as CSSProperties} aria-hidden="true"><span/></div>}
      </div>
-     <div className="gsl-stage-footer"><span><MousePointer2 size={15}/> {hint}</span><span>PROTOTYPE · NOT A PRODUCTION AUTOMATION</span></div>
+     <div className="gsl-stage-footer"><span><MousePointer2 size={15}/> {notice}</span><span>{mode==='workflow'?connections.length+' DEPENDENCIES':'3D OBJECT'}</span></div>
     </div>
-    <aside className="gsl-side">
-     <div className="gsl-camera-panel"><div className="gsl-camera-heading"><span><Video size={18}/> {mode==='keyboard'?'CAMERA + KEYBOARD':'CAMERA INPUT'}</span><small>{status==='ready'?(tracking?'TRACKING':'READY'):status.toUpperCase()}</small></div>
-      <div className="gsl-camera-link"><Camera size={22}/><div><strong>{status==='ready'?'CAMERA INSIDE THE KEYBOARD':status==='loading'?'PREPARING CAMERA OVERLAY':'WEBCAM + KEYBOARD TOGETHER'}</strong><span>{status==='ready'?'Watch the big left panel: your fingertip, highlighted key and typed text appear in one view.':'Activate the camera and the live preview will appear behind the large holographic keyboard.'}</span></div></div>
-      {error&&<p role="alert" className="gsl-camera-error">{error}</p>}
-      <button type="button" className={'gsl-camera-btn '+(status==='ready'?'gsl-camera-stop':'')} onClick={status==='ready'||status==='loading'?stop:start}>{status==='ready'?<><CameraOff size={18}/> STOP CAMERA</>:status==='loading'?<><CameraOff size={18}/> CANCEL CAMERA SETUP</>:<><Camera size={18}/> ENABLE CAMERA</>}</button>
-      <div className="gsl-camera-meta"><span>{status==='ready'?'MODEL READY'+(gpuStatus?' · '+gpuStatus:''):'MEDIAPIPE / LOCAL INFERENCE'}</span><span>{tracking?'● HAND DETECTED':'○ NO HAND DATA'}</span></div>
-      {status==='ready'&&mode!=='keyboard'&&<div className="gsl-pinch-feedback"><div><span>THUMB + INDEX / CLOSURE</span><strong>{tracking?(cursor?.pinching?'PINCH DETECTED':pinchMeter+'%'):'WAITING FOR HAND'}</strong></div><div className="gsl-pinch-track"><i style={{width:pinchMeter+'%'}}/></div></div>}
-     </div>
-     <div className="gsl-guide"><div><Sparkles size={18}/><strong>HOW TO INTERACT</strong></div>
-      {mode==='keyboard'&&<div className="gsl-input-modes"><span>HOW TO TYPE</span><div><button type="button" className={inputMethod==='tap'?'active':''} aria-pressed={inputMethod==='tap'} onClick={()=>{touchRef.current.reset();setInputMethod('tap');inputMethodRef.current='tap';airTapRef.current={down:false,candidate:false,frames:0};}}>INDEX TAP · EXPERIMENT</button><button type="button" className={inputMethod==='push'?'active':''} aria-pressed={inputMethod==='push'} onClick={()=>{setInputMethod('push');inputMethodRef.current='push';touchRef.current.reset();}}>FORWARD TOUCH</button><button type="button" className={inputMethod==='dwell'?'active':''} aria-pressed={inputMethod==='dwell'} onClick={()=>{touchRef.current.reset();setInputMethod('dwell');inputMethodRef.current='dwell';dwellRef.current={key:'',since:0,locked:false};}}>HOLD 1 SEC</button></div></div>}
-      {mode==='keyboard'&&<div className="gsl-input-modes"><span>HAND MOVEMENT RANGE</span><input type="range" min=".8" max="1.8" step=".1" value={reach} onChange={e=>setReach(Number(e.target.value))} aria-label="Hand pointer reach"/><small>{reach.toFixed(1)}× · increase if keys are hard to reach</small></div>}
-      {mode==='keyboard'&&status==='ready'&&inputMethod==='tap'&&<p className="gsl-tap-feedback" aria-live="off">{tapMessage}</p>}
-      {mode!=='keyboard'&&<div className="gsl-input-modes"><span>PINCH SENSITIVITY</span><div>{(['easy','balanced','precise'] as Sensitivity[]).map(level=><button key={level} type="button" className={sensitivity===level?'active':''} aria-pressed={sensitivity===level} onClick={()=>{setSensitivity(level);sensitivityRef.current=level;pinchRef.current=false;pinchCandidateRef.current={value:false,frames:0};}}>{level.toUpperCase()}</button>)}</div></div>}
-      {mode==='cube'&&<label className="gsl-rotation-speed">ROTATION RESPONSE <strong>{rotationSpeed.toFixed(1)}×</strong><input type="range" min=".65" max="2.5" step=".15" value={rotationSpeed} onChange={e=>setRotationSpeed(Number(e.target.value))}/></label>}
-      {mode==='keyboard'?<p>FORWARD TOUCH: aim briefly at a key to position its virtual surface, push the index toward the camera, and withdraw to release. Depth is estimated by the webcam. Finger-bend and hold modes remain separate experiments.</p>:mode==='cube'?<p>Move your hand to rotate continuously in either direction; the angle accumulates, so you can turn through 360°. Pinch to change size. Adjust Rotation Response if needed.</p>:<p>Pinch over a work package and move it. Release near another package to create a dependency. With a mouse, click one card then another to link them, or drag to reposition.</p>}
-      <div className="gsl-guide-tags"><span>NO CAMERA REQUIRED FOR MANUAL MODE</span><span>{mode==='workflow'?connections.length+' DEPENDENCIES':'GESTURE + POINTER'}</span></div>
-      {mode==='workflow'&&<button type="button" onClick={()=>{setTasks(starterTasks);tasksRef.current=starterTasks;setConnections([['A','B']]);setLinkFrom(null);setHint('WBS reset.');}}><RotateCcw size={16}/> RESET WBS</button>}
-     </div>
-    </aside>
+   </div>
+   <div className="gsl-unified-footer-actions">
+    {mode==='workflow'?<button type="button" onClick={reset}><RotateCcw size={16}/> RESET WBS</button>:null}
+    <span><Link2 size={15}/> Spatial Control's camera is shared with its Air Keyboard. The two demos above never request another camera.</span>
    </div>
    <footer className="gsl-footer"><span>AN EXPERIMENT IN COMPUTER VISION, HUMAN INTERACTION AND PROJECT WORKFLOWS.</span><Link to="/projects">EXPLORE REAL PROJECTS <ArrowRight size={16}/></Link></footer>
   </div>
