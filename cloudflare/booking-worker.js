@@ -7,6 +7,7 @@ import { DurableObject } from 'cloudflare:workers';
 import {
  GoogleOAuthVault,googleOAuthReady,googleNotificationsReady,storedGoogleRefreshToken,googleAdminRoute
 } from './google-oauth.js';
+import {bookingEmail} from './booking-email.js';
 export {GoogleOAuthVault};
 
 const ZONE = 'America/New_York';
@@ -138,43 +139,43 @@ async function googleRequest(url,token,method='GET',payload){
  if(!response.ok)throw Error('Google API returned '+response.status);
  return data;
 }
+/** Gmail API: RFC 2046 multipart/alternative, UTF-8 text + accessible HTML. */
+const mimeBase64=value=>{
+ const raw=toBase64Url(new TextEncoder().encode(value)).replace(/-/g,'+').replace(/_/g,'/');
+ const padded=raw+'='.repeat((4-raw.length%4)%4);
+ return padded.match(/.{1,76}/g)?.join('\r\n')||'';
+};
 async function gmailSend(env,recipient,subject,message,reference){
  const token=await userAccessToken(env);
- const body=[
-  'From: '+env.BOOKING_ORGANIZER_EMAIL,
-  'To: '+recipient,
+ if(!message?.html||!message?.text)throw Error('Missing booking email body');
+ const boundary='pf_'+crypto.randomUUID().replace(/-/g,'');
+ const headers=[
+  'From: Pietro Forestieri <'+env.BOOKING_ORGANIZER_EMAIL+'>',
+  'To: <'+recipient+'>',
   'Subject: '+subject,
   'MIME-Version: 1.0',
-  'Content-Type: text/plain; charset=utf-8',
-  'Content-Transfer-Encoding: 8bit',
+  'Content-Type: multipart/alternative; boundary="'+boundary+'"',
   '',
-  message
- ].join('\r\n');
+  'This is a multi-part message in MIME format.',
+  '--'+boundary,
+  'Content-Type: text/plain; charset=UTF-8',
+  'Content-Transfer-Encoding: base64',
+  '',
+  mimeBase64(message.text),
+  '--'+boundary,
+  'Content-Type: text/html; charset=UTF-8',
+  'Content-Transfer-Encoding: base64',
+  '',
+  mimeBase64(message.html),
+  '--'+boundary+'--',''
+ ];
  await googleRequest('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',token,'POST',{
-  raw:toBase64Url(new TextEncoder().encode(body))
+  raw:toBase64Url(new TextEncoder().encode(headers.join('\r\n')))
  });
- console.log('Booking notification accepted by Gmail',reference);
+ console.log('Branded booking email accepted by Gmail',reference);
 }
-const messageDate=iso=>new Intl.DateTimeFormat('en-US',{timeZone:ZONE,weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(new Date(iso));
 function emailCopy(data,isHost,reminder){
- const date=messageDate(data.start);
- const heading=reminder?'Your consultation starts in 15 minutes':'Your 30-minute consultation is booked';
- const name=isHost?'Pietro':data.name;
- const who=isHost?'\nGuest: '+data.name+'\nGuest email: '+data.email+'\n':'';
- const meet=data.meet_url?'\nJoin Google Meet: '+data.meet_url+'\n':'\nGoogle Meet details will be provided separately.\n';
- return [
-  'Hello '+name+',','',
-  isHost?(reminder?'Your upcoming portfolio call starts in 15 minutes.':'A guest has booked a free portfolio consultation.'):(reminder?'Your free consultation begins in 15 minutes.':'Thanks for booking a complimentary consultation.'),
-  '',
-  'When: '+date,
-  'Duration: 30 minutes (New York time zone reference).',
-  who,
-  meet,
-  reminder?'Please join the call using the link above.':'You will receive a reminder approximately 15 minutes before the call.',
-  '',
-  'Pietro Forestieri · Project Management, AI & Real Estate',
-  'https://pietroforestieri.propertydex.xyz'
- ].join('\n');
+ return bookingEmail(data,isHost,reminder);
 }
 
 async function calendarBusy(env,token,from,to){
