@@ -137,6 +137,7 @@ async function googleRequest(url,token,method='GET',payload){
 async function gmailSend(env,recipient,subject,message,reference){
  const token=await userAccessToken(env);
  const body=[
+  'From: '+env.BOOKING_ORGANIZER_EMAIL,
   'To: '+recipient,
   'Subject: '+subject,
   'MIME-Version: 1.0',
