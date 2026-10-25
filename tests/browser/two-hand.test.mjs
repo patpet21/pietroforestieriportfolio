@@ -117,12 +117,16 @@ test('two forward contacts in the same camera frame insert both keys once in sta
   await hands(page,pair(1.2,1.2));
   assert.equal(await output(page),'FJFJ');
   await page.getByRole('button',{name:'Close air keyboard',exact:true}).click();
-  const field=page.getByRole('textbox',{name:'Text composed on virtual keyboard',exact:true});
-  await field.fill('');
-  await field.evaluate(el=>{
+  await page.evaluate(()=>{
+   const field=document.createElement('textarea');
+   field.id='fixture-native-input';
+   field.setAttribute('aria-label','Native input');
+   document.querySelector('.gsl-spatial-section').append(field);
    window.__nativeGestureInputs=[];
-   el.addEventListener('input',()=>window.__nativeGestureInputs.push(el.value));
+   field.addEventListener('input',()=>window.__nativeGestureInputs.push(field.value));
+   field.focus();
   });
+  const field=page.locator('#fixture-native-input');
   await page.getByRole('button',{name:'EXPERIMENTAL AIR KEYBOARD',exact:true}).click();
   await page.waitForSelector('.air-desk-plane');
   await hands(page,pair(),{reverse:true,ready:['F','J']});
