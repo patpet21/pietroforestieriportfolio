@@ -105,6 +105,7 @@ test('a covered target, route transition and competing camera never replay a hel
   assert.equal(await page.evaluate(()=>window.__clicks||0),0);
   await pose(page,'aim');await pose(page,'push');assert.equal(await page.evaluate(()=>window.__clicks),1);
   await page.locator('header nav a[href="/contact"]').click();await page.waitForURL('**/contact*');
+  await page.locator('.holo-natural-control').waitFor({state:'detached',timeout:5000});
   assert.equal(await page.locator('.holo-natural-control').count(),0,'Spatial Control is dedicated to Gesture Lab');
   assert.equal(await page.evaluate(()=>window.__streams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
   assert.equal(await page.evaluate(()=>window.__closed),1);
