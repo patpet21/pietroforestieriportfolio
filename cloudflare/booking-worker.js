@@ -441,7 +441,18 @@ export default {
     return respond({googleConnected:false,error:'Google Calendar access failed. Check Worker logs for the reason.'},503,origin);
    }
   }
-  if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true'},200,origin);
+  if(path==='/api/calendar/oauth-check'&&request.method==='GET'){
+   if(!oauthReady(env))return respond({oauthConnected:false,error:'Google user OAuth is not configured'},503,origin);
+   try{
+    const token=await userAccessToken(env);
+    await googleRequest('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'?fields=id',token);
+    return respond({oauthConnected:true,calendarAccess:true,gmailSendingNotYetTested:true,notificationsConfigured:notificationReady(env)},200,origin);
+   }catch(error){
+    console.error('Google OAuth validation failed:',error?.message||'Unknown');
+    return respond({oauthConnected:false,error:'Google user authorization failed. Inspect Worker logs.'},503,origin);
+   }
+  }
+  if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true',meetCredentialsPresent:oauthReady(env),notificationSettingsPresent:notificationReady(env)},200,origin);
   if(path==='/api/calendar/availability'&&request.method==='GET'){
    try{return await availability(request,env,origin)}
    catch(error){console.error('Availability failed:',error?.message||'Unknown');return respond({error:'Availability temporarily unavailable. Try the contact form.'},503,origin);}
