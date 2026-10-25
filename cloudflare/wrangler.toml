@@ -8,9 +8,17 @@ keep_vars = true
 name = "BOOKING_LOCKS"
 class_name = "BookingGate"
 
+[[durable_objects.bindings]]
+name = "OAUTH_VAULT"
+class_name = "GoogleOAuthVault"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["BookingGate"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["GoogleOAuthVault"]
 
 [vars]
 ALLOWED_ORIGINS = "https://pietroforestieri.propertydex.xyz,https://pietroforestieri.netlify.app"
@@ -25,3 +33,9 @@ BOOKING_WINDOW_DAYS = "45"
 # Add calendar IDs and service account credentials only in Cloudflare
 # Workers & Pages -> Worker -> Settings -> Variables and Secrets.
 # Do not commit private keys or a .dev.vars file.
+
+# OAuth setup secrets must be configured only in Cloudflare dashboard:
+# GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, OAUTH_SETUP_TOKEN.
+# BOOKING_ORGANIZER_EMAIL is a regular environment variable.
+# GOOGLE_OAUTH_REFRESH_TOKEN is not needed: OAuth vault encrypts and stores it.
+# EMAIL_NOTIFICATIONS_ENABLED should stay false until an end-to-end Gmail test.
