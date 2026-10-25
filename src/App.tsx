@@ -11,6 +11,7 @@ import {ProjectStory,NextProjectSpotlight} from './components/ProjectStory';
 import ServiceExperience from './components/ServiceExperience';
 import ServiceFolders from './components/ServiceFolders';
 import PortfolioNavigation from './components/PortfolioNavigation';
+import BookingCalendar from './components/BookingCalendar';
 import GestureLab from './components/GestureLab';
 import{Link,useLocation}from'react-router-dom';import{motion}from'motion/react';import{ArrowUpRight,ArrowRight,ArrowDown,MapPin,CheckCircle2,Hand}from'lucide-react';import{projects,categories}from'./data/projects';
 import{projectHighlights}from'./data/projectHighlights';import type{Project}from'./data/projects';
@@ -233,4 +234,4 @@ function Contact(){
    </form>
   </div></section></>;
 }
-export default function App(){const loc=useLocation();return <><PortfolioNavigation/><main key={loc.pathname}>{loc.pathname==='/'?<Home/>:loc.pathname==='/about'?<About/>:loc.pathname==='/projects'?<Projects/>:loc.pathname.startsWith('/projects/')?<Case/>:loc.pathname==='/services'?<Services/>:loc.pathname==='/gesture-lab'?<GestureLab/>:loc.pathname==='/contact'?<Contact/>:<PageHead tag="404" description="Try the homepage.">Page not found.</PageHead>}</main><PortfolioGuide/><Foot/></>}
+export default function App(){const loc=useLocation();return <><PortfolioNavigation/><main key={loc.pathname}>{loc.pathname==='/'?<Home/>:loc.pathname==='/about'?<About/>:loc.pathname==='/projects'?<Projects/>:loc.pathname.startsWith('/projects/')?<Case/>:loc.pathname==='/services'?<Services/>:loc.pathname==='/gesture-lab'?<GestureLab/>:loc.pathname==='/contact'?<Contact/>:loc.pathname==='/book'?<BookingCalendar/>:<PageHead tag="404" description="Try the homepage.">Page not found.</PageHead>}</main><PortfolioGuide/><Foot/></>}
