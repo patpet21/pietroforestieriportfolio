@@ -1,4 +1,4 @@
-import {configured,json,policy,monday,weekDates,candidateSlots,getToken,busyBetween,freeSlot} from '../lib/google-calendar.mjs';
+import {configured,json,policy,monday,weekDates,candidateSlots,getToken,busyBetween,freeSlot,newYorkDay} from '../lib/google-calendar.mjs';
 
 export default async function handler(request){
  if(request.method!=='GET')return json({error:'Method not allowed'},405);
@@ -6,7 +6,7 @@ export default async function handler(request){
   const url=new URL(request.url);
   const duration=Number(url.searchParams.get('duration')||30);
   const {window:windowDays,start,end,weekdays}=policy();
-  const current=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const current=newYorkDay(new Date());
   const queryWeek=url.searchParams.get('week')||current;
   const week=monday(queryWeek);
   const dates=weekDates(week);
