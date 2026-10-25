@@ -3399,3 +3399,24 @@ footer{border-top:1px solid #ead19e55}
 .pf-stage-slide--poster .pf-stage-card:hover img.pf-stage-poster-media{filter:none;transform:none}
 .pf-stage-slide--poster .pf-stage-gradient{pointer-events:none}
 @media(max-width:740px){.pf-stage-slide--poster img.pf-stage-poster-media{object-fit:contain}}
+
+/* V27 / Trigosat Consulting artwork as the clickable portfolio brand.
+   Keep Pietro's name beside the mark so the individual portfolio remains identifiable. */
+.pf-site-brand{gap:10px!important;min-width:0;flex:none;max-width:min(265px,28vw)}
+.pf-site-brand-art{display:block;max-width:none;width:70px;height:62px;object-fit:contain;object-position:center;border:1px solid #dec99859;border-radius:8px;background:#0e2943}
+.pf-site-brand-fallback{display:none}
+.pf-site-brand-fallback.is-visible{display:block}
+.pf-site-brand small{font:850 9px/1.38 Manrope,sans-serif;letter-spacing:1px;color:#f4e9d8}
+.pf-site-brand:focus-visible{outline:2px solid #f3d69d;outline-offset:4px}
+@media(max-width:1080px){
+ .pf-site-brand-art{width:58px;height:55px}
+ .pf-site-brand{gap:8px!important}
+ .pf-site-brand small{font-size:8px;letter-spacing:.5px}
+}
+@media(max-width:760px){
+ .pf-site-brand{max-width:none}
+ .pf-site-brand-art{width:56px;height:48px}
+ .pf-site-brand small{font-size:8px}
+}
+/* Portrait sourced from the supplied new personal photo, backed by the local original. */
+.pf-founder-portrait-frame img,.pf-about-portrait img{object-position:center 26%}
