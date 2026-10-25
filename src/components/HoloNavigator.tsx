@@ -104,9 +104,7 @@ export default function HoloNavigator(){
  const [scrollSpeed,setScrollSpeed]=useState(2);
  const scrollSpeedRef=useRef(2);
  const overlayRef=useRef<HTMLCanvasElement|null>(null);
- const [previewLarge,setPreviewLarge]=useState(false);
- const [mobilePanelExpanded,setMobilePanelExpanded]=useState(false);
- const mobilePanelExpandedRef=useRef(false);mobilePanelExpandedRef.current=mobilePanelExpanded;
+ const mobilePanelExpandedRef=useRef(true);
  const streamRef=useRef<MediaStream|null>(null);
  const modelRef=useRef<Landmarker|null>(null);
  const rafRef=useRef(0);
@@ -138,7 +136,7 @@ export default function HoloNavigator(){
   modelRef.current?.close();modelRef.current=null;
   streamRef.current?.getTracks().forEach(track=>track.stop());streamRef.current=null;
   if(videoRef.current){videoRef.current.pause();videoRef.current.srcObject=null;}
-  setCameraPlaying(false);setCameraNeedsTap(false);setMobilePanelExpanded(false);
+  setCameraPlaying(false);setCameraNeedsTap(false);
   zoomGestureRef.current={frames:0,active:false,baseGap:0,baseZoom:1,gap:0,missed:0};
   zoomValueRef.current=1;setZoomLevel(1);
   document.documentElement.style.removeProperty('--spatial-site-zoom');
@@ -276,7 +274,6 @@ export default function HoloNavigator(){
    }
    if(session!==tokenRef.current){landmarker.close();return;}
    modelRef.current=landmarker;setBackend(cpu?'CPU':'GPU');
-   if(mobile)setMobilePanelExpanded(false);
    setStatus('ready');
    missedRef.current=0;controllerRef.current.reset();
    setLabel('PALM: SCROLL · INDEX: AIM · PUSH FORWARD: CLICK');
@@ -563,17 +560,11 @@ export default function HoloNavigator(){
   }
  };
 
- const mobileCompact=mobileView&&!mobilePanelExpanded&&((status==='loading'&&!cameraNeedsTap)||(status==='ready'&&cameraPlaying));
- const mobileIdle=mobileView&&status==='off';
  return <Profiler id="gesture-ui" onRender={(_id,_phase,duration)=>diagnostics.current.record('reactCommitMs',duration)}>
-  <aside className={"holo-natural-control "+(previewLarge?"holo-expanded":"")+(mobileCompact?" holo-mobile-compact":"")+(mobileIdle?" holo-mobile-idle":"")} aria-label="Natural gesture control">
+  <aside className="holo-natural-control" aria-label="Natural gesture control">
    <div className="holo-natural-title">
-    <Scan size={17}/><strong>{mobileCompact?(status==='loading'?'CONNECTING…':('GESTURES ON · '+handCount+' HAND')):('SPATIAL CONTROL'+(mobileView?' · MOBILE':''))}</strong>
+    <Scan size={17}/><strong>SPATIAL CONTROL{mobileView?' · MOBILE':''}</strong>
     {status==='ready'&&<i/>}
-    {mobileView&&(status==='ready'||status==='loading')
-      ?<button type="button" className="holo-preview-toggle" onClick={()=>setMobilePanelExpanded(v=>!v)} aria-label={mobilePanelExpanded?'Hide gesture camera and controls':'Show gesture camera and controls'}>{mobilePanelExpanded?'HIDE':'CAMERA'}</button>
-      :(status==='ready'||status==='preview')&&<button type="button" className="holo-preview-toggle" onClick={()=>setPreviewLarge(v=>!v)} aria-label={previewLarge?'Reduce hand preview':'Enlarge hand preview'}>{previewLarge?'SMALL −':'ENLARGE +'}</button>}
-    {mobileView&&(status==='ready'||status==='preview'||status==='loading')&&<button type="button" className="holo-mobile-stop-title" onClick={stop} aria-label="Stop mobile camera"><CameraOff size={15}/></button>}
    </div>
    <div className={'holo-vision-preview '+(['ready','loading','preview'].includes(status)?'on ':'')+(cameraPlaying?'playing':'')}>
     <video ref={videoRef} muted playsInline autoPlay onPlaying={()=>{setCameraPlaying(true);setCameraNeedsTap(false);}} onPause={()=>setCameraPlaying(false)}
