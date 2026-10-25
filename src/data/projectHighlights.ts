@@ -53,6 +53,13 @@ export const projectHighlights: Record<string, ProjectHighlight> = {
     teaser: 'Coordinating technology improvements around an operating store.',
     stage: 'Work completed · Follow-up pending'
   },
+  'n8n-automation': {
+    shortTitle: 'n8n Workflow Automation',
+    what: 'A documented n8n publishing and Google Drive cleanup experiment with scheduled and conditional workflow branches.',
+    solves: 'Demonstrates how verification and decision gates can make repetitive operational work easier to audit.',
+    teaser: 'Scheduled workflows, verification and guarded file cleanup.',
+    stage: 'Workflow experiment · Separate from NYC Retail IT'
+  },
   'lead-rescue': {
     shortTitle: 'Lead Rescue',
     what: 'An experimental workflow concept for identifying incoming enquiries and potential response delays.',
