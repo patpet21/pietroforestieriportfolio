@@ -1,0 +1,218 @@
+/* PF — OBSIDIAN / CHAMPAGNE / WARM STONE, 2026
+   Unified editorial palette. The authored project artwork remains colorful,
+   but surrounding surfaces return to neutral, restrained luxury. */
+:root{
+ --pf-blue:#ddc59a;
+ --pf-purple:#bba38a;
+ --pf-pink:#c7ab88;
+ --pf-vivid-accent:#e3c695;
+ --pf-vivid-lime:#e7c590;
+ --pf-vivid-ink:#211f1b;
+ --pf-vivid-surface:#282a27;
+ --pf-vivid-surface-2:#202320;
+ --pf-vivid-text:#f5f2ea;
+ --lux-champagne:#ddba80;
+ --lux-cream:#faf6ed;
+ --lux-blue:#c7b096;
+ --lux-night:#171917;
+ --lux-border:#ccb1896a;
+ --pf-obsidian:#131615;
+ --pf-charcoal:#202320;
+ --pf-stone:#30312e;
+ --pf-bronze:#cba675;
+ --pf-text:#f5f0e7;
+ --pf-muted:#c4beb1;
+ background:#151716!important;color:#f5f0e7!important;color-scheme:dark;
+}
+html,body,#root{background:#151716!important;color:#f5f0e7!important}
+::selection{background:#e2bf88!important;color:#141715!important}
+body{scrollbar-color:#927754 #151716}
+main{min-width:0}
+.eyebrow,.section-head .eyebrow{color:#d6b884!important;letter-spacing:.17em}
+.eyebrow i,.section-head i,.steps i:before{background:#dfbc87!important;box-shadow:0 0 9px #ddbc8745!important}
+.section-head h2,.about-text h2,.featured h2,.page-head h1,.case-head h1,.pf-founder-home-copy h2,.svx-section-heading h2{color:#f7f3eb}
+.section-head p,.section-head .section-head p,.about-text p,.featured p,.page-head p,.case-head>p,.muted,.service-row p{color:#c7c1b7!important}
+.page-head em,.featured em,.quote em,footer em{color:#ddbf8b!important}
+.section.work,.work,.pf-showcase-section{
+ background:radial-gradient(ellipse at 53% 8%,#34352f 0%,#202421 55%,#181b19 100%)!important;
+}
+.section.services,.services{
+ background:linear-gradient(135deg,#292c28 0%,#232623 45%,#1e211e 100%)!important;
+}
+.section.approach,.approach{
+ background:linear-gradient(125deg,#232522,#30302b 57%,#242522)!important;
+}
+.section.featured,.featured{
+ background:radial-gradient(ellipse at 75% 30%,#4d463b 0%,#292a26 60%,#1f211e 100%)!important;
+}
+.quote{background:linear-gradient(125deg,#2d2d29,#38342d 65%,#282824)!important}
+.hero,.hero.pf10-home-hero{
+ background:radial-gradient(ellipse at 78% 28%,#524b40 0%,#32312a 37%,#1d211e 72%,#121614 100%)!important;
+}
+.hero:after{background:linear-gradient(90deg,#171b18ed 1%,#21231fba 28%,#24272160 63%,transparent 94%)!important}
+.hero:before{opacity:.22!important}
+.hero .pf10-hero-copy h1,.hero h1{color:#f7f3eb!important}
+.hero .hero-gradient{
+ background:linear-gradient(118deg,#f8efdc 0%,#e6d2ae 36%,#cfa46c 76%,#a97b4c 100%)!important;
+ -webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent;
+}
+.hero .outlined{-webkit-text-stroke:1.35px #e9d8bd!important;color:transparent!important}
+.hero .eyebrow,.hero .hero-ny{color:#e4cda8!important}
+.hero .hero-bottom p{color:#dcd6c9!important}
+.hero .primary,.featured .primary,.btn.primary,.gsl-home-promo a{
+ background:linear-gradient(113deg,#f7ebce,#d8b37b)!important;
+ color:#211f1b!important;border:1px solid #e5c897!important;
+ box-shadow:0 9px 27px #0909095e!important;
+}
+.hero .primary:hover,.featured .primary:hover,.btn.primary:hover,.gsl-home-promo a:hover{box-shadow:0 12px 35px #d8b57a42!important}
+.hero .secondary{color:#f6eee2!important;background:#2a2d29c9!important;border:1px solid #bfab898a!important;box-shadow:none!important}
+.hero .secondary:hover{background:#36382f!important}
+.scroll,.hero .scroll{color:#b2a893!important}
+.pf10-scroll-section{background:#252723!important}
+.pf10-scroll-sticky{background:radial-gradient(ellipse at 25% 45%,#393830dc,#282a26ed 52%,#1c201c 100%)!important}
+.pf10-scroll-story,.pf10-scroll-story h3,.pf10-scroll-story h4{color:#f7f0e6!important}
+.pf10-scroll-story p{color:#d0c8bc}
+.pf-marquee{background:linear-gradient(95deg,#34332f,#48433a 50%,#302f2a)!important;border-color:#d1b78a60!important}
+.pf-marquee b{color:#e1be86!important}
+.pf-showcase-section{border-top:1px solid #d1b68a24;border-bottom:1px solid #d1b68a40}
+.pf-stage-card,.pf-stage-slide--poster .pf-stage-card{background-color:#252825!important;border-color:#c8aa7d9c!important;box-shadow:0 20px 52px #050604a1!important}
+.pf-stage-slide[data-offset="0"] .pf-stage-card{border-color:#e3c38f!important;box-shadow:0 27px 63px #050604be,0 0 0 1px #d5b37e5c!important}
+.pf-stage-slide:not([data-offset="0"]) .pf-stage-card:after{background:#090b08a3!important}
+.pf-stage-slide--poster .pf-stage-poster-media{background-color:#22241f!important}
+.pf-stage-gradient{background:linear-gradient(180deg,#0a0b0c80,transparent 35%,#06070793 70%,#0c0c0df0)!important}
+.pf-stage-slide--poster .pf-stage-gradient{background:linear-gradient(180deg,transparent,transparent 72%,#171813b0 92%,#141513f7)!important}
+.pf-stage-open,.pf-stage-slide--poster .pf-stage-open{background:#eddbb8!important;border:1px solid #dfc18b!important;color:#201f1b!important}
+.pf-stage-edge-arrow{background:#e3c995!important;color:#1f2420!important;border-color:#f4dfa9!important}
+.pf-stage-edge-arrow:hover{background:#f7e2b6!important}
+.pf-stage-footer{border-color:#d5b9854c!important}
+.pf-stage-current b,.pf-stage-current strong,.pf-stage-navigation button,.pf-stage-instruction{color:#ddc391!important}
+.pf-stage-story{
+ background:linear-gradient(130deg,#292a26,#1d201d)!important;
+ border-color:#c7aa7d6b!important;box-shadow:0 18px 45px #06060586!important;
+}
+.pf-stage-story-head small,.pf-stage-story-detail>span,.pf-stage-story-head span{color:#d8bd92!important}
+.pf-stage-story-detail{border-color:#ceba924d!important}
+.pf-stage-story-detail p{color:#d3cec4!important}
+.pf-stage-story-head h3{color:#f5f0e7!important}
+/* Original 3D demo UI adopts the same warm workspace surfaces. */
+.hero .pf10-hero-grid>.pf3-hero-engine.pfpm-hero{
+ background:linear-gradient(140deg,#252823f5,#1d201def 58%,#141815ef)!important;
+ border-color:#e0be8665!important;box-shadow:0 26px 66px #070907c9!important;color:#f6f1e8!important;
+}
+.pfpm-network-glow{background:radial-gradient(ellipse at 50% 54%,#b99d5a1d,transparent 73%)!important}
+.pfpm-stage,.pfpm-stage.is-active{background:linear-gradient(145deg,#4b483d,#2a2d28 61%,#21241f)!important;border-color:#bfa5799f!important;box-shadow:0 8px 0 #131711e9,5px 13px 18px #080a08a6,inset 1px 1px #faf3e52b!important}
+.pfpm-stage.is-active{border-color:#f3d89d!important;transform:perspective(620px) rotateX(5deg) rotateY(-5deg) translateY(-5px)}
+.pfpm-stage.is-warning{background:linear-gradient(145deg,#6b4432,#402b27)!important;border-color:#e1ab7a!important}
+.pfpm-stage-icon,.pfpm-stage.is-active .pfpm-stage-icon{color:#e5c997!important}
+.pfpm-stage small{color:#c4bbaa!important}
+.pfpm-readout{background:#151915dd!important;border-color:#d6b78958!important}
+.pfpm-readout>span,.pfpm-topline>span:first-child{color:#dfc393!important}
+.pfpm-readout>strong,.pfpm-stage strong{color:#fff5e6!important}
+.pfpm-readout>p{color:#c7bfb4!important}
+.pfpm-case-metrics strong{color:#f1e8d8!important}
+.pfpm-case-metrics small{color:#bbae9d!important}
+.pfpm-actions button{background:#302d26!important;border-color:#bca4787a!important;color:#f3e1c4!important}
+.pfpm-actions .pfpm-start{background:linear-gradient(115deg,#ffeac1,#cda46b)!important;border-color:#e6c78f!important;color:#211e18!important}
+.pfpm-footer>span{color:#aea28d!important}
+.pfpm-wire-base{stroke:#9b907463!important}
+.pfpm-wire-energy{stroke:#dbbc828a!important}
+.pfpm-wire-progress{stroke:#f4d59b!important;filter:drop-shadow(0 0 5px #e1b87578)}
+/* Photos stay vibrant and readable; service folder body becomes mineral gray. */
+.pf-glass-service-card{
+ background:linear-gradient(150deg,#33332d,#242824 65%,#20231f)!important;
+ border-color:#c6a97775!important;box-shadow:0 20px 42px #080b08a3!important;
+}
+.pf-glass-service-details{border-top-color:#d6b78362!important}
+.pf-glass-service-details>small{color:#e1c08e!important}
+.pf-glass-service-title{color:#f7f3ea!important}
+.pf-glass-service-title svg{color:#deb982!important}
+.pf-glass-service-details p{color:#c9c4b8!important}
+.pf-glass-service-hint{color:#dec395!important}
+.pf-glass-service-folder .gf-root[data-tone="dark"] .gf-tint{background:linear-gradient(180deg,#15171205 0%,#15171212 35%,#10140e91 75%,#0c1009cc 100%)!important}
+.pf-glass-service-folder .gf-root[data-tone="dark"] .gf-title,.pf-glass-service-folder .gf-root[data-tone="dark"] .gf-meta{color:#f7ecdb!important}
+.pf-glass-service-folder .gf-root[data-tone="dark"] .gf-key--more{background:linear-gradient(115deg,#f7e8c2,#d6af70)!important;color:#22231e!important}
+.pf-founder-home-section{
+ background:linear-gradient(118deg,#20231f,#36332b 52%,#222622)!important;
+ border-color:#d9bb8655!important;
+}
+.pf-founder-home-copy h2 em{color:#dbb984!important}
+.pf-founder-home-copy>p{color:#d1cbc0!important}
+.pf-founder-home-copy .pf-founder-note{color:#dfc596!important}
+.pf-founder-photo-mark,.pf-about-portrait figcaption{background:linear-gradient(110deg,#181b18e9,#292922df)!important;border-color:#d9bc8b83!important}
+.pf-founder-portrait-frame,.pf-about-portrait{background:#262824!important;box-shadow:0 22px 48px #08090799!important}
+.pf-founder-link{color:#ead3a8!important}
+/* Pages, case studies, grids, story panels */
+.page-head,.case-head{
+ background:linear-gradient(108deg,#292b27 0%,#343128 61%,#282a26 100%)!important;
+ border-bottom-color:#c2a4765e!important;
+}
+.portrait{background:radial-gradient(circle at 55% 40%,#56503e 0%,#34342b 55%,#242622 100%)!important;border-color:#d7bc8d67!important}
+.portrait b{color:#edce93!important}
+.ccase-head{--cc-accent:#d7b47d}
+.ccase-copy .dot,.ccase-brand small,.ccase-problem small{color:#e6c38c!important}
+.ccase-claim{color:#f7f0e6!important}
+.ccase-intro,.ccase-problem p,.ccase-role span{color:#ccc6bc!important}
+.ccase-panel,.ccase-problem{background:linear-gradient(145deg,#292b26,#1b1e1a)!important;border-color:#d2b68154!important}
+.ccase-primary{background:#dfbc84!important;color:#171a16!important}
+.ccase-secondary{background:#2b2c26!important;border-color:#d6bd977a!important;color:#f4e9d8!important}
+.ccase-path,.ccase-rest,.pf-story-section,.pf-next-section{background:linear-gradient(122deg,#232621,#1d211d)!important}
+.pf-story-frame,.pf-story-main,.pf-story-nav,.pf-next-card,.showcase-card,.ecosystem-card{background-color:#282b26!important;border-color:#bfa77c75!important}
+.pf-story-heading h2,.pf-story-content h3,.showcase-intro h2{color:#f8f1e7!important}
+.pf-story-content p,.showcase-copy p{color:#cbc5b9!important}
+.pf-card-details,.pf3-workflow-detail{background:linear-gradient(135deg,#32332d,#252824)!important;border-color:#c9ad7d7f!important}
+.pf-card-details p{color:#cfcac0!important}
+.pf-project-visual,.art,.pf-case-art{background-color:#2c302a!important;border-color:#d5b88a76!important}
+.pf-project-glass{background:#1a1e18d9!important;border-color:#d9c19073!important}
+.pf-project-glass strong,.card-title h3{color:#f8efe3!important}
+.card-meta,.card>p{color:#bfb7aa!important}
+.filters button{background:#282b26d9!important;border-color:#af9f7b8e!important;color:#e7dac5!important}
+.filters button.active,.filters button:hover{background:#ddbc84!important;border-color:#e6c994!important;color:#22221e!important}
+.pf-retail-automation{background:radial-gradient(ellipse at 55% 10%,#444037,#222521 74%)!important;border-color:#c4aa8059!important}
+.pf-retail-automation-grid figure{background:linear-gradient(150deg,#33352e,#1e211e)!important;border-color:#d6ba8782!important}
+/* Interactive Services */
+.svx-hero-copy h1 em,.svx-section-heading h2 em,.svx-evidence-head h2 em{color:#e1be8c!important}
+.svx-opening,.svx-section-heading>p,.svx-evidence-head>p{color:#d0c9bb!important}
+.svx-value-row svg,.svx-brand-bottom b{color:#e3c28c!important}
+.svx-main-cta{background:#e6c78d!important;color:#24231f!important}
+.svx-brand-card{background:radial-gradient(ellipse at 76% 15%,#3e3a32,#272a27 60%,#1c201d)!important;border-color:#c6a67477!important}
+.svx-brand-image,.svx-brand-image.svx-brand-image{background:linear-gradient(135deg,#3c3b32,#232722)!important;border-color:#c6a67477!important}
+.pf-service-brand-art{background-color:#2c2d26!important}
+.svx-offers-section,.svx-evidence-section{background:radial-gradient(ellipse at 40% 18%,#30322b,#1d201d 80%)!important}
+.svx-selector button,.svx-detail,.svx-evidence-card{
+ background:linear-gradient(140deg,#30322d,#222522)!important;border-color:#c7ae835c!important;color:#f6f0e5!important;
+}
+.svx-selector button.active{background:linear-gradient(140deg,#484133,#2d2d29)!important;border-color:#e5c48c!important;box-shadow:inset 0 0 0 1px #ddbd8c38!important}
+.svx-picker-top,.svx-detail-symbol,.svx-detail-intro>small{color:#e7c696!important}
+.svx-selector button>small,.svx-detail p{color:#c9c3b7!important}
+/* Contact & footer */
+.contact-grid input,.contact-grid textarea,.contact-grid select{
+ background:#292c27!important;color:#f7f1e7!important;border:1px solid #c3ae8582!important;
+}
+.contact-grid input::placeholder,.contact-grid textarea::placeholder{color:#9d998f!important}
+.contact-grid input:focus,.contact-grid textarea:focus,.contact-grid select:focus{outline:2px solid #e3c48f!important;outline-offset:2px}
+.contact-grid label{color:#dfc293!important}
+footer{background:linear-gradient(145deg,#161917,#292b25 66%,#1d211c)!important;border-color:#d6b77c4d!important}
+.footer-arrow{color:#d6bb8a!important;border-color:#c8a777b2!important;background:#e3bf8820!important}
+.footer-bottom{border-color:#c5ad7e59!important;color:#b5a995!important}
+.underlink{border-color:#d5b67e!important;color:#f1d5a8!important}
+.underlink svg,.card-title svg{color:#d9b682!important}
+/* Keep gesture lab camera/tool functional, but remove the overpowering azure surrounds. */
+.gsl-page{background:radial-gradient(ellipse at 75% 7%,#494639 0%,#2d3029 40%,#1e241e 85%)!important}
+.gsl-home-promo{background:linear-gradient(115deg,#3a3a2e,#34312d 55%,#242823)!important;border-color:#c8b08476!important}
+.gsl-home-promo h2 em{color:#e6c992!important}
+.gsl-home-hand{background:radial-gradient(circle,#4c5040,#252d27 74%)!important;border-color:#dfc494!important;box-shadow:0 0 40px #e0be7a2f!important;color:#f9e4bf!important}
+.gsl-home-orbit{border-color:#d9c28c8e!important}
+.gsl-privacy,.gsl-interactive,.gsl-camera-panel,.gsl-guide,.gsl-unified-page .gsl-spatial-section{background:linear-gradient(130deg,#3c3c34,#242923)!important;border-color:#c4ac7a7a!important}
+.gsl-mode-tabs button,.gsl-unified-page .gsl-mode-tabs button{background:linear-gradient(130deg,#35372d,#262a25)!important;border-color:#bfaa7f83!important}
+.gsl-mode-tabs button.active{background:linear-gradient(130deg,#57503d,#32352d)!important;border-color:#f0d69a!important}
+.gsl-unified-page .gsl-spatial-section .holo-natural-control{background:linear-gradient(130deg,#3c3e32,#262a24)!important;border-color:#e2c38b!important}
+.gsl-back a,.gsl-picker-top{color:#ead09a!important}
+@media(max-width:820px){
+ .hero .hero-inner.pf10-hero-grid{padding-top:110px!important}
+ .page-head{padding-top:125px!important}
+ .ccase-head{padding-top:112px!important}
+}
+@media(max-width:480px){
+ .section-head h2,.pf-showcase-section .section-head h2{overflow-wrap:break-word}
+ .hero .pf10-hero-copy h1{font-size:clamp(41px,11vw,65px)!important}
+}
