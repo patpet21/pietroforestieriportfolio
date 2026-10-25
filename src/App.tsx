@@ -12,9 +12,9 @@ import ServiceExperience from './components/ServiceExperience';
 import ServiceFolders from './components/ServiceFolders';
 import PortfolioNavigation from './components/PortfolioNavigation';
 import GestureLab from './components/GestureLab';
-import{Link,NavLink,useLocation}from'react-router-dom';import{motion}from'motion/react';import{ArrowUpRight,ArrowRight,ArrowDown,Menu,X,MapPin,CheckCircle2,Hand}from'lucide-react';import{projects,categories}from'./data/projects';
+import{Link,useLocation}from'react-router-dom';import{motion}from'motion/react';import{ArrowUpRight,ArrowRight,ArrowDown,MapPin,CheckCircle2,Hand}from'lucide-react';import{projects,categories}from'./data/projects';
 import{projectHighlights}from'./data/projectHighlights';import type{Project}from'./data/projects';
-const nav=[['/','Home'],['/about','About'],['/projects','Projects'],['/services','Services'],['/gesture-lab','Gesture Lab'],['/contact','Contact']];const appear={initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},viewport:{once:true,amount:.14},transition:{duration:.65}};
+const appear={initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},viewport:{once:true,amount:.14},transition:{duration:.65}};
 function Foot(){return <footer><div className="wrap"><small className="eyebrow">THE NEXT STEP</small><h2>Good ideas deserve<br/><em>great execution.</em></h2><Link className="footer-arrow" to="/contact"><ArrowUpRight size={37}/></Link><div className="footer-bottom"><span>© {new Date().getFullYear()} PIETRO FORESTIERI</span><span>NEW YORK CITY · INDEPENDENT PROFESSIONAL</span><a href="https://github.com/patpet21" target="_blank" rel="noreferrer">GITHUB ↗</a></div></div></footer>}
 function Heading({label,title,description}:{label:string;title:string;description?:string}){return <motion.div {...appear} className="section-head"><small className="eyebrow"><i/> {label}</small><div><h2>{title}</h2>{description&&<p>{description}</p>}</div></motion.div>}
 function Artwork({p}:{p:Project}){
