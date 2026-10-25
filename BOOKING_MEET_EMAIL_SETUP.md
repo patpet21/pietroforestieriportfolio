@@ -1,188 +1,175 @@
-# Meet + Gmail notifications — Cloudflare + Google (no Supabase, no GitHub Actions)
+# Meet + Gmail: authorize Google from Cloudflare (no Supabase, no OAuth Playground)
 
-Current status: **Code implemented, additional Google authorization required**. Existing
-service-account variables for free/busy remain intact. Do not share credentials
-or OAuth refresh tokens in GitHub, screenshots, chats or Netlify.
+## Implemented in the repository
 
-## What the extension does
+- Netlify still hosts the portfolio.
+- Cloudflare Worker \`pietroforestieriportfolio\` still handles booking requests at
+  \`booking.propertydex.xyz\`.
+- The existing service account checks the organizer's Google Calendar availability.
+- A new, separate **Cloudflare Durable Object** stores your Google OAuth refresh token
+  **encrypted with AES-GCM**. It never appears in repository files or browser URLs.
+- The private setup page starts the Google consent process with PKCE and a one-time
+  state. The callback checks that you used the configured organizer Google account.
+- Once connected, new confirmed bookings can create a distinct Google Meet link.
+- When email notifications are enabled, Gmail confirmation emails go to the visitor
+  and organizer. Durable Object alarms schedule reminders about 15 minutes before.
+- If not authorized, the existing booking service continues without Meet or Gmail.
+- No Supabase project, GitHub Actions, Netlify paid tier or OAuth Playground.
 
-With user OAuth configured:
+### Important security and operational limits
 
-1. A visitor chooses a genuine free **30-minute slot**.
-2. The existing service account checks personal + Portfolio Meetings calendars.
-3. The Worker creates the event as the **actual Google account owner**, asking
-   Calendar for a fresh Google Meet link using \`conferenceDataVersion=1\`.
-4. The server rejects or rolls back the event if Meet generation does not
-   succeed. It never invents a Meet URL.
-5. The Worker stores booking notification metadata in its existing
-   SQLite-backed \`BookingGate\` Durable Object (per local calendar day).
-6. A Durable Object **Alarm** sends confirmation emails to the visitor and
-   organizer through the authenticated Gmail API. Emails contain the generated Meet URL.
-7. Approximately **15 minutes before the start**, an alarm checks that the
-   Google Calendar event still exists and Gmail sends reminder messages to
-   the same two people. The reminder time is based on the event timestamp,
-   not a fixed New York cron time — DST is handled automatically.
-8. The booking page displays the real Meet URL and a clear notification status.
+This is a personal use integration. Your Google account alone is authorized, not
+all portfolio visitors. Be aware Google may show an unverified app warning. Google
+may require verification for broader distribution or some restricted/sensitive scopes.
 
-One Gmail account, one Cloudflare Worker, the existing Google Calendar and
-service account, and Cloudflare Durable Object alarms. **No Supabase, paid
-Netlify tier, Resend account or GitHub Actions** needed.
+Refresh tokens for External apps in Google's **Testing** status normally expire
+after **7 days** when Calendar/Gmail scopes are requested. To use an ongoing
+personal authorization, review Google's **Audience → Publish app** process and
+the personal-use verification exception; Production alone does not guarantee
+unlimited access or remove any Google warning. Tokens may still be revoked by
+Google or the account owner.
 
-### Important limitations
+Cloudflare Free plan limits and Google sending quotas apply. Reminders are
+scheduled near 15 minutes before a call, not precisely to the second.
 
-- You must complete OAuth configuration first. Until then, the existing
-  service-account booking process still works but cannot promise Meet or
-  automated emails. The booking result explicitly says which features are
-  configured.
-- An alarm generally runs near its scheduled time, **not guaranteed to the
-  second**. Gmail delivery timing can depend on mail providers.
-- No attendee is automatically added to Google Calendar; the attendee receives
-  their Meet invitation by **Gmail email**. This avoids Google service-account
-  attendee restrictions. The organizer already sees the event on the shared
-  calendar.
-- This is not an email marketing platform; Gmail sending quotas and Google API
-  scopes apply. Never use it for mailing lists.
-- Individual email sends are recorded after Gmail accepts them and retried on
-  transient errors. A rare interruption between send and recording success
-  can send a duplicate; Gmail is not an exactly-once queue.
-- If you **cancel a calendar event** before the reminder, its 15-minute
-  notification is skipped. Editing the event time in Google Calendar directly
-  does not reschedule the existing alarm; reschedule via a booking admin
-  flow once implemented, or cancel and book a new slot.
-- Personal data needed for reminders is stored in Cloudflare Durable Object
-  storage until delivery and removed after reminders or shortly after the
-  appointment. Do not export or log participant emails unnecessarily.
+## Step 1 — Add the new Google redirect URI
 
-## Step 1 — Enable Gmail API in your EXISTING Google Cloud project
+Use your EXISTING Google Cloud project **Pietro Portfolio Booking** and
+EXISTING web OAuth client **Portfolio Booking Worker**.
 
-Google Cloud Console → Select **Pietro Portfolio Booking** →
-APIs & Services → Library → enable **Gmail API**.
+1. Open https://console.cloud.google.com/auth/clients
+2. Select your web client.
+3. In **Authorized redirect URIs**, add this exact URL:
 
-You have already enabled Calendar API and created a service account.
-Do not delete or recreate it.
+   \`\`\`
+   https://booking.propertydex.xyz/api/oauth/callback
+   \`\`\`
 
-## Step 2 — Google Auth Platform and OAuth application
+4. Save. The previously entered OAuth Playground URI may be removed if unused.
 
-Open Google Cloud → Google Auth Platform (OAuth consent screen).
-Create/configure an app for your own portfolio booking system:
+The \`https\`, domain, path and absence of trailing slash must match exactly.
 
-- App name: \`Pietro Portfolio Booking\`
-- User type / audience: **External** (for a personal Gmail account)
-- Add yourself as a test user if the app is in **Testing**
-- Required scopes:
-  - \`https://www.googleapis.com/auth/calendar.events\`
-  - \`https://www.googleapis.com/auth/gmail.send\`
+## Step 2 — Verify scopes and audience
 
-The app will ask you for consent to manage events and **send emails
-as your Gmail account**. Grant only if that is what you intend.
+In https://console.cloud.google.com/auth/data-access, keep:
 
-**Token longevity**: External OAuth apps in **Testing** issue refresh
-tokens that commonly expire after **7 days** for these scopes. For
-ongoing production booking, follow Google's publishing / verification rules.
-Some scopes may require extra approval, depending on Google's current
-requirements. A test-only token is NOT a production solution.
+- \`https://www.googleapis.com/auth/calendar.events\`
+- \`https://www.googleapis.com/auth/gmail.send\`
 
-## Step 3 — Create OAuth Client ID
+The flow also asks for basic identity (\`openid email\`) so it can refuse the
+wrong Google account.
 
-Google Cloud → Google Auth Platform → Clients → **Create client**:
+At https://console.cloud.google.com/auth/audience, confirm that the Google
+account you intend to authorize is permitted. For production personal use,
+check **Publishing status** and Google's verification warnings/requirements.
+Do not authorize an account that does not own or have sufficient write access
+to the selected **Portfolio Meetings** calendar.
 
-- Application type: **Web application**
-- Name: \`Portfolio Booking Worker\`
-- Authorized redirect URI:
-  \`https://developers.google.com/oauthplayground\`
-
-This URI is required for the one-time Google OAuth Playground setup below.
-Copy Client ID and Client Secret locally. Do not commit them.
-
-## Step 4 — Authorize yourself once using Google OAuth Playground
-
-Official site: https://developers.google.com/oauthplayground/
-
-- Click the gear settings.
-- Enable **Use your own OAuth credentials**.
-- Enter **your** newly created Web OAuth Client ID and Client Secret.
-- Access type must be **Offline**; force consent when obtaining a new token.
-- In "Step 1 Select & authorize APIs", manually enter the **two scopes**
-  above, separated by a space, and click **Authorize APIs**.
-- Sign in with the actual Google account that owns **Portfolio Meetings**
-  and has Gmail to send from. Confirm both permissions.
-- Under "Step 2" click **Exchange authorization code for tokens**.
-- Copy only the **Refresh token** locally.
-
-Use your own OAuth credentials in the Playground so its short-lived
-default-provider token policy does not apply. Do not paste the refresh
-token in this chat or GitHub.
-
-## Step 5 — Cloudflare Secrets, not Netlify
+## Step 3 — Add four Cloudflare settings
 
 Cloudflare Dashboard → Workers & Pages → **pietroforestieriportfolio** →
-Settings → **Variables and Secrets → Add**:
+Settings → **Variables and Secrets**.
 
-| Name | Type | Value |
+| Key | Type | Value |
 |---|---|---|
-| \`GOOGLE_OAUTH_CLIENT_ID\` | Secret | OAuth web client ID |
-| \`GOOGLE_OAUTH_CLIENT_SECRET\` | **Secret** | OAuth web client secret |
-| \`GOOGLE_OAUTH_REFRESH_TOKEN\` | **Secret** | OAuth refresh token |
-| \`BOOKING_ORGANIZER_EMAIL\` | Text | Your Gmail address that receives notifications |
-| \`EMAIL_NOTIFICATIONS_ENABLED\` | Text | \`true\` **only after first OAuth/calendar test** |
+| \`GOOGLE_OAUTH_CLIENT_ID\` | Secret | Web OAuth Client ID |
+| \`GOOGLE_OAUTH_CLIENT_SECRET\` | **Secret** | Web OAuth Client Secret |
+| \`BOOKING_ORGANIZER_EMAIL\` | Text | Gmail address of the calendar owner / intended sender |
+| \`OAUTH_SETUP_TOKEN\` | **Secret** | A strong, random password (32+ characters) you generate and keep privately |
 
-The previous service-account secrets (\`GOOGLE_SERVICE_ACCOUNT_EMAIL\`,
-\`GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY\`) and calendar IDs must **remain**.
+Generate a random \`OAUTH_SETUP_TOKEN\` using a password manager or an offline,
+cryptographically secure random generator. Do not send it through this chat or
+upload it to GitHub. The setup page will ask you to type it.
 
-In the Cloudflare Worker you already use **Variables and Secrets**, and
-\`keep_vars=true\` in the Wrangler config preserves dashboard values during
-deploys. Never copy secrets into \`wrangler.toml\`.
+**Do not change or delete \`OAUTH_SETUP_TOKEN\` after authorizing Google**:
+it is also the encryption-key input for the stored refresh token. If you
+rotate it, reconnect Google using the new token so the stored credential
+can be re-encrypted.
 
-## Step 6 — Verify OAuth before enabling email
+Existing secrets \`GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY\`,
+\`GOOGLE_SERVICE_ACCOUNT_EMAIL\`, \`GOOGLE_CALENDAR_ID\` and
+\`GOOGLE_BUSY_CALENDAR_IDS\` must stay as they are.
 
-After Workers Builds deploys the latest version, open:
+Do NOT create or paste a manual \`GOOGLE_OAUTH_REFRESH_TOKEN\`.
+The new callback stores the token automatically in the Cloudflare vault.
 
-\`\`\`
-https://booking.propertydex.xyz/health
-https://booking.propertydex.xyz/api/calendar/oauth-check
-\`\`\`
+Leave \`EMAIL_NOTIFICATIONS_ENABLED\` unset or \`false\` until the integration
+has been checked.
 
-Expect \`meetCredentialsPresent:true\` and
-\`oauthConnected:true,calendarAccess:true\` if authorized.
+## Step 4 — Open the private authorization page
 
-**Note:** OAuth check confirms Calendar access and token refresh only.
-It cannot confirm Gmail's scope or actual delivery without a real test send.
-
-Once OAuth succeeds, set \`EMAIL_NOTIFICATIONS_ENABLED=true\` in Cloudflare.
-
-## Step 7 — Safe real-world test
-
-Create an **available** 30-minute booking on:
+After Cloudflare deploys the new Worker code, open:
 
 \`\`\`
-https://pietroforestieri.propertydex.xyz/book
+https://booking.propertydex.xyz/admin/google
 \`\`\`
 
-Use your own secondary mailbox as the guest if possible. Verify:
+Type the random **OAuth setup password** from Step 3 in the form.
 
-1. Booking response contains a real \`https://meet.google.com/...\` URL.
-2. Google Calendar \`Portfolio Meetings\` has the event and the Meet URL.
-3. Gmail sends a confirmation email to the guest and organizer.
-4. Confirm the emails show the correct time and Meet link.
-5. To test a reminder without bypassing the 24-hour booking lead time,
-   temporarily adjust the test scenario under controlled conditions,
-   or wait for the genuine booking's scheduled reminder.
-6. At ~15 minutes before the appointment, verify both reminder emails.
-7. Cancel another test event and verify its reminder is skipped.
+Click **AUTHORIZE GOOGLE** and sign in with the EXACT account configured in
+\`BOOKING_ORGANIZER_EMAIL\`. Google will ask you to approve Calendar event
+access, Gmail sending, and basic identity. After consent, Google sends
+you back to Cloudflare and you should see a green success message.
 
-Cloudflare → Worker → Observability → Logs can help diagnose Gmail quota,
-scope, Meet conference generation or alarm errors. Never log secrets.
+This form sends the password via an HTTPS POST body, not a URL.
+The Worker checks browser origin, OAuth state, an HttpOnly one-time cookie,
+PKCE, the authorized scopes and the Google email address before storing the
+refresh token ciphertext.
 
-## If you prefer not to grant Gmail permissions
+## Step 5 — Test the live connection
 
-It is possible to integrate a separate transactional mail service such as
-Resend (free tier with verified domain), but this **code is currently designed
-for Google Gmail OAuth** to avoid creating another service or Supabase project.
+Check:
+- \`https://booking.propertydex.xyz/health\`
+- \`https://booking.propertydex.xyz/api/calendar/oauth-check\`
 
-## Official references
+Expected **after successful consent**:
+- \`meetCredentialsPresent: true\`
+- \`oauthConnected: true\`
+- \`calendarAccess: true\`
+
+The OAuth check does not send an email, so \`gmailSendingNotYetTested\`
+is expected. It confirms the token can refresh and the account can access
+the selected Google Calendar.
+
+## Step 6 — Activate notification emails carefully
+
+After OAuth check succeeds, add a plain Cloudflare text variable:
+
+\`\`\`
+EMAIL_NOTIFICATIONS_ENABLED=true
+\`\`\`
+
+The Worker already supports:
+- a unique Google Meet link when it creates an appointment;
+- confirmation notifications to your Gmail and your guest's email;
+- alarms for reminder messages roughly **15 minutes before** each appointment.
+
+Test first using a secondary email address you control, then confirm the
+real Calendar event, Meet link and both confirmation messages. For the
+15-minute reminder, use a controlled test or wait for an actual booking;
+the default lead-time policy allows bookings at least 24 hours in advance.
+
+**Caution:** This uses Gmail API quotas and durable alarms. If a notification
+fails, the code retries but cannot promise exactly-once email delivery.
+Disabling \`EMAIL_NOTIFICATIONS_ENABLED\` does not cancel already queued
+notifications; to stop sending, also revoke the Google authorization or
+implement an administrative suspension.
+
+## Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| Setup page says not configured | Add all four Cloudflare settings and deploy |
+| OAuth \`redirect_uri_mismatch\` | URI in the Google Cloud client is exactly the Cloudflare callback |
+| Google account refused | The organizer email must match the Google account granting access |
+| \`access_denied\` / unverified app warning | Check Audience status, Google scopes and personal-use policy |
+| OAuth success but Gmail missing | Verify Gmail API is enabled, \`EMAIL_NOTIFICATIONS_ENABLED\` is \`true\`, and test Worker logs |
+| App stops after seven days | Check whether Google Auth Platform is still in External Testing |
+| AES decryption error after changing setup secret | Restore original secret or reauthorize and replace encrypted token |
+
+## References
 
 - https://developers.google.com/identity/protocols/oauth2/web-server
-- https://developers.google.com/oauthplayground/
-- https://developers.google.com/workspace/calendar/api/guides/create-events
-- https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/send
+- https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification
+- https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/
 - https://developers.cloudflare.com/durable-objects/api/alarms/
