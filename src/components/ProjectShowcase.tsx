@@ -7,7 +7,7 @@ import {projectHighlights} from '../data/projectHighlights';
 import BrandImage from './BrandImage';
 import type {Project} from '../data/projects';
 
-const order=['privacygate','privatestone','propertydex','propertydex-framework','websites','retail-it','lead-rescue','e-learning'];
+const order=['privacygate','privatestone','propertydex','propertydex-framework','websites','retail-it','n8n-automation','lead-rescue','e-learning'];
 const slides:Project[]=order.map(id=>projects.find(p=>p.id===id)).filter((p):p is Project=>Boolean(p));
 /**
  * The SELECTED WORK carousel is a visual project gallery (not the services grid).
@@ -15,11 +15,12 @@ const slides:Project[]=order.map(id=>projects.find(p=>p.id===id)).filter((p):p i
  * into the repo. Positions correspond to the four panels of services-sprite.avif.
  * The legacy BrandImage remains behind artwork as a browser fallback.
  */
-const featuredArtwork:Record<string,{position:string;src?:string;label:string}>={
- 'privacygate':{position:'center',src:'/portfolio-gallery/privacygate-poster.avif',label:'PrivacyGate product and privacy-first AI screens'},
- 'propertydex':{position:'center',src:'/portfolio-gallery/propertydex-poster.avif',label:'PropertyDEX real estate tokenization concept'},
- 'propertydex-framework':{position:'center',src:'/portfolio-gallery/propertydex-framework-poster.avif',label:'PropertyDEX Framework — deal structure, stakeholders, feasibility and execution'},
- 'e-learning':{position:'100% 0%',label:'AI PM LAB digital project and learning resources'}
+const featuredArtwork:Record<string,{src:string;fallback:string;label:string}>={
+ 'privacygate':{src:'/portfolio-gallery/privacygate-poster.avif',fallback:'/project-media/privacygate-protect.webp',label:'PrivacyGate privacy-first AI product screens'},
+ 'propertydex':{src:'/portfolio-gallery/propertydex-poster.avif',fallback:'/project-media/propertydex-symbol.webp',label:'PropertyDEX real estate research'},
+ 'propertydex-framework':{src:'https://i.ibb.co/qMPRTZRn/framework-prdx.png',fallback:'/portfolio-gallery/propertydex-framework-poster.avif',label:'PropertyDEX Framework property project analysis'},
+ 'e-learning':{src:'https://i.ibb.co/nqDV6Q2H/Chat-GPT-Image-Oct-25-2026-10-57-02-AM-2.png',fallback:'/project-media/ai-pm-lab.webp',label:'AI PM Lab project-management learning resources'},
+ 'n8n-automation':{src:'https://i.ibb.co/rK4pdpvp/workflow-pm.png',fallback:'/project-media/n8n-workflow-detail.webp',label:'n8n workflow automation publishing and cleanup'}
 };
 
 
@@ -65,8 +66,7 @@ export default function ProjectShowcase(){
     const poster=featuredArtwork[p.id];
     const inside=<>
      <BrandImage key={p.id+'cover'} project={p.id} alt="" className="pf-stage-image" loading={center?'eager':'lazy'} decoding="async"/>
-     {poster&&<span className="pf-stage-poster-media" role="img" aria-label={poster.label}
-      style={{backgroundPosition:poster.position,backgroundSize:poster.src?'cover':'200% 200%',backgroundImage:'url("'+(poster.src??'/portfolio-gallery/services-sprite.avif')+'")'}}/>}
+     {poster&&<img className="pf-stage-poster-media" src={poster.src} alt={poster.label} loading={center?'eager':'lazy'} decoding="async" onError={e=>{if(!e.currentTarget.src.endsWith(poster.fallback))e.currentTarget.src=poster.fallback;}}/>}
      <span className="pf-stage-gradient" aria-hidden="true"/>
      {!poster&&<span className="pf-stage-top">
       <span className="pf-stage-brand"><BrandImage key={p.id+'brand'} project={p.id} kind="logo" alt="" className="pf-stage-brand-mark" loading="lazy"/><span>{String(i+1).padStart(2,'0')} / SELECTED PROJECT</span></span>
