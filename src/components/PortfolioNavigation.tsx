@@ -2,7 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {NavLink,Link,useLocation} from 'react-router-dom';
 import {
  ArrowRight,ArrowUpRight,Blocks,BriefcaseBusiness,Fingerprint,FolderKanban,
- Home,Mail,Menu,PanelLeftClose,PanelLeftOpen,UserRound,Workflow
+ Home,Mail,CalendarDays,Menu,PanelLeftClose,PanelLeftOpen,UserRound,Workflow
 } from 'lucide-react';
 import './PortfolioNavigation.css';
 
@@ -13,6 +13,7 @@ const primary=[
  {to:'/services',label:'Services',Icon:BriefcaseBusiness},
  {to:'/gesture-lab',label:'Gesture Lab',Icon:Fingerprint},
  {to:'/contact',label:'Contact',Icon:Mail},
+ {to:'/book',label:'Book a call',Icon:CalendarDays},
 ];
 const projects=[
  {to:'/projects/privatestone',label:'PrivateStone',Icon:Blocks},
@@ -67,7 +68,7 @@ export default function PortfolioNavigation(){
     </Link>
    </div>
    <span className="pf-shell-edition">INDEPENDENT DIGITAL PRACTICE <i/> NEW YORK · WORLDWIDE</span>
-   <Link to="/contact" className="pf-shell-contact">LET'S CONNECT <ArrowUpRight size={17}/></Link>
+   <Link to="/book" className="pf-shell-contact">BOOK A CALL <ArrowUpRight size={17}/></Link>
   </header>
 
   <aside className="pf-nav-rail" aria-label="Quick navigation">
