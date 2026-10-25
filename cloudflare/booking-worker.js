@@ -236,6 +236,21 @@ export default {
    return new Response(null,{status:204,headers});
   }
   const path=new URL(request.url).pathname;
+  // Read-only connection check, safe while BOOKINGS_ENABLED is false.
+  // Respond with a status only: never return private events, calendar IDs, or credentials.
+  if(path==='/api/calendar/check'&&request.method==='GET'){
+   if(!ready(env))return respond({googleConnected:false,error:'Calendar credentials are not configured'},503,origin);
+   try{
+    const token=await accessToken(env);
+    const now=new Date();
+    const until=new Date(now.getTime()+86400000);
+    await calendarBusy(env,token,now.toISOString(),until.toISOString());
+    return respond({googleConnected:true,calendarsChecked:calendarIds(env).length,bookingsEnabled:env.BOOKINGS_ENABLED==='true'},200,origin);
+   }catch(error){
+    console.error('Calendar connection verification failed:',error?.message||'Unknown error');
+    return respond({googleConnected:false,error:'Google Calendar access failed. Check Worker logs for the reason.'},503,origin);
+   }
+  }
   if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true'},200,origin);
   if(path==='/api/calendar/availability'&&request.method==='GET'){
    try{return await availability(request,env,origin)}
