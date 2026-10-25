@@ -6,8 +6,9 @@
 import {DurableObject} from 'cloudflare:workers';
 
 const REDIRECT_URI='https://booking.propertydex.xyz/api/oauth/callback';
-// OAuth setup is cookie-free. Random, one-time form tokens and OAuth states
-// are stored server-side in the Durable Object with ten-minute expiry.
+// Cookie-free setup uses short-lived AES-GCM authenticated tokens.
+// No form/session DB writes. Only the OAuth refresh token uses Durable Object
+// SQLite storage, encrypted with a separate purpose-bound key.
 const AUTH_SCOPES=[
  'openid','email',
  'https://www.googleapis.com/auth/calendar.events',
@@ -37,6 +38,33 @@ const safeEqual=async(a,b)=>{
  for(let i=0;i<da.length;i++)diff|=da[i]^db[i];
  return diff===0;
 };
+
+/** Authenticated short-lived setup token. No browser cookies, DB or client-held secret. */
+const authKey=async(secret,purpose)=>crypto.subtle.importKey(
+ 'raw',await sha256('pietro-portfolio-session:v2:'+purpose+':'+secret),
+ {name:'AES-GCM'},false,['encrypt','decrypt']
+);
+const seal=async(secret,purpose,data)=>{
+ const iv=crypto.getRandomValues(new Uint8Array(12));
+ const encrypted=await crypto.subtle.encrypt(
+  {name:'AES-GCM',iv,additionalData:textEncoder.encode(purpose)},
+  await authKey(secret,purpose),textEncoder.encode(JSON.stringify({...data,exp:Date.now()+TTL}))
+ );
+ return bytesToB64url(iv)+'.'+bytesToB64url(encrypted);
+};
+const unseal=async(secret,purpose,value)=>{
+ if(typeof value!=='string'||!/^[-_A-Za-z0-9]{16}\.[-_A-Za-z0-9]{40,2048}$/.test(value))return null;
+ const [ivText,bodyText]=value.split('.');
+ try{
+  const plain=await crypto.subtle.decrypt(
+   {name:'AES-GCM',iv:b64urlToBytes(ivText),additionalData:textEncoder.encode(purpose)},
+   await authKey(secret,purpose),b64urlToBytes(bodyText)
+  );
+  const obj=JSON.parse(new TextDecoder().decode(plain));
+  return obj&&Number.isFinite(obj.exp)&&Date.now()<=obj.exp&&obj.exp-Date.now()<=TTL?obj:null;
+ }catch{return null;}
+};
+
 const configured=env=>!!(env.GOOGLE_OAUTH_CLIENT_ID&&env.GOOGLE_OAUTH_CLIENT_SECRET&&env.BOOKING_ORGANIZER_EMAIL&&env.OAUTH_SETUP_TOKEN&&env.OAUTH_VAULT);
 const vault=env=>env.OAUTH_VAULT.getByName('pietro-google-owner-v1');
 const htmlResponse=(title,body,status=200,headers={})=>new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111b17;color:#f5eeda;font:16px/1.55 system-ui,sans-serif;padding:20px;box-sizing:border-box}main{width:min(540px,100%);background:#1a2921;border:1px solid #bfa16a;border-radius:18px;padding:clamp(22px,5vw,36px);box-shadow:0 20px 70px #0008}h1{font-size:clamp(24px,5vw,34px);margin:5px 0;color:#ecf9ee}p{color:#c4d0c3}label{display:block;margin:24px 0 8px;color:#e8d4a0;font-size:13px}input{width:100%;box-sizing:border-box;border:1px solid #6a9278;border-radius:8px;background:#0c1612;color:white;padding:14px;font:inherit}button{width:100%;background:#cead75;color:#18231b;border:0;border-radius:8px;padding:14px;font-weight:800;cursor:pointer;margin-top:14px}small{display:block;color:#a8bba9;margin-top:16px}a{color:#b8e4ba}</style><main>'+body+'</main></html>',{
@@ -46,7 +74,7 @@ const notConfigured=()=>htmlResponse('Not configured','<h1>Google setup not read
 const invalid=(code='request')=>{
  const reasons={
   origin:'The browser did not pass the expected security check. Open the authorization page directly.',
-  csrf:'The one-time setup form expired or was already used. Open Connect Google again to receive a fresh form.',
+  csrf:'The secure authorization form is invalid or has expired. Open Connect Google again.',
   large:'The submitted form was too large. Reload the setup page and try again.',
   password:'The setup password did not match the OAUTH_SETUP_TOKEN secret in Cloudflare. Check the exact saved value; do not paste it into chat.',
   vault:'The Cloudflare OAuth vault could not create a one-time authorization request. Check Worker Observability logs.',
@@ -59,40 +87,12 @@ export class GoogleOAuthVault extends DurableObject{
  constructor(ctx,env){
   super(ctx,env);
   this.env=env;
-  this.ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS oauth_pending (state TEXT PRIMARY KEY, verifier TEXT NOT NULL, browser_nonce TEXT NOT NULL, expires INTEGER NOT NULL)');
-  this.ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS oauth_setup_forms (token TEXT PRIMARY KEY, expires INTEGER NOT NULL)');
   this.ctx.storage.sql.exec('CREATE TABLE IF NOT EXISTS oauth_tokens (id TEXT PRIMARY KEY, encrypted TEXT NOT NULL, email TEXT NOT NULL)');
  }
  async key(){
   if(!this.env.OAUTH_SETUP_TOKEN)throw Error('OAuth vault encryption not configured');
   const digest=await sha256('pietro-portfolio-oauth-vault:v1:'+this.env.OAUTH_SETUP_TOKEN);
   return crypto.subtle.importKey('raw',digest,{name:'AES-GCM'},false,['encrypt','decrypt']);
- }
- async createForm(token){
-  const now=Date.now();
-  this.ctx.storage.sql.exec('DELETE FROM oauth_setup_forms WHERE expires < ?',now);
-  if(this.ctx.storage.sql.exec('SELECT COUNT(*) AS n FROM oauth_setup_forms').one().n>=20)throw Error('Too many pending setup forms');
-  this.ctx.storage.sql.exec('INSERT INTO oauth_setup_forms(token,expires) VALUES (?,?)',token,now+TTL);
- }
- async consumeForm(token){
-  if(typeof token!=='string'||!/^[-_A-Za-z0-9]{40,64}$/.test(token))return false;
-  const row=this.ctx.storage.sql.exec('SELECT expires FROM oauth_setup_forms WHERE token = ?',token).toArray()[0];
-  if(row)this.ctx.storage.sql.exec('DELETE FROM oauth_setup_forms WHERE token = ?',token);
-  return !!row&&Date.now()<=row.expires;
- }
- async begin(state,verifier){
-  const now=Date.now();
-  this.ctx.storage.sql.exec('DELETE FROM oauth_pending WHERE expires < ?',now);
-  const recent=this.ctx.storage.sql.exec('SELECT COUNT(*) AS n FROM oauth_pending').one();
-  if(recent.n>=4)throw Error('Too many pending setup attempts');
-  // Keep browser_nonce for existing SQLite schema compatibility; not a browser cookie.
-  this.ctx.storage.sql.exec('INSERT INTO oauth_pending(state,verifier,browser_nonce,expires) VALUES (?,?,?,?)',state,verifier,randomToken(),now+TTL);
- }
- async consume(state){
-  if(typeof state!=='string'||!/^[-_A-Za-z0-9]{40,64}$/.test(state))return null;
-  const row=this.ctx.storage.sql.exec('SELECT verifier,expires FROM oauth_pending WHERE state = ?',state).toArray()[0];
-  if(row)this.ctx.storage.sql.exec('DELETE FROM oauth_pending WHERE state = ?',state);
-  return row&&Date.now()<=row.expires?row.verifier:null;
  }
  async saveToken(token,email){
   if(!token||!email)throw Error('Missing OAuth refresh token');
@@ -132,10 +132,9 @@ export async function googleAdminRoute(request,env,path){
   if(!configured(env))return notConfigured();
   const status=new URL(request.url).searchParams.get('status');
   const message=status==='connected'?'<p style="color:#a4f3b8">Google authorization stored successfully. Your next step is to test Calendar and Gmail before enabling automated emails.</p>':status==='error'?'<p style="color:#ffcc9d">Authorization could not be completed. Check the Worker logs and retry.</p>':'<p>Authorize only your own Google account to generate Meet links and send appointment emails.</p>';
-  const csrf=randomToken();
-  try{await vault(env).createForm(csrf);}
-  catch(error){console.error('OAuth setup form failed:',error?.message||'Unknown');return invalid('vault');}
-  return htmlResponse('Pietro · Authorize Google','<small>PIETRO FORESTIERI / ADMIN SETUP</small><h1>Connect Google</h1>'+message+'<form action="/admin/google/start" method="post"><input type="hidden" name="csrf" value="'+csrf+'"><label for="code">Your Cloudflare OAuth setup password</label><input id="code" type="password" name="setup_token" autocomplete="off" minlength="24" required><button type="submit">AUTHORIZE GOOGLE</button></form><small>Your authorization is protected by your admin password and one-time codes saved securely on Cloudflare; browser cookies are not required.</small>');
+  // Signed and encrypted for ten minutes; no database round trip required.
+  const csrf=await seal(env.OAUTH_SETUP_TOKEN,'admin-form',{nonce:randomToken()});
+  return htmlResponse('Pietro · Authorize Google','<small>PIETRO FORESTIERI / ADMIN SETUP</small><h1>Connect Google</h1>'+message+'<form action="/admin/google/start" method="post"><input type="hidden" name="csrf" value="'+csrf+'"><label for="code">Your Cloudflare OAuth setup password</label><input id="code" type="password" name="setup_token" autocomplete="off" minlength="24" required><button type="submit">AUTHORIZE GOOGLE</button></form><small>Google access is restricted to your account. The setup uses secure, short-lived authorization codes without browser cookies.</small>');
  }
  if(path==='/admin/google/start'&&request.method==='POST'){
   if(!configured(env))return notConfigured();
@@ -146,23 +145,19 @@ export async function googleAdminRoute(request,env,path){
   const raw=await request.text();
   if(raw.length>2048)return invalid('large');
   const form=new URLSearchParams(raw);
-  let formAccepted=false;
-  try{formAccepted=await vault(env).consumeForm(form.get('csrf'));}
-  catch(error){
-   console.error('OAuth setup form validation failed:',error?.message||'Unknown');
-   return invalid('vault');
-  }
-  if(!formAccepted){
-   console.warn('Google OAuth setup refused: expired or reused form token');
+  const setupForm=await unseal(env.OAUTH_SETUP_TOKEN,'admin-form',form.get('csrf'));
+  if(!setupForm||typeof setupForm.nonce!=='string'||setupForm.nonce.length!==43){
+   console.warn('OAuth admin form rejected: invalid or expired authenticated form');
    return invalid('csrf');
   }
   if(!(await safeEqual(form.get('setup_token'),env.OAUTH_SETUP_TOKEN))){
    console.warn('Google OAuth setup refused: invalid setup credential');
    return invalid('password');
   }
-  const state=randomToken(),verifier=randomToken();
-  try{await vault(env).begin(state,verifier)}
-  catch(error){console.error('OAuth start failed:',error?.message||'Unknown');return invalid('vault');}
+  const verifier=randomToken();
+  // OAuth state stores the private PKCE verifier only as AES-GCM ciphertext.
+  // Google's authorization code can be exchanged only once.
+  const state=await seal(env.OAUTH_SETUP_TOKEN,'oauth-state',{verifier,nonce:randomToken()});
   const auth=new URL('https://accounts.google.com/o/oauth2/v2/auth');
   for(const [key,value] of Object.entries({
    response_type:'code',client_id:env.GOOGLE_OAUTH_CLIENT_ID,redirect_uri:REDIRECT_URI,
@@ -177,14 +172,12 @@ export async function googleAdminRoute(request,env,path){
   const state=url.searchParams.get('state'),code=url.searchParams.get('code');
   const bounce=(result)=>new Response(null,{status:303,headers:{...sessionHeaders,Location:'/admin/google?status='+result}});
   if(!configured(env)||!state||!code||url.searchParams.has('error'))return bounce('error');
-  // Single-use 256-bit state plus PKCE, organizer email verification.
-  let verifier;
-  try{verifier=await vault(env).consume(state);}
-  catch(error){
-   console.error('OAuth callback state validation failed:',error?.message||'Unknown');
-   return bounce('error');
-  }
-  if(!verifier)return bounce('error');
+  // Authenticated, time-limited encrypted OAuth state + PKCE.
+  // No cookies or Durable Object session state. Google code is one-time.
+  const sealedState=await unseal(env.OAUTH_SETUP_TOKEN,'oauth-state',state);
+  const verifier=sealedState?.verifier;
+  if(typeof verifier!=='string'||!/^[-_A-Za-z0-9]{43}$/.test(verifier)||
+     typeof sealedState.nonce!=='string'||sealedState.nonce.length!==43)return bounce('error');
   try{
    const tokenResponse=await fetch('https://oauth2.googleapis.com/token',{
     method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
