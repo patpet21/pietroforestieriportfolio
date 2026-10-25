@@ -13,7 +13,7 @@ const primary=[
  {to:'/services',label:'Services',Icon:BriefcaseBusiness},
  {to:'/gesture-lab',label:'Gesture Lab',Icon:Fingerprint},
  {to:'/contact',label:'Contact',Icon:Mail},
- {to:'/book',label:'Book a call',Icon:CalendarDays},
+ {to:'/book',label:'Free consultation',Icon:CalendarDays},
 ];
 const projects=[
  {to:'/projects/privatestone',label:'PrivateStone',Icon:Blocks},
@@ -68,14 +68,14 @@ export default function PortfolioNavigation(){
     </Link>
    </div>
    <span className="pf-shell-edition">INDEPENDENT DIGITAL PRACTICE <i/> NEW YORK · WORLDWIDE</span>
-   <Link to="/book" className="pf-shell-contact">BOOK A CALL <ArrowUpRight size={17}/></Link>
+   <Link to="/book" className="pf-shell-contact">FREE CONSULTATION <ArrowUpRight size={17}/></Link>
   </header>
 
   <aside className="pf-nav-rail" aria-label="Quick navigation">
    <button type="button" onClick={open} aria-label="Expand the navigation sidebar" className="pf-rail-expand" title="Expand navigation"><PanelLeftOpen size={22}/></button>
    <div className="pf-rail-separator"/>
    <nav className="pf-rail-links" aria-label="Main navigation">
-    {primary.map(({to,label,Icon})=><NavLink key={to} to={to} end={to==='/'} aria-label={label} title={label} className={({isActive})=>'pf-rail-link'+(isActive?' is-active':'')}><Icon size={21} strokeWidth={1.75}/><span className="pf-rail-tooltip">{label}</span></NavLink>)}
+    {primary.map(({to,label,Icon})=><NavLink key={to} to={to} end={to==='/'} aria-label={label} title={label} className={({isActive})=>'pf-rail-link'+(to==='/book'?' pf-rail-book':'')+(isActive?' is-active':'')}><Icon size={21} strokeWidth={1.75}/><span className="pf-rail-tooltip">{label}</span></NavLink>)}
    </nav>
    <div className="pf-rail-bottom"><span>PF</span><small>26</small></div>
   </aside>
@@ -91,7 +91,7 @@ export default function PortfolioNavigation(){
     <div className="pf-sidebar-intro"><small>THE PORTFOLIO</small><p>Ideas made tangible.<br/><em>Explore the work.</em></p></div>
     <nav aria-label="Portfolio pages" className="pf-sidebar-nav">
      <span className="pf-sidebar-section-label">01 / NAVIGATION</span>
-     {primary.map(({to,label,Icon})=><NavLink key={to} to={to} end={to==='/'} className={'pf-sidebar-item'+(isActive(to)?' is-active':'')}><Icon size={19} strokeWidth={1.65}/><span>{label}</span><ArrowRight size={14} className="pf-sidebar-arrow"/></NavLink>)}
+     {primary.map(({to,label,Icon})=><NavLink key={to} to={to} end={to==='/'} className={'pf-sidebar-item'+(to==='/book'?' pf-sidebar-book-item':'')+(isActive(to)?' is-active':'')}><Icon size={19} strokeWidth={1.65}/><span>{label}</span><ArrowRight size={14} className="pf-sidebar-arrow"/></NavLink>)}
     </nav>
     <div className="pf-sidebar-projects">
      <span className="pf-sidebar-section-label">02 / FEATURED PROJECTS</span>
@@ -99,9 +99,10 @@ export default function PortfolioNavigation(){
     </div>
    </div>
    <div className="pf-sidebar-footer">
-    <span>AVAILABLE FOR COLLABORATION</span>
-    <Link to="/contact">START A CONVERSATION <ArrowUpRight size={17}/></Link>
-    <small>STRUCTURE · CREATIVITY · EXECUTION</small>
+    <span>YOUR NEXT STEP / NO OBLIGATION</span>
+    <Link to="/book" className="pf-sidebar-book-cta"><CalendarDays size={18}/> BOOK A FREE CONSULTATION <ArrowUpRight size={17}/></Link>
+    <Link to="/contact" className="pf-sidebar-message-link">PREFER A MESSAGE? <ArrowRight size={14}/></Link>
+    <small>15 · 30 · 45 MIN · ONLINE</small>
    </div>
   </aside>
  </>;
