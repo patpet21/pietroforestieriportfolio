@@ -105,6 +105,13 @@ export default function BookingCalendar(){
    .then(r=>r.ok?r.json():null).then(json=>{if(json?.configured)setData(json as Reply);}).catch(()=>{});
   return()=>controller.abort();
  },[refreshAfterBooking,week,duration]);
+ useEffect(()=>{
+  if(!selected||typeof window==='undefined'||window.innerWidth>660)return;
+  const frame=window.requestAnimationFrame(()=>{
+   document.getElementById('pfc-confirm-form')?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  });
+  return()=>window.cancelAnimationFrame(frame);
+ },[selected]);
  const previousDisabled=week<=initialWeek();
  const nextDisabled=week>=monday(moveDays(today,45));
  return <div className="pfc-shell">
