@@ -33,11 +33,11 @@ const zoneLabel=(tz:string)=>{
  const part=new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'shortOffset'}).formatToParts(new Date()).find(v=>v.type==='timeZoneName')?.value||'';
  return (zones.find(x=>x.id===tz)?.label||tz)+' ('+part+')';
 };
-const hourRows=(a:number,b:number)=>Array.from({length:Math.max(0,(b-a)*4)},(_,i)=>a*60+i*15);
+const hourRows=(a:number,b:number)=>Array.from({length:Math.max(0,(b-a)*2)},(_,i)=>a*60+i*30);
 const clock=(mins:number)=>String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
 
 export default function BookingCalendar(){
- const [duration,setDuration]=useState(30);
+ const duration=30;
  const [zone,setZone]=useState<string>(calendarZone);
  const [week,setWeek]=useState(initialWeek);
  const [data,setData]=useState<Reply|null>(null);
@@ -105,14 +105,14 @@ export default function BookingCalendar(){
    <aside className="pfc-info">
     <div className="pfc-identity"><img src="https://i.ibb.co/vvqkpWh8/trigosatconsulting.png" alt="Trigosat Consulting" onError={e=>{e.currentTarget.style.display='none';}}/><div><strong>Pietro Forestieri</strong><small>Project Management · AI · Real Estate</small><span><i/> Based in New York City</span></div></div>
     <div className="pfc-intro"><small>COMPLIMENTARY ONLINE CONSULTATION</small><h1>Your free consultation<span>.</span></h1><p>Tell me what you're building or where your business needs better systems. We'll explore practical next steps together — with no obligation.</p></div>
-    <div className="pfc-config"><label id="pfc-duration-label">HOW LONG?</label><div className="pfc-duration" role="group" aria-labelledby="pfc-duration-label">{[15,30,45].map(min=><button type="button" key={min} aria-pressed={duration===min} className={duration===min?'is-active':''} onClick={()=>setDuration(min)}>{min} min</button>)}</div></div>
+    <div className="pfc-config"><span className="pfc-duration-title">CALL DURATION</span><div className="pfc-duration-fixed"><Clock3 size={18}/> <strong>30 MINUTES</strong><span>COMPLIMENTARY</span></div></div>
     <div className="pfc-config"><label htmlFor="pfc-timezone">SHOW TIMES IN</label><div className="pfc-zone-select"><Globe2 size={18}/><select id="pfc-timezone" value={zone} onChange={e=>setZone(e.target.value)}>{zones.map(item=><option value={item.id} key={item.id}>{zoneLabel(item.id)}</option>)}</select><ChevronDown size={17}/></div></div>
-    <div className="pfc-footnotes"><span><Video size={18}/> Video-call details provided after confirmation</span><span><Clock3 size={18}/> Online · No commitment</span><span><ShieldCheck size={18}/> Only genuinely free calendar slots are bookable</span></div>
+    <div className="pfc-footnotes"><span><Video size={18}/> Video-call details provided after confirmation</span><span><Clock3 size={18}/> Online · No commitment</span><span><ShieldCheck size={18}/> Available 30-minute slots only</span></div>
     <Link className="pfc-contact-alt" to="/contact">Prefer to write a message? <ArrowRight size={16}/></Link>
    </aside>
    <section className="pfc-schedule" aria-label="Appointment availability">
     <header className="pfc-schedule-heading">
-     <div><small>PRIVATE BOOKING / LIVE AVAILABILITY</small><h2><CalendarDays size={25}/> Choose a time</h2><p>Times shown in <strong>{zoneLabel(zone)}</strong>. Date columns follow New York business days.</p></div>
+     <div><small>PRIVATE BOOKING / LIVE AVAILABILITY</small><h2><CalendarDays size={25}/> Choose a time</h2><p>Appointments display in <strong>{zoneLabel(zone)}</strong> when selected. The grid uses New York business time.</p></div>
      <div className="pfc-week-actions"><strong>{dateTitle(dates[0])} – {dateTitle(dates[4])}</strong><div><button type="button" onClick={()=>setWeek(initialWeek())}>Today</button><button type="button" disabled={previousDisabled} aria-label="Previous week" onClick={()=>setWeek(moveDays(week,-7))}><ArrowLeft size={17}/></button><button type="button" disabled={nextDisabled} aria-label="Next week" onClick={()=>setWeek(moveDays(week,7))}><ArrowRight size={17}/></button><button type="button" aria-label="Refresh availability" onClick={()=>setRefresh(v=>v+1)}><RefreshCcw size={16}/></button></div></div>
     </header>
     <div className="pfc-grid-wrap"><div className="pfc-timetable">
@@ -134,7 +134,7 @@ export default function BookingCalendar(){
       </div>)}
      </div></div>
     </div></div>
-    {status==='pending'&&<div className="pfc-system-note" role="status"><CalendarDays size={19}/><div><strong>Calendar integration is ready for setup.</strong><p>Availability will appear here when the Google Calendar connection is configured in Cloudflare Workers. No unverified times can be selected.</p></div></div>}
+    {status==='pending'&&<div className="pfc-system-note" role="status"><CalendarDays size={19}/><div><strong>Calendar is temporarily unavailable.</strong><p>Availability will appear here when the Google Calendar connection is configured in Cloudflare Workers. Please use the contact form if you cannot see available times.</p></div></div>}
     {status==='error'&&<div className="pfc-system-note is-error" role="alert"><div><strong>Calendar currently unavailable</strong><p>{feedback} <Link to="/contact">Send a message instead.</Link></p></div></div>}
     {status==='ready'&&!selected&&!confirmed&&<p className="pfc-calendar-hint"><CheckCircle2 size={16}/> Only available slots are selectable. Select a time to continue.</p>}
     {selected&&<div className="pfc-confirm-card" id="pfc-confirm-form"><div className="pfc-confirm-head"><div><small>STEP 02 / YOUR DETAILS</small><strong>{readable(selected.start,zone)} · {duration} min</strong></div><button onClick={()=>setSelected(null)} type="button" aria-label="Cancel selected time">Change time</button></div>
