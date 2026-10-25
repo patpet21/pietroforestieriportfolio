@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,CalendarCheck,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Globe2,Link2,LoaderCircle,RefreshCcw,ShieldCheck,Video} from 'lucide-react';
+import {ArrowLeft,ArrowRight,ArrowUpRight,CalendarCheck,CalendarDays,Check,CheckCircle2,ChevronDown,Clock3,Globe2,Link2,LoaderCircle,RefreshCcw,ShieldCheck,Video} from 'lucide-react';
 import './BookingCalendar.css';
 
 type Slot={date:string;start:string;end:string;available:boolean};
