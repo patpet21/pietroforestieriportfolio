@@ -3053,3 +3053,23 @@ a:focus-visible,button:focus-visible{outline:2px solid #c7ffff;outline-offset:4p
  .gsl-home-promo p{font-size:12px}
  .page-head{padding-bottom:60px}
 }
+
+
+/* Home is an introduction, not a second Gesture Lab workspace. */
+.gsl-home-promo{padding:32px 0!important}
+.gsl-home-promo-inner{grid-template-columns:minmax(0,1.35fr) minmax(220px,.65fr);gap:25px}
+.gsl-home-promo-art{min-height:177px}
+.gsl-home-hand{width:132px;height:132px}
+.gsl-home-hand svg{width:60px;height:60px}
+.gsl-home-orbit{width:207px;height:111px}
+.gsl-home-promo h2{font-size:clamp(30px,3.15vw,44px)}
+.gsl-home-promo a{border-radius:9px;transition:transform .2s ease,box-shadow .2s ease}
+@media(max-width:760px){
+ .gsl-home-promo{padding:27px 0!important}
+ .gsl-home-promo-inner{grid-template-columns:1fr;gap:8px}
+ .gsl-home-promo-art{min-height:135px}
+ .gsl-home-hand{width:108px;height:108px}
+ .gsl-home-hand svg{width:52px;height:52px}
+ .gsl-home-orbit{width:178px;height:95px}
+ .gsl-home-tag{font-size:7px;padding:7px 9px}
+}
