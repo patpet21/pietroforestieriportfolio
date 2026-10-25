@@ -6,7 +6,7 @@
 import { DurableObject } from 'cloudflare:workers';
 
 const ZONE = 'America/New_York';
-const DURATIONS = [15, 30, 45];
+const DURATIONS = [30];
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Vary': 'Origin' };
 const MONTH_FORMAT = new Intl.DateTimeFormat('en-US', { timeZone: ZONE, year:'numeric', month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23' });
 let tokenCache = { value: '', until: 0, signature: '' };
@@ -48,7 +48,7 @@ function slotsForWeek(env,week,duration){
  for(let i=0;i<7;i++){
   const day=advance(week,i);
   if(day<current||day>latest||!weekdays.includes(new Date(day+'T12:00:00Z').getUTCDay()))continue;
-  for(let minutes=first*60;minutes+duration<=last*60;minutes+=15){
+  for(let minutes=first*60;minutes+duration<=last*60;minutes+=30){
    const start=wallToUTC(day,Math.floor(minutes/60),minutes%60);
    if(start<minTime)continue;
    out.push({date:day,start:new Date(start).toISOString(),end:new Date(start+duration*60000).toISOString()});
@@ -123,7 +123,7 @@ const notBusy=(slot,intervals)=>{
 };
 async function availability(request,env,origin){
  const url=new URL(request.url),duration=Number(url.searchParams.get('duration')||30);
- if(!DURATIONS.includes(duration))return respond({error:'Select 15, 30 or 45 minutes'},400,origin);
+ if(!DURATIONS.includes(duration))return respond({error:'Consultations are 30 minutes only'},400,origin);
  const today=newYorkDay(new Date()),week=monday(url.searchParams.get('week')||today);
  const {first,last,windowDays}=policy(env);
  if(week<advance(monday(today),-7)||week>advance(monday(today),windowDays+7))return respond({error:'Week outside booking window'},400,origin);
