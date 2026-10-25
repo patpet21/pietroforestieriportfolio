@@ -42,7 +42,16 @@ const htmlResponse=(title,body,status=200,headers={})=>new Response('<!doctype h
  status,headers:{'Content-Type':'text/html; charset=utf-8',...sessionHeaders,...headers}
 });
 const notConfigured=()=>htmlResponse('Not configured','<h1>Google setup not ready</h1><p>First add your OAuth client ID, client secret, organizer email and a random OAuth setup password to Cloudflare Variables and Secrets.</p>',503);
-const invalid=()=>htmlResponse('Not authorized','<h1>Authorization not available</h1><p>The setup request is invalid or expired. Return to the setup page and start again.</p><a href="/admin/google">Try again</a>',403);
+const invalid=(code='request')=>{
+ const reasons={
+  origin:'The browser did not pass the same-origin security check. Open the authorization page directly, not through an embedded frame.',
+  large:'The submitted form was too large. Reload the setup page and try again.',
+  password:'The setup password did not match the OAUTH_SETUP_TOKEN secret in Cloudflare. Check the exact saved value; do not paste it into chat.',
+  vault:'The Cloudflare OAuth vault could not create a one-time authorization request. Check Worker Observability logs.',
+  request:'This authorization request could not be accepted.'
+ };
+ return htmlResponse('Google setup error','<h1>Authorization could not start</h1><p>'+reasons[code]+'</p><a href="/admin/google">Return to Google setup</a>',403);
+};
 
 export class GoogleOAuthVault extends DurableObject{
  constructor(ctx,env){
@@ -111,15 +120,26 @@ export async function googleAdminRoute(request,env,path){
  }
  if(path==='/admin/google/start'&&request.method==='POST'){
   if(!configured(env))return notConfigured();
-  if(request.headers.get('Origin')!==ADMIN_ORIGIN)return invalid();
-  if(Number(request.headers.get('Content-Length')||0)>2048)return invalid();
+  // The administrator's password protects this route. Some privacy browsers
+  // omit Origin on same-origin HTML form POSTs, so only reject an Origin that
+  // is explicitly foreign; Fetch Metadata also rejects cross-site submissions.
+  const origin=request.headers.get('Origin');
+  const fetchSite=request.headers.get('Sec-Fetch-Site');
+  if((origin&&origin!==ADMIN_ORIGIN)||(fetchSite&&fetchSite!=='same-origin'&&fetchSite!=='none')){
+   console.warn('Google OAuth setup refused: cross-origin form submission');
+   return invalid('origin');
+  }
+  if(Number(request.headers.get('Content-Length')||0)>2048)return invalid('large');
   const raw=await request.text();
-  if(raw.length>2048)return invalid();
+  if(raw.length>2048)return invalid('large');
   const form=new URLSearchParams(raw);
-  if(!(await safeEqual(form.get('setup_token'),env.OAUTH_SETUP_TOKEN)))return invalid();
+  if(!(await safeEqual(form.get('setup_token'),env.OAUTH_SETUP_TOKEN))){
+   console.warn('Google OAuth setup refused: invalid setup credential');
+   return invalid('password');
+  }
   const state=randomToken(),verifier=randomToken(),browserNonce=randomToken();
   try{await vault(env).begin(state,verifier,browserNonce)}
-  catch(error){console.error('OAuth start failed:',error?.message||'Unknown');return invalid();}
+  catch(error){console.error('OAuth start failed:',error?.message||'Unknown');return invalid('vault');}
   const auth=new URL('https://accounts.google.com/o/oauth2/v2/auth');
   for(const [key,value] of Object.entries({
    response_type:'code',client_id:env.GOOGLE_OAUTH_CLIENT_ID,redirect_uri:REDIRECT_URI,
