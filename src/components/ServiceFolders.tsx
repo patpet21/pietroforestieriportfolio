@@ -44,7 +44,7 @@ export default function ServiceFolders(){
       image={item.image} files={item.files} action="more" appearDelay={i*110}
       open={openId===item.id} onOpenChange={state=>setOpenId(state?item.id:null)}
       menu={[{label:'Explore project',onSelect:()=>navigate(item.href)}]}
-      onFileSelect={file=>{if(file.href?.startsWith('/')){setOpenId(null);navigate(file.href);}}}/>
+      />
     </div>
     <div className="pf-glass-service-details">
      <small>{item.number} / {item.category}</small>
