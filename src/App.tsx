@@ -12,11 +12,12 @@ import ServiceExperience from './components/ServiceExperience';
 import ServiceFolders from './components/ServiceFolders';
 import PortfolioNavigation from './components/PortfolioNavigation';
 import BookingCalendar from './components/BookingCalendar';
+import PortfolioLegal from './components/PortfolioLegal';
 import GestureLab from './components/GestureLab';
 import{Link,useLocation}from'react-router-dom';import{motion}from'motion/react';import{ArrowUpRight,ArrowRight,ArrowDown,MapPin,CheckCircle2,CalendarDays,Hand}from'lucide-react';import{projects,categories}from'./data/projects';
 import{projectHighlights}from'./data/projectHighlights';import type{Project}from'./data/projects';
 const appear={initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},viewport:{once:true,amount:.14},transition:{duration:.65}};
-function Foot(){return <footer><div className="wrap"><small className="eyebrow">THE NEXT STEP</small><h2>Good ideas deserve<br/><em>great execution.</em></h2><Link className="footer-arrow" to="/contact"><ArrowUpRight size={37}/></Link><div className="footer-bottom"><span>© {new Date().getFullYear()} PIETRO FORESTIERI</span><span>NEW YORK CITY · INDEPENDENT PROFESSIONAL</span><a href="https://github.com/patpet21" target="_blank" rel="noreferrer">GITHUB ↗</a></div></div></footer>}
+function Foot(){return <footer><div className="wrap"><small className="eyebrow">THE NEXT STEP</small><h2>Good ideas deserve<br/><em>great execution.</em></h2><Link className="footer-arrow" to="/contact"><ArrowUpRight size={37}/></Link><div className="footer-bottom"><span>© {new Date().getFullYear()} PIETRO FORESTIERI</span><span>NEW YORK CITY · INDEPENDENT PROFESSIONAL</span><div className="pf-legal-footer-links"><Link to="/privacy">PRIVACY</Link><Link to="/terms">TERMS</Link><a href="https://github.com/patpet21" target="_blank" rel="noreferrer">GITHUB ↗</a></div></div></div></footer>}
 function Heading({label,title,description}:{label:string;title:string;description?:string}){return <motion.div {...appear} className="section-head"><small className="eyebrow"><i/> {label}</small><div><h2>{title}</h2>{description&&<p>{description}</p>}</div></motion.div>}
 function Artwork({p}:{p:Project}){
  return <div className="art pf-case-art" data-project={p.id} style={{'--color':p.accent} as React.CSSProperties}>
@@ -234,4 +235,4 @@ function Contact(){
    </form>
   </div></section></>;
 }
-export default function App(){const loc=useLocation();return <><PortfolioNavigation/><main key={loc.pathname}>{loc.pathname==='/'?<Home/>:loc.pathname==='/about'?<About/>:loc.pathname==='/projects'?<Projects/>:loc.pathname.startsWith('/projects/')?<Case/>:loc.pathname==='/services'?<Services/>:loc.pathname==='/gesture-lab'?<GestureLab/>:loc.pathname==='/contact'?<Contact/>:loc.pathname==='/book'?<BookingCalendar/>:<PageHead tag="404" description="Try the homepage.">Page not found.</PageHead>}</main><PortfolioGuide/><Foot/></>}
+export default function App(){const loc=useLocation();return <><PortfolioNavigation/><main key={loc.pathname}>{loc.pathname==='/'?<Home/>:loc.pathname==='/about'?<About/>:loc.pathname==='/projects'?<Projects/>:loc.pathname.startsWith('/projects/')?<Case/>:loc.pathname==='/services'?<Services/>:loc.pathname==='/gesture-lab'?<GestureLab/>:loc.pathname==='/contact'?<Contact/>:loc.pathname==='/book'?<BookingCalendar/>:loc.pathname==='/privacy'?<PortfolioLegal kind="privacy"/>:loc.pathname==='/terms'?<PortfolioLegal kind="terms"/>:<PageHead tag="404" description="Try the homepage.">Page not found.</PageHead>}</main><PortfolioGuide/><Foot/></>}
