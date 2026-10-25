@@ -112,9 +112,10 @@ access, Gmail sending, and basic identity. After consent, Google sends
 you back to Cloudflare and you should see a green success message.
 
 This form sends the password via an HTTPS POST body, not a URL.
-The Worker checks browser origin, OAuth state, an HttpOnly one-time cookie,
-PKCE, the authorized scopes and the Google email address before storing the
-refresh token ciphertext.
+The Worker verifies a single-use 10-minute setup form token stored in
+Cloudflare, your administrator password, a one-time OAuth state, PKCE,
+the granted scopes and the Google account email before saving the refresh
+token ciphertext. **No browser cookies are required** for setup or callback.
 
 ## Step 5 — Test the live connection
 
