@@ -22,6 +22,7 @@ const monday=(key:string)=>{
  const day=isoDate(key),offset=(day.getUTCDay()+6)%7;
  return moveDays(key,-offset);
 };
+const initialWeek=()=>{const now=dayKey(new Date()),start=monday(now);return now>moveDays(start,4)?moveDays(start,7):start;};
 const timeLabel=(iso:string,tz:string)=>new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
 const dateTitle=(day:string)=>new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',timeZone:'UTC'}).format(isoDate(day));
 const weekday=(day:string)=>new Intl.DateTimeFormat('en-US',{weekday:'short',timeZone:'UTC'}).format(isoDate(day));
@@ -36,7 +37,7 @@ const clock=(mins:number)=>String(Math.floor(mins/60)).padStart(2,'0')+':'+Strin
 export default function BookingCalendar(){
  const [duration,setDuration]=useState(30);
  const [zone,setZone]=useState<string>(calendarZone);
- const [week,setWeek]=useState(()=>monday(dayKey(new Date())));
+ const [week,setWeek]=useState(initialWeek);
  const [data,setData]=useState<Reply|null>(null);
  const [status,setStatus]=useState<Status>('loading');
  const [selected,setSelected]=useState<Slot|null>(null);
@@ -94,7 +95,7 @@ export default function BookingCalendar(){
    .then(r=>r.ok?r.json():null).then(json=>{if(json?.configured)setData(json as Reply);}).catch(()=>{});
   return()=>controller.abort();
  },[refreshAfterBooking,week,duration]);
- const previousDisabled=week<=monday(today);
+ const previousDisabled=week<=initialWeek();
  const nextDisabled=week>=monday(moveDays(today,45));
  return <div className="pfc-shell">
   <div className="pfc-topbar"><span className="pfc-booking-url"><Link2 size={14}/> PIETRO FORESTIERI / BOOK A CALL</span><span className="pfc-topbar-right"><ShieldCheck size={14}/> GOOGLE CALENDAR AVAILABILITY</span></div>
@@ -110,7 +111,7 @@ export default function BookingCalendar(){
    <section className="pfc-schedule" aria-label="Appointment availability">
     <header className="pfc-schedule-heading">
      <div><small>PRIVATE BOOKING / LIVE AVAILABILITY</small><h2><CalendarDays size={25}/> Choose a time</h2><p>Times shown in <strong>{zoneLabel(zone)}</strong>. Date columns follow New York business days.</p></div>
-     <div className="pfc-week-actions"><strong>{dateTitle(dates[0])} – {dateTitle(dates[4])}</strong><div><button type="button" onClick={()=>setWeek(monday(today))}>Today</button><button type="button" disabled={previousDisabled} aria-label="Previous week" onClick={()=>setWeek(moveDays(week,-7))}><ArrowLeft size={17}/></button><button type="button" disabled={nextDisabled} aria-label="Next week" onClick={()=>setWeek(moveDays(week,7))}><ArrowRight size={17}/></button><button type="button" aria-label="Refresh availability" onClick={()=>setRefresh(v=>v+1)}><RefreshCcw size={16}/></button></div></div>
+     <div className="pfc-week-actions"><strong>{dateTitle(dates[0])} – {dateTitle(dates[4])}</strong><div><button type="button" onClick={()=>setWeek(initialWeek())}>Today</button><button type="button" disabled={previousDisabled} aria-label="Previous week" onClick={()=>setWeek(moveDays(week,-7))}><ArrowLeft size={17}/></button><button type="button" disabled={nextDisabled} aria-label="Next week" onClick={()=>setWeek(moveDays(week,7))}><ArrowRight size={17}/></button><button type="button" aria-label="Refresh availability" onClick={()=>setRefresh(v=>v+1)}><RefreshCcw size={16}/></button></div></div>
     </header>
     <div className="pfc-grid-wrap"><div className="pfc-timetable">
      <div className="pfc-table-head"><div className="pfc-corner">NY TIME</div>{dates.map(day=><div className={'pfc-table-day'+(today===day?' is-today':'')} key={day}><span>{weekday(day)}</span><strong>{isoDate(day).getUTCDate()}</strong></div>)}</div>
