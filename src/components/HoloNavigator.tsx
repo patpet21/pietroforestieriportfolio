@@ -591,7 +591,7 @@ export default function HoloNavigator(){
    {status==='ready'?<>
     <div className="holo-natural-status"><span>{handCount} {handCount===1?'HAND':'HANDS'} · {keyboard?airFrame.fingers.length+' POINTERS':'1 CONTROL'} · {backend} · ZOOM {Math.round(zoomLevel*100)}%</span><span>{stateLabel}</span><span className="holo-target-readout">TARGET: {targetName||'— AIM AT A BUTTON'}</span><span className="holo-pinch-readout">PUSH: <b>{pressSignal}</b></span></div>
     <button type="button" data-holo-test className="holo-gesture-test" onClick={()=>{setTestClicks(n=>n+1);setLabel('TEST CLICK ✓ · ACTIVATED');}}>TEST GESTURE CLICK <strong>{testClicks?('✓ '+testClicks):'↗'}</strong></button>
-    {!mobileView&&location.pathname==='/gesture-lab'?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
+    {location.pathname==='/gesture-lab'?<button type="button" className={'holo-air-toggle '+(keyboard?'active':'')} onClick={()=>{
      keyboardRef.current=!keyboardRef.current;setKeyboard(keyboardRef.current);
      airEngineRef.current.clearCalibration();
      autoCalibrationRef.current=keyboardRef.current&&airModeRef.current==='tap'?{enabled:true,since:0,last:null,hint:''}:freshAutoCalibration();
@@ -600,7 +600,7 @@ export default function HoloNavigator(){
      controlHandRef.current=null;poseRef.current={kind:'idle',since:0};
      clearHover();controllerRef.current.reset();palmScrollRef.current=newPalmScroll();
      setLabel(keyboardRef.current?'AIR KEYBOARD ON · AIM THEN PUSH FORWARD':'AIR KEYBOARD OFF');
-    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'EXPERIMENTAL AIR KEYBOARD'}</button>:<p className="holo-mobile-note">{mobileView?'MOBILE MODE: one hand for scrolling and pointing. Experimental Air Type requires desktop Gesture Lab.':'Experimental Air Type is available separately in Gesture Lab.'}</p>}
+    }}><Keyboard size={15}/>{keyboard?'CLOSE AIR KEYBOARD':'EXPERIMENTAL AIR KEYBOARD'}</button>:null}
     <button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA</button>
    </>:status==='preview'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> STOP CAMERA · RETRY AFTER</button>
    :status==='loading'?<button type="button" className="holo-natural-stop" onClick={stop}><CameraOff size={15}/> CANCEL CAMERA START</button>
