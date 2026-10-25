@@ -157,7 +157,7 @@ Check these in order:
    `BOOKINGS_ENABLED` as a **Text** variable with value `true`; Deploy.
    This variable is deliberately absent from Wrangler configuration and
    `keep_vars = true` preserves it across subsequent CLI deployments.
-4. Refresh the portfolio. Only free 15-, 30- and 45-minute slots should
+4. Refresh the portfolio. Only free 30-minute slots should
    be selectable.
 5. Create a busy event on the personal calendar, refresh, and confirm
    its overlapping slots are unavailable.
