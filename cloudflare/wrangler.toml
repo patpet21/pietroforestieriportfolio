@@ -27,6 +27,8 @@ BOOKING_END_HOUR = "17"
 BOOKING_WEEKDAYS = "1,2,3,4,5"
 BOOKING_MIN_NOTICE_HOURS = "24"
 BOOKING_WINDOW_DAYS = "45"
+# OAuth is connected: queue branded Gmail confirmation and 15-minute reminder for new bookings.
+EMAIL_NOTIFICATIONS_ENABLED = "true"
 
 # Booking is disabled until BOOKINGS_ENABLED=true is added in the Cloudflare dashboard.
 # Dashboard variables survive redeploys because keep_vars=true.
@@ -38,4 +40,4 @@ BOOKING_WINDOW_DAYS = "45"
 # GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, OAUTH_SETUP_TOKEN.
 # BOOKING_ORGANIZER_EMAIL is a regular environment variable.
 # GOOGLE_OAUTH_REFRESH_TOKEN is not needed: OAuth vault encrypts and stores it.
-# EMAIL_NOTIFICATIONS_ENABLED should stay false until an end-to-end Gmail test.
+# EMAIL_NOTIFICATIONS_ENABLED=true activates branded mail for NEW bookings.\n# Validate delivery with an actual controlled reservation; existing bookings are not retroactively queued.
