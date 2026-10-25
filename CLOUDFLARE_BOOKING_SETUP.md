@@ -18,7 +18,7 @@ belong to Cloudflare and run only for the Worker.
 1. Open Cloudflare Dashboard → **Workers & Pages → Create application**.
 2. Choose to **Import an existing Git repository** and authorize access to
    `patpet21/pietroforestieriportfolio`.
-3. Set the Worker name **exactly** to `pietro-portfolio-booking`.
+3. Set the Worker name to `pietroforestieriportfolio` to match the existing Cloudflare application and the Wrangler configuration.
 4. Configure **Production branch** `main`, **Root directory** `cloudflare`.
 5. Leave **Build command** empty; use **Deploy command** `npx wrangler deploy`.
 6. Deploy. The `cloudflare/wrangler.toml` file automatically creates the
@@ -46,14 +46,14 @@ Sign in with the **same Cloudflare account** that manages `propertydex.xyz`.
 Wrangler may ask to install its package for this command; this does not create
 a GitHub Actions workflow or move hosting.
 
-The deploy creates `pietro-portfolio-booking` and its SQLite-backed
+The deploy creates `pietroforestieriportfolio` and its SQLite-backed
 `BOOKING_LOCKS` Durable Object. The Worker intentionally has no public
 `workers.dev` URL until you attach the custom domain below. Workers + SQLite Durable Objects and Worker
 Secrets are supported on the Free plan subject to Cloudflare limits.
 
 ## 2. Attach the Cloudflare custom domain
 
-Cloudflare Dashboard → **Workers & Pages** → `pietro-portfolio-booking`
+Cloudflare Dashboard → **Workers & Pages** → `pietroforestieriportfolio`
 → **Settings → Domains & Routes → Add → Custom Domain**:
 
 ```
@@ -75,7 +75,7 @@ Before secrets are added, expect `googleConfigured: false` and
 
 ## 3. Set Google Calendar credentials ONLY on Cloudflare
 
-Cloudflare → Workers & Pages → `pietro-portfolio-booking` →
+Cloudflare → Workers & Pages → `pietroforestieriportfolio` →
 **Settings → Variables and Secrets → Add**.
 
 Add these keys (the Google Calendar API must already be enabled, and the
