@@ -4,6 +4,10 @@
  * This Worker requires a matching SQLite Durable Object binding BOOKING_LOCKS.
  */
 import { DurableObject } from 'cloudflare:workers';
+import {
+ GoogleOAuthVault,googleOAuthReady,googleNotificationsReady,storedGoogleRefreshToken,googleAdminRoute
+} from './google-oauth.js';
+export {GoogleOAuthVault};
 
 const ZONE = 'America/New_York';
 const DURATIONS = [30];
@@ -108,10 +112,10 @@ async function accessToken(env){
  * Never put Google OAuth secrets in repository or Netlify.
  */
 let userTokenCache={token:'',expires:0,key:''};
-const oauthReady=env=>!!(env.GOOGLE_OAUTH_CLIENT_ID&&env.GOOGLE_OAUTH_CLIENT_SECRET&&env.GOOGLE_OAUTH_REFRESH_TOKEN);
-const notificationReady=env=>oauthReady(env)&&env.EMAIL_NOTIFICATIONS_ENABLED==='true'&&!!env.BOOKING_ORGANIZER_EMAIL;
+const oauthReady=googleOAuthReady;
+const notificationReady=googleNotificationsReady;
 async function userAccessToken(env){
- if(!oauthReady(env))throw Error('Google user OAuth has not been configured');
+ if(!(await oauthReady(env)))throw Error('Google user OAuth has not been configured');
  const hint=env.GOOGLE_OAUTH_CLIENT_ID;
  if(userTokenCache.token&&userTokenCache.key===hint&&Date.now()<userTokenCache.expires)return userTokenCache.token;
  const response=await fetch('https://oauth2.googleapis.com/token',{
@@ -119,7 +123,7 @@ async function userAccessToken(env){
   body:new URLSearchParams({
    client_id:env.GOOGLE_OAUTH_CLIENT_ID,
    client_secret:env.GOOGLE_OAUTH_CLIENT_SECRET,
-   refresh_token:env.GOOGLE_OAUTH_REFRESH_TOKEN,
+   refresh_token:await storedGoogleRefreshToken(env),
    grant_type:'refresh_token'
   })
  });
@@ -216,7 +220,7 @@ async function createEvent(env,serviceToken,data){
  const bytes=new TextEncoder().encode(env.GOOGLE_CALENDAR_ID+'|'+data.start+'|'+data.end);
  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
  const id=Array.from(hash.slice(0,16),b=>b.toString(16).padStart(2,'0')).join('');
- const useUser=oauthReady(env);
+ const useUser=await oauthReady(env);
  const token=useUser?await userAccessToken(env):serviceToken;
  const base='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'/events';
  const event={
@@ -281,7 +285,7 @@ async function booking(request,env,origin){
   if(event.duplicate){await lock.finish(reservation.id,true);return respond({error:'That slot is already booked.'},409,origin);}
   await lock.finish(reservation.id,true);
   let notificationQueued=false;
-  if(notificationReady(env)){
+  if(await notificationReady(env)){
    try{
     await lock.enqueueNotice({id:event.id,start,email,name,meetUrl:event.meetUrl||''});
     notificationQueued=true;
@@ -338,7 +342,7 @@ export class BookingGate extends DurableObject {
   return this.ctx.storage.sql.exec('SELECT start_ms AS start,end_ms AS end FROM reservations').toArray();
  }
  async enqueueNotice(data){
-  if(!notificationReady(this.env))throw Error('Notification integration not ready');
+  if(!(await notificationReady(this.env)))throw Error('Notification integration not ready');
   const sql=this.ctx.storage.sql;
   sql.exec('INSERT OR IGNORE INTO booking_messages (id,start_iso,guest,name,meet_url,retry_at) VALUES (?,?,?,?,?,?)',
    data.id,data.start,data.email,data.name,data.meetUrl||'',Date.now()+2000);
@@ -418,13 +422,15 @@ export default {
  async fetch(request,env){
   const origin=allowedOrigin(request,env);
   // CORS is not authentication, but it prevents third-party browser embedding.
-  if(request.headers.has('Origin')&&!origin)return respond({error:'Origin not permitted'},403);
+  if(request.headers.has('Origin')&&!origin&&request.headers.get('Origin')!==new URL(request.url).origin)return respond({error:'Origin not permitted'},403);
   if(request.method==='OPTIONS'){
    if(!origin)return respond({error:'Origin not permitted'},403);
    const headers=new Headers(JSON_HEADERS);headers.set('Access-Control-Allow-Origin',origin);headers.set('Access-Control-Allow-Methods','GET, POST, OPTIONS');headers.set('Access-Control-Allow-Headers','Content-Type');headers.set('Access-Control-Max-Age','3600');
    return new Response(null,{status:204,headers});
   }
   const path=new URL(request.url).pathname;
+  const adminRoute=await googleAdminRoute(request,env,path);
+  if(adminRoute)return adminRoute;
   // Human-friendly entry point: this host serves the API, not the booking UI.
   // Direct visitors to the actual Netlify-hosted calendar.
   if(path==='/'&&request.method==='GET'){
@@ -446,17 +452,17 @@ export default {
    }
   }
   if(path==='/api/calendar/oauth-check'&&request.method==='GET'){
-   if(!oauthReady(env))return respond({oauthConnected:false,error:'Google user OAuth is not configured'},503,origin);
+   if(!(await oauthReady(env)))return respond({oauthConnected:false,error:'Google user OAuth is not configured'},503,origin);
    try{
     const token=await userAccessToken(env);
     await googleRequest('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'?fields=id',token);
-    return respond({oauthConnected:true,calendarAccess:true,gmailSendingNotYetTested:true,notificationsConfigured:notificationReady(env)},200,origin);
+    return respond({oauthConnected:true,calendarAccess:true,gmailSendingNotYetTested:true,notificationsConfigured:await notificationReady(env)},200,origin);
    }catch(error){
     console.error('Google OAuth validation failed:',error?.message||'Unknown');
     return respond({oauthConnected:false,error:'Google user authorization failed. Inspect Worker logs.'},503,origin);
    }
   }
-  if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true',meetCredentialsPresent:oauthReady(env),notificationSettingsPresent:notificationReady(env)},200,origin);
+  if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true',meetCredentialsPresent:await oauthReady(env),notificationSettingsPresent:await notificationReady(env)},200,origin);
   if(path==='/api/calendar/availability'&&request.method==='GET'){
    try{return await availability(request,env,origin)}
    catch(error){console.error('Availability failed:',error?.message||'Unknown');return respond({error:'Availability temporarily unavailable. Try the contact form.'},503,origin);}
