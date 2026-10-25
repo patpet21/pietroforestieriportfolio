@@ -1,18 +1,18 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {NavLink,Link,useLocation} from 'react-router-dom';
 import {
- ArrowRight,ArrowUpRight,Blocks,BookOpen,BriefcaseBusiness,ChevronLeft,Contact,
- Fingerprint,FolderKanban,Home,Menu,PanelLeftClose,PanelLeftOpen,Workflow,X
+ ArrowRight,ArrowUpRight,Blocks,BriefcaseBusiness,Fingerprint,FolderKanban,
+ Home,Mail,Menu,PanelLeftClose,PanelLeftOpen,UserRound,Workflow
 } from 'lucide-react';
 import './PortfolioNavigation.css';
 
 const primary=[
  {to:'/',label:'Home',Icon:Home},
- {to:'/about',label:'About',Icon:Contact},
+ {to:'/about',label:'About',Icon:UserRound},
  {to:'/projects',label:'Selected work',Icon:FolderKanban},
  {to:'/services',label:'Services',Icon:BriefcaseBusiness},
  {to:'/gesture-lab',label:'Gesture Lab',Icon:Fingerprint},
- {to:'/contact',label:'Contact',Icon:BookOpen},
+ {to:'/contact',label:'Contact',Icon:Mail},
 ];
 const projects=[
  {to:'/projects/privatestone',label:'PrivateStone',Icon:Blocks},
