@@ -1,6 +1,6 @@
 /**
  * One-time Google account authorization for Pietro Portfolio.
- * OAuth credentials and administrator password are Cloudflare Secrets only.
+ * OAuth credentials and signing/encryption key are Cloudflare Secrets only.
  * The refresh token is AES-GCM encrypted in a dedicated SQLite Durable Object.
  */
 import {DurableObject} from 'cloudflare:workers';
@@ -31,14 +31,6 @@ const b64urlToBytes=(v)=>Uint8Array.from(atob(v.replace(/-/g,'+').replace(/_/g,'
 const randomToken=()=>bytesToB64url(crypto.getRandomValues(new Uint8Array(32)));
 const sha256=async text=>new Uint8Array(await crypto.subtle.digest('SHA-256',textEncoder.encode(text)));
 const makeChallenge=async verifier=>bytesToB64url(await sha256(verifier));
-const safeEqual=async(a,b)=>{
- if(!a||!b||typeof a!=='string'||typeof b!=='string')return false;
- const [da,db]=await Promise.all([sha256(a),sha256(b)]);
- let diff=0;
- for(let i=0;i<da.length;i++)diff|=da[i]^db[i];
- return diff===0;
-};
-
 /** Authenticated short-lived setup token. No browser cookies, DB or client-held secret. */
 const authKey=async(secret,purpose)=>crypto.subtle.importKey(
  'raw',await sha256('pietro-portfolio-session:v2:'+purpose+':'+secret),
@@ -67,7 +59,7 @@ const unseal=async(secret,purpose,value)=>{
 
 const configured=env=>!!(env.GOOGLE_OAUTH_CLIENT_ID&&env.GOOGLE_OAUTH_CLIENT_SECRET&&env.BOOKING_ORGANIZER_EMAIL&&env.OAUTH_SETUP_TOKEN&&env.OAUTH_VAULT);
 const vault=env=>env.OAUTH_VAULT.getByName('pietro-google-owner-v1');
-const htmlResponse=(title,body,status=200,headers={})=>new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111b17;color:#f5eeda;font:16px/1.55 system-ui,sans-serif;padding:20px;box-sizing:border-box}main{width:min(540px,100%);background:#1a2921;border:1px solid #bfa16a;border-radius:18px;padding:clamp(22px,5vw,36px);box-shadow:0 20px 70px #0008}h1{font-size:clamp(24px,5vw,34px);margin:5px 0;color:#ecf9ee}p{color:#c4d0c3}label{display:block;margin:24px 0 8px;color:#e8d4a0;font-size:13px}input{width:100%;box-sizing:border-box;border:1px solid #6a9278;border-radius:8px;background:#0c1612;color:white;padding:14px;font:inherit}button{width:100%;background:#cead75;color:#18231b;border:0;border-radius:8px;padding:14px;font-weight:800;cursor:pointer;margin-top:14px}small{display:block;color:#a8bba9;margin-top:16px}a{color:#b8e4ba}</style><main>'+body+'</main></html>',{
+const htmlResponse=(title,body,status=200,headers={})=>new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111b17;color:#f5eeda;font:16px/1.55 system-ui,sans-serif;padding:20px;box-sizing:border-box}main{width:min(540px,100%);background:#1a2921;border:1px solid #bfa16a;border-radius:18px;padding:clamp(22px,5vw,36px);box-shadow:0 20px 70px #0008}h1{font-size:clamp(24px,5vw,34px);margin:5px 0;color:#ecf9ee}p{color:#c4d0c3}label{display:block;margin:24px 0 8px;color:#e8d4a0;font-size:13px}input{width:100%;box-sizing:border-box;border:1px solid #6a9278;border-radius:8px;background:#0c1612;color:white;padding:14px;font:inherit}button,.connect-btn{display:block;box-sizing:border-box;width:100%;background:#cead75;color:#18231b;border:0;border-radius:8px;padding:14px;font-weight:800;cursor:pointer;margin-top:14px;text-align:center;text-decoration:none}small{display:block;color:#a8bba9;margin-top:16px}a{color:#b8e4ba}</style><main>'+body+'</main></html>',{
  status,headers:{'Content-Type':'text/html; charset=utf-8',...sessionHeaders,...headers}
 });
 const notConfigured=()=>htmlResponse('Not configured','<h1>Google setup not ready</h1><p>First add your OAuth client ID, client secret, organizer email and a random OAuth setup password to Cloudflare Variables and Secrets.</p>',503);
@@ -132,28 +124,15 @@ export async function googleAdminRoute(request,env,path){
   if(!configured(env))return notConfigured();
   const status=new URL(request.url).searchParams.get('status');
   const message=status==='connected'?'<p style="color:#a4f3b8">Google authorization stored successfully. Your next step is to test Calendar and Gmail before enabling automated emails.</p>':status==='error'?'<p style="color:#ffcc9d">Authorization could not be completed. Check the Worker logs and retry.</p>':'<p>Authorize only your own Google account to generate Meet links and send appointment emails.</p>';
-  // Signed and encrypted for ten minutes; no database round trip required.
-  const csrf=await seal(env.OAUTH_SETUP_TOKEN,'admin-form',{nonce:randomToken()});
-  return htmlResponse('Pietro · Authorize Google','<small>PIETRO FORESTIERI / ADMIN SETUP</small><h1>Connect Google</h1>'+message+'<form action="/admin/google/start" method="post" novalidate><input type="hidden" name="csrf" value="'+csrf+'"><label for="code">Your Cloudflare OAuth setup password</label><input id="code" type="password" name="setup_token" autocomplete="off"><button type="submit">AUTHORIZE GOOGLE</button></form><small>GOOGLE AUTH SETUP · FORM V3 / NO BROWSER LENGTH VALIDATION — Google access is restricted to your account. The setup uses secure, short-lived authorization codes without browser cookies.</small>');
+  // Account selection and consent are performed entirely by Google.
+  // There are no password fields, cookies, setup forms or CSRF form tokens.
+  return htmlResponse('Pietro · Connect Google','<small>PIETRO FORESTIERI / GOOGLE ACCOUNT</small><h1>Connect Google</h1>'+message+'<p>Click below, select your Google account and approve Calendar and Gmail access. Only the configured organizer account can complete the connection.</p><a class="connect-btn" href="/admin/google/start">CONNECT WITH GOOGLE</a><small>GOOGLE CONNECTION V4 · ONE CLICK · NO PASSWORD<br>Secure OAuth state, PKCE and Google account identity verification protect the connection.</small>'.replace('<br>',' — '));
  }
- if(path==='/admin/google/start'&&request.method==='POST'){
+ if(path==='/admin/google/start'&&request.method==='GET'){
   if(!configured(env))return notConfigured();
-  // Atomically consume a 10-minute one-time CSRF form token kept in
-  // the Durable Object; a strong admin password is also mandatory.
-  // This does not depend on browser cookies, Origin or Fetch Metadata.
-  if(Number(request.headers.get('Content-Length')||0)>2048)return invalid('large');
-  const raw=await request.text();
-  if(raw.length>2048)return invalid('large');
-  const form=new URLSearchParams(raw);
-  const setupForm=await unseal(env.OAUTH_SETUP_TOKEN,'admin-form',form.get('csrf'));
-  if(!setupForm||typeof setupForm.nonce!=='string'||setupForm.nonce.length!==43){
-   console.warn('OAuth admin form rejected: invalid or expired authenticated form');
-   return invalid('csrf');
-  }
-  if(!(await safeEqual(form.get('setup_token'),env.OAUTH_SETUP_TOKEN))){
-   console.warn('Google OAuth setup refused: invalid setup credential');
-   return invalid('password');
-  }
+  // Public entrypoint is safe: the callback will persist credentials ONLY
+  // if Google's verified identity matches BOOKING_ORGANIZER_EMAIL.
+  // OAuth 2.0 state is purpose-bound AES-GCM encrypted and expires in 10 min.
   const verifier=randomToken();
   // OAuth state stores the private PKCE verifier only as AES-GCM ciphertext.
   // Google's authorization code can be exchanged only once.
@@ -161,9 +140,8 @@ export async function googleAdminRoute(request,env,path){
   const auth=new URL('https://accounts.google.com/o/oauth2/v2/auth');
   for(const [key,value] of Object.entries({
    response_type:'code',client_id:env.GOOGLE_OAUTH_CLIENT_ID,redirect_uri:REDIRECT_URI,
-   scope:AUTH_SCOPES.join(' '),access_type:'offline',prompt:'consent',
-   state,code_challenge:await makeChallenge(verifier),code_challenge_method:'S256',
-   login_hint:env.BOOKING_ORGANIZER_EMAIL
+   scope:AUTH_SCOPES.join(' '),access_type:'offline',prompt:'select_account consent',
+   state,code_challenge:await makeChallenge(verifier),code_challenge_method:'S256'
   }))auth.searchParams.set(key,value);
   return new Response(null,{status:303,headers:{...sessionHeaders,'Location':auth.toString()}});
  }
