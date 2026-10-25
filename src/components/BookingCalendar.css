@@ -329,3 +329,13 @@
  .pfc-mobile-day-picker{gap:3px}
  .pfc-mobile-day-picker button{min-height:65px}
 }
+
+.pfc-meet-link{
+ display:inline-flex;align-items:center;justify-content:center;gap:10px;
+ margin:13px 0;padding:13px 17px;text-decoration:none;
+ background:linear-gradient(120deg,#afffd2,#4add9a);border:1px solid #b7ffdc;
+ color:#11321f!important;font:850 11px Manrope,sans-serif;letter-spacing:.5px;
+ box-shadow:0 0 22px #45e9a04d;
+}
+.pfc-meet-link:hover{filter:brightness(1.11)}
+@media(max-width:660px){.pfc-meet-link{width:100%;min-height:48px}}
