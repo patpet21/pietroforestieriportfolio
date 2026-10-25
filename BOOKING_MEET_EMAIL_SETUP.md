@@ -8,9 +8,9 @@
 - The existing service account checks the organizer's Google Calendar availability.
 - A new, separate **Cloudflare Durable Object** stores your Google OAuth refresh token
   **encrypted with AES-GCM**. It never appears in repository files or browser URLs.
-- The private setup page starts the Google consent process using short-lived,
-  AES-GCM authenticated form and OAuth-state tokens plus PKCE. No browser cookies
-  or session database lookups are needed. The callback verifies your Google account.
+- The Google connection page has a **Connect with Google** button (no password form).
+  Google shows account selection and consent. AES-GCM authenticated OAuth state
+  and PKCE protect the callback, which verifies the organizer's Google account.
 - Once connected, new confirmed bookings can create a distinct Google Meet link.
 - When email notifications are enabled, Gmail confirmation emails go to the visitor
   and organizer. Durable Object alarms schedule reminders about 15 minutes before.
@@ -76,11 +76,11 @@ Settings → **Variables and Secrets**.
 | \`GOOGLE_OAUTH_CLIENT_ID\` | Secret | Web OAuth Client ID |
 | \`GOOGLE_OAUTH_CLIENT_SECRET\` | **Secret** | Web OAuth Client Secret |
 | \`BOOKING_ORGANIZER_EMAIL\` | Text | Gmail address of the calendar owner / intended sender |
-| \`OAUTH_SETUP_TOKEN\` | **Secret** | A strong, random password (32+ characters) you generate and keep privately |
+| \`OAUTH_SETUP_TOKEN\` | **Secret** | Existing secret key used internally for encryption and OAuth state validation. NEVER typed into the authorization page. |
 
-Generate a random \`OAUTH_SETUP_TOKEN\` using a password manager or an offline,
-cryptographically secure random generator. Do not send it through this chat or
-upload it to GitHub. The setup page will ask you to type it.
+The existing \`OAUTH_SETUP_TOKEN\` remains inside Cloudflare solely as an internal
+signing and encryption key. You do **not** type or paste any password during
+Google authorization. Do not share, reveal, or commit this secret.
 
 **Do not change or delete \`OAUTH_SETUP_TOKEN\` after authorizing Google**:
 it is also the encryption-key input for the stored refresh token. If you
@@ -97,7 +97,7 @@ The new callback stores the token automatically in the Cloudflare vault.
 Leave \`EMAIL_NOTIFICATIONS_ENABLED\` unset or \`false\` until the integration
 has been checked.
 
-## Step 4 — Open the private authorization page
+## Step 4 — Connect your organizer Google account (one click)
 
 After Cloudflare deploys the new Worker code, open:
 
@@ -105,20 +105,16 @@ After Cloudflare deploys the new Worker code, open:
 https://booking.propertydex.xyz/admin/google
 \`\`\`
 
-Type the random **OAuth setup password** from Step 3 in the form.
-
-Click **AUTHORIZE GOOGLE** and sign in with the EXACT account configured in
+Click **CONNECT WITH GOOGLE** once, then choose the exact account configured in
 \`BOOKING_ORGANIZER_EMAIL\`. Google will ask you to approve Calendar event
 access, Gmail sending, and basic identity. After consent, Google sends
 you back to Cloudflare and you should see a green success message.
 
-This form sends the password via an HTTPS POST body, not a URL.
-The Worker verifies a short-lived AES-GCM authenticated setup form token,
-your administrator password, a separately encrypted OAuth state containing the
-PKCE verifier, the granted scopes and the organizer Google account before
-storing the refresh token ciphertext. Google's authorization code can be
-exchanged only once. **No browser cookies or session database writes are
-required** for setup or callback.
+The Worker has **no administrator password input, no form, and no setup cookie**.
+The connection begins with a GET redirect to Google. The Worker verifies a
+short-lived encrypted OAuth state containing the PKCE verifier, granted
+scopes, and the exact authorized organizer email before saving refresh token
+ciphertext. Google's authorization code can be exchanged only once.
 
 ## Step 5 — Test the live connection
 
