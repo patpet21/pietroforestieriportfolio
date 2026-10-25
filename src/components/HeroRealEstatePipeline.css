@@ -327,7 +327,7 @@
  .pfpm-hero .pfpm-stage{animation:pfpm-hover-float 5.5s ease-in-out infinite}
  .pfpm-hero .pfpm-stage:nth-of-type(3n){animation-delay:-1.7s}
  .pfpm-hero .pfpm-stage:nth-of-type(3n + 1){animation-delay:-3.1s}
- .pfpm-hero .pfpm-stage.is-active,.pfpm-hero .pfpm-stage:hover{animation-play-state:paused}
+ .pfpm-hero .pfpm-stage.is-active,.pfpm-hero .pfpm-stage:hover{animation:none!important;transform:translateZ(31px) perspective(650px) rotateX(4deg) translateY(-3px)!important}
 }
 @keyframes pfpm-hover-float{
  0%,100%{transform:translateZ(10px) rotateX(8deg) translateY(0)}
