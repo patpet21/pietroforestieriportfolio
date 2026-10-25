@@ -10,7 +10,24 @@
 - Bookings stay **disabled by default** until the Cloudflare dashboard variable `BOOKINGS_ENABLED` is set to `true`.
 - No GitHub Actions. No Supabase.
 
-## 1. Deploy the Worker once (no new app backend provider)
+## 1A. Easier: deploy directly from Cloudflare dashboard
+
+This approach does **not** create GitHub Actions workflow files. The builds
+belong to Cloudflare and run only for the Worker.
+
+1. Open Cloudflare Dashboard → **Workers & Pages → Create application**.
+2. Choose to **Import an existing Git repository** and authorize access to
+   `patpet21/pietroforestieriportfolio`.
+3. Set the Worker name **exactly** to `pietro-portfolio-booking`.
+4. Configure **Production branch** `main`, **Root directory** `cloudflare`.
+5. Leave **Build command** empty; use **Deploy command** `npx wrangler deploy`.
+6. Deploy. The `cloudflare/wrangler.toml` file automatically creates the
+   SQLite Durable Object binding and migration. No other repo workflow is needed.
+7. Continue with **Step 2** to add the custom domain.
+
+If you prefer not to connect GitHub to Cloudflare, use the CLI alternative below.
+
+## 1B. Deploy the Worker once (no new app backend provider)
 
 The `cloudflare/` directory contains the complete Worker and its
 SQLite-backed Durable Object booking lock.
