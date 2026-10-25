@@ -28,6 +28,7 @@ export default function GestureLab(){
  const [selected,setSelected]=useState<string|null>(null);
  const [notice,setNotice]=useState('Drag the 3D object with your mouse or touch. Use the same Spatial Control above to navigate this page by gestures.');
  const cubeGrab=useRef<{pointerId:number;x:number;y:number;rx:number;ry:number;moved:boolean}|null>(null);
+ const suppressCubeClick=useRef(false);
  const stageRef=useRef<HTMLDivElement|null>(null);
  const dragRef=useRef<DragInfo|null>(null);
  const suppressClickRef=useRef<string|null>(null);
@@ -38,6 +39,7 @@ export default function GestureLab(){
  };
  const onCubeDown=(event:ReactPointerEvent<HTMLDivElement>)=>{
   if(event.pointerType==='mouse'&&event.button!==0)return;
+  suppressCubeClick.current=false;
   cubeGrab.current={pointerId:event.pointerId,x:event.clientX,y:event.clientY,rx:angles.x,ry:angles.y,moved:false};
   event.currentTarget.setPointerCapture(event.pointerId);
  };
@@ -45,7 +47,7 @@ export default function GestureLab(){
   const g=cubeGrab.current;
   if(!g||g.pointerId!==event.pointerId)return;
   const dx=event.clientX-g.x,dy=event.clientY-g.y;
-  if(Math.abs(dx)+Math.abs(dy)>5)g.moved=true;
+  if(Math.abs(dx)+Math.abs(dy)>5){g.moved=true;suppressCubeClick.current=true;}
   setAngles({x:clamp(g.rx-dy*.48,-360,360),y:g.ry+dx*.58});
  };
  const onCubeUp=(event:ReactPointerEvent<HTMLDivElement>)=>{
@@ -119,7 +121,7 @@ export default function GestureLab(){
        <div className="gsl-cube-scene"><div className="gsl-cube-orbit"/>
         <div className="gsl-3d-object" role="button" tabIndex={0} aria-label="3D cube: select to expand or shrink; drag to rotate"
          style={{transform:'rotateX('+angles.x+'deg) rotateY('+angles.y+'deg) scale('+(expanded?1.22:1)+')'}}
-         onClick={()=>{if(!cubeGrab.current)setExpanded(v=>!v);}}
+         onClick={()=>{if(suppressCubeClick.current){suppressCubeClick.current=false;return;}setExpanded(v=>!v);}}
          onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setExpanded(v=>!v);}}}
          onPointerDown={onCubeDown} onPointerMove={onCubeMove} onPointerUp={onCubeUp} onPointerCancel={onCubeUp}>
          {['AI + PM','AUTOMATION','WORKFLOWS','WBS','COORDINATION','DELIVERY'].map((name,i)=><div key={name} className={'gsl-cube-face gsl-cube-face-'+i}><Zap size={26}/><strong>{name}</strong><small>SPATIAL / DIGITAL SYSTEMS</small></div>)}
