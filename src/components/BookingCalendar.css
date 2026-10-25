@@ -162,3 +162,113 @@
  .pfc-skeleton,.pfc-spin{animation:none!important}
  .pfc-time-slot{transition:none!important}
 }
+
+
+/* Booking v2 / dark emerald glass, luminous cut-corner appointment slots.
+   Busy and unavailable times are intentionally charcoal (never red/green). */
+.pfc-shell{
+ --book-coral:#41dfaa;
+ --book-emerald:#36d79f;
+ --book-emerald-strong:#67ffc5;
+ --book-emerald-soft:rgba(44,222,154,.15);
+ --book-cream:#f3faf6;
+ border-color:rgba(84,204,151,.36);
+ background:radial-gradient(ellipse at 87% 5%,rgba(23,97,71,.13),transparent 42%),#111715;
+}
+.pfc-topbar{background:#151b19;border-bottom-color:rgba(92,214,161,.24)}
+.pfc-topbar-right{color:#98e8c1!important}
+.pfc-info{border-right-color:rgba(85,217,149,.20)}
+.pfc-identity img{
+ border:2px solid #61f0b1!important;
+ box-shadow:0 0 0 4px rgba(54,215,159,.12),0 0 24px rgba(50,232,159,.41),0 0 38px rgba(42,180,127,.23);
+}
+.pfc-identity i{background:#70ffb8;box-shadow:0 0 13px rgba(83,241,174,.65)}
+.pfc-intro>small,.pfc-intro h1 span{color:#63eeb2}
+.pfc-config .pfc-duration-title{
+ display:block;margin-bottom:10px;color:#bbc9c0;
+ font:750 10px Manrope,sans-serif;letter-spacing:1.25px;
+}
+.pfc-duration-fixed{
+ display:flex;align-items:center;gap:11px;
+ background:linear-gradient(115deg,#1a3027,#17221e);
+ border:1px solid rgba(76,214,152,.50);
+ border-radius:12px;padding:13px 15px;
+ box-shadow:inset 0 1px 0 rgba(164,255,210,.08);
+}
+.pfc-duration-fixed svg{color:#60e8ab;flex:none}
+.pfc-duration-fixed strong{font:800 12px/1.25 Manrope,sans-serif;letter-spacing:.7px;color:#edfff5}
+.pfc-duration-fixed span{margin-left:auto;font:800 8px Manrope,sans-serif;letter-spacing:1px;color:#84cdaa}
+.pfc-zone-select{background:#18221f;border-color:rgba(85,176,127,.36)}
+.pfc-zone-select svg,.pfc-footnotes svg{color:#92ddac}
+.pfc-contact-alt{color:#9df0c5}
+.pfc-schedule-heading>div:first-child>small{color:#72e6b0}
+.pfc-schedule-heading h2 svg{color:#55e6a7;filter:drop-shadow(0 0 7px rgba(64,239,163,.48))}
+.pfc-schedule-heading h2{color:#f1fff6}
+.pfc-schedule-heading p strong{color:#a9f1c9}
+.pfc-week-actions button{background:#1d2822;border-color:#4b6757}
+.pfc-week-actions button:hover:not(:disabled){border-color:#5ce0a7;color:#b6ffda}
+.pfc-table-head{background:#19221d;border-bottom-color:#375748}
+.pfc-table-day.is-today>strong{color:#8bf4c0}
+.pfc-grid-wrap{border-color:#3a735a;background:#111a16;box-shadow:inset 0 0 18px rgba(19,79,51,.08)}
+.pfc-time-axis{background:#17211d;border-bottom-color:#2c4437}
+.pfc-slot-container{border-left-color:rgba(73,133,93,.30);border-bottom-color:rgba(47,90,67,.28)}
+.pfc-shell .pfc-time-slot{
+ position:relative;isolation:isolate;
+ border:1px solid rgba(81,181,130,.50);
+ clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,11px 100%,0 calc(100% - 11px));
+ border-radius:0;
+ background:linear-gradient(127deg,#183b2c,#174632 48%,#103528)!important;
+ color:#cdffdf!important;
+ box-shadow:inset 0 0 0 1px rgba(98,242,170,.11);
+ transition:transform .22s ease,filter .22s ease,background .22s ease;
+}
+.pfc-shell .pfc-time-slot.is-free:before{
+ content:"";position:absolute;inset:2px 3px;pointer-events:none;
+ background:linear-gradient(130deg,transparent 40%,rgba(88,246,169,.10) 70%,transparent);
+ clip-path:inherit;
+}
+.pfc-shell .pfc-time-slot.is-free:after{
+ content:"";position:absolute;left:2px;top:4px;width:2px;height:calc(100% - 8px);
+ background:#62f4b1;box-shadow:0 0 9px 1px rgba(49,243,158,.85);pointer-events:none;
+}
+.pfc-shell .pfc-time-slot.is-free:hover:not(:disabled),
+.pfc-shell .pfc-time-slot.is-free:focus-visible{
+ background:linear-gradient(115deg,#2b7451,#1a6045)!important;
+ border-color:#a1ffcf!important;color:white!important;
+ filter:drop-shadow(0 0 7px rgba(47,236,156,.75));
+ transform:translateY(-2px) scale(1.015);
+}
+.pfc-shell .pfc-time-slot.is-selected,
+.pfc-shell .pfc-time-slot.is-selected:hover{
+ background:linear-gradient(115deg,#b4ffdc,#40db9e)!important;
+ color:#092117!important;border-color:#cbffe8!important;
+ filter:drop-shadow(0 0 10px rgba(50,244,164,.74));
+}
+.pfc-shell .pfc-time-slot.is-unavailable:disabled,
+.pfc-shell .pfc-time-slot:disabled{
+ background:#1c2320!important;color:#707e76!important;border-color:#334139!important;
+ box-shadow:none!important;filter:none!important;transform:none!important;
+ opacity:.78;
+}
+.pfc-busy{color:#879c8b}
+.pfc-time-slot .pfc-dash{color:#718276}
+.pfc-calendar-hint svg{color:#77edb5}
+.pfc-confirm-card{border-color:rgba(86,228,161,.55);background:#172b20}
+.pfc-confirm-head small{color:#87f0bb}
+.pfc-confirm-head>button{background:#26382c;color:#d7f4e1;border-color:#6fc49c78}
+.pfc-fields label{color:#acd9bd}
+.pfc-fields input{background:#142019;border-color:#46795b}
+.pfc-fields input:focus{outline-color:#7cedb5}
+.pfc-book-cta{background:linear-gradient(120deg,#a6ffd1,#45d798);border-color:#a4ffcf;color:#10261b;box-shadow:0 0 20px rgba(53,222,145,.22)}
+.pfc-book-cta:hover:not(:disabled){background:#97f8c5;box-shadow:0 0 28px rgba(53,222,145,.46)}
+.pfc-shell button:focus-visible,.pfc-shell a:focus-visible,.pfc-shell select:focus-visible{
+ outline:2px solid #85f2bd;outline-offset:3px;
+}
+@media(max-width:660px){
+ .pfc-duration-fixed{flex-wrap:wrap}
+ .pfc-duration-fixed span{font-size:7px}
+ .pfc-shell .pfc-time-slot{min-height:34px}
+}
+@media(prefers-reduced-motion:reduce){
+ .pfc-shell .pfc-time-slot:hover{transform:none!important}
+}
