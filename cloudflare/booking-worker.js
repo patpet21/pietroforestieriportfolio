@@ -457,14 +457,44 @@ export default {
    }
   }
   if(path==='/api/calendar/oauth-check'&&request.method==='GET'){
-   if(!(await oauthReady(env)))return respond({oauthConnected:false,error:'Google user OAuth is not configured'},503,origin);
+   // Calendar metadata GET requires calendar.calendars(.readonly) or a broader
+   // scope. Our intentionally narrow calendar.events scope permits events.list.
+   // Distinguish token-refresh failure from Calendar access failure.
+   if(!(await oauthReady(env)))return respond({
+    oauthConnected:false,stage:'not_connected',error:'Google user OAuth is not configured'
+   },503,origin);
+   let token;
    try{
-    const token=await userAccessToken(env);
-    await googleRequest('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'?fields=id',token);
-    return respond({oauthConnected:true,calendarAccess:true,gmailSendingNotYetTested:true,notificationsConfigured:await notificationReady(env)},200,origin);
+    token=await userAccessToken(env);
    }catch(error){
-    console.error('Google OAuth validation failed:',error?.message||'Unknown');
-    return respond({oauthConnected:false,error:'Google user authorization failed. Inspect Worker logs.'},503,origin);
+    console.error('Google OAuth token refresh check failed:',error?.message||'Unknown');
+    return respond({
+     oauthConnected:false,stage:'token_refresh',
+     error:'Google authorization exists, but the access token could not be refreshed. Check Worker logs.'
+    },503,origin);
+   }
+   const eventsUrl=new URL('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(env.GOOGLE_CALENDAR_ID)+'/events');
+   eventsUrl.searchParams.set('maxResults','1');
+   eventsUrl.searchParams.set('fields','kind,accessRole');
+   try{
+    const check=await fetch(eventsUrl.toString(),{headers:{Authorization:'Bearer '+token}});
+    if(!check.ok){
+     console.error('Google OAuth Calendar events.list check failed: HTTP '+check.status);
+     return respond({
+      oauthConnected:true,calendarAccess:false,stage:'calendar_events_access',googleStatus:check.status,
+      error:'OAuth token refreshed successfully, but Calendar events access failed.'
+     },503,origin);
+    }
+    return respond({
+     oauthConnected:true,calendarAccess:true,calendarCheck:'events.list',
+     gmailSendingNotYetTested:true,notificationsConfigured:await notificationReady(env)
+    },200,origin);
+   }catch(error){
+    console.error('Google OAuth Calendar events.list network error:',error?.message||'Unknown');
+    return respond({
+     oauthConnected:true,calendarAccess:false,stage:'calendar_events_network',
+     error:'OAuth token refreshed successfully, but the Calendar request could not complete.'
+    },503,origin);
    }
   }
   if(path==='/health'&&request.method==='GET')return respond({ok:true,service:'portfolio-booking',googleConfigured:ready(env),bookingsEnabled:env.BOOKINGS_ENABLED==='true',meetCredentialsPresent:await oauthReady(env),notificationSettingsPresent:await notificationReady(env)},200,origin);
