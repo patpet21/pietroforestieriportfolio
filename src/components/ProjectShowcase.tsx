@@ -16,10 +16,10 @@ const slides:Project[]=order.map(id=>projects.find(p=>p.id===id)).filter((p):p i
  * The legacy BrandImage remains behind artwork as a browser fallback.
  */
 const featuredArtwork:Record<string,{src:string;fallback:string;label:string}>={
- 'privacygate':{src:'/portfolio-gallery/privacygate-poster.avif',fallback:'/project-media/privacygate-protect.webp',label:'PrivacyGate privacy-first AI product screens'},
+ 'privacygate':{src:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',fallback:'/project-media/privacygate-protect.webp',label:'PrivacyGate privacy-first AI product screens'},
  'propertydex':{src:'/portfolio-gallery/propertydex-poster.avif',fallback:'/project-media/propertydex-symbol.webp',label:'PropertyDEX real estate research'},
- 'propertydex-framework':{src:'https://i.ibb.co/qMPRTZRn/framework-prdx.png',fallback:'/portfolio-gallery/propertydex-framework-poster.avif',label:'PropertyDEX Framework property project analysis'},
- 'e-learning':{src:'https://i.ibb.co/nqDV6Q2H/Chat-GPT-Image-Oct-25-2026-10-57-02-AM-2.png',fallback:'/project-media/ai-pm-lab.webp',label:'AI PM Lab project-management learning resources'},
+ 'propertydex-framework':{src:'https://i.ibb.co/qLV28zzf/framework.png',fallback:'/portfolio-gallery/propertydex-framework-poster.avif',label:'PropertyDEX Framework property project analysis'},
+ 'e-learning':{src:'https://i.ibb.co/nqvcC4J6/workflow-pmlab.png',fallback:'/project-media/ai-pm-lab.webp',label:'AI PM Lab project-management learning resources'},
  'n8n-automation':{src:'https://i.ibb.co/rK4pdpvp/workflow-pm.png',fallback:'/project-media/n8n-workflow-detail.webp',label:'n8n workflow automation publishing and cleanup'}
 };
 
