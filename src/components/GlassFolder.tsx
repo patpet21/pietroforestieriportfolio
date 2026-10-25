@@ -521,6 +521,18 @@ const FRONT_PATH =
 
 const MAX_VISIBLE = 4
 
+/** Keep the linked, full-resolution posters as the first choice, with shipped
+ * assets as backups if the external image host is unavailable. */
+const backupPoster = (src: string): string | null =>
+  src.includes('i.ibb.co/nqDV6Q2H/') ? '/project-media/ai-pm-lab.webp' :
+  src.includes('i.ibb.co/rK4pdpvp/') ? '/project-media/n8n-workflow-detail.webp' :
+  src.includes('i.ibb.co/qMPRTZRn/') ? '/project-media/propertydex-framework.webp' : null;
+const handlePosterError = (event: React.SyntheticEvent<HTMLImageElement>) => {
+  const element = event.currentTarget;
+  const backup = backupPoster(element.currentSrc || element.src);
+  if(backup && !element.src.endsWith(backup)) element.src = backup;
+};
+
 const SAMPLE_FILES: FolderFile[] = [
   { name: "Cover — final", meta: "PNG · 4.8 MB", art: "ember" },
   { name: "Moodboard", meta: "24 images", art: "dusk" },
@@ -727,7 +739,7 @@ export default function GlassFolder({
           {/* back panel and its artwork */}
           <div className="gf-back" style={{ clipPath: "path('" + BACK_PATH + "')" }} aria-hidden="true">
             {image ? (
-              <img className="gf-art" src={image} alt="" width={W + 24} height={H + 24} draggable={false} />
+              <img className="gf-art" src={image} alt="" width={W + 24} height={H + 24} draggable={false} onError={handlePosterError}/>
             ) : art !== "none" ? (
               <ArtCanvas className="gf-art" art={art} seed={seed} w={W + 24} h={H + 24} density={density} priority={0} />
             ) : null}
@@ -785,7 +797,7 @@ export default function GlassFolder({
                 <>
                   {picture ? (
                     file.image ? (
-                      <img className="gf-sheet-art" src={file.image} alt="" width={SHEET_W} height={SHEET_H} draggable={false} />
+                      <img className="gf-sheet-art" src={file.image} alt="" width={SHEET_W} height={SHEET_H} draggable={false} onError={handlePosterError}/>
                     ) : (
                       <ArtCanvas
                         className="gf-sheet-art"
