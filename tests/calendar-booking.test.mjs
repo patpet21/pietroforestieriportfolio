@@ -22,7 +22,8 @@ test('a busy interval blocks all overlapping durations, not adjacent times',()=>
  assert.equal(freeSlot({start:'2026-11-02T14:30:00Z',end:'2026-11-02T15:00:00Z'},busy),true);
 });
 test('slots have permitted durations and are aligned to quarter-hour boundaries',()=>{
- const candidates=candidateSlots('2026-11-23',30);
+ const future=new Date(Date.now()+15*86400000).toISOString().slice(0,10);
+ const candidates=candidateSlots(monday(future),30);
  assert.ok(candidates.length>0);
  for(const slot of candidates){
   assert.equal((Date.parse(slot.end)-Date.parse(slot.start))/60000,30);
