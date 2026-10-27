@@ -14,8 +14,8 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "before-you-prompt-clarity-checklist.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/before-you-prompt-clarity-checklist.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/before-you-prompt-clarity-checklist.pdf"
+        "downloadUrl": "/downloads/before-you-prompt-clarity-checklist.pdf",
+        "previewUrl": "/downloads/before-you-prompt-clarity-checklist.pdf"
       },
       {
         "language": "Italiano",
@@ -37,15 +37,15 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "The_One_Prompt_Framework_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/The_One_Prompt_Framework_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/The_One_Prompt_Framework_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/The_One_Prompt_Framework_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/The_One_Prompt_Framework_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
         "format": "PDF",
         "filename": "The_One_Prompt_Framework_AI_PM_Lab_ITA.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/The_One_Prompt_Framework_AI_PM_Lab_ITA.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/The_One_Prompt_Framework_AI_PM_Lab_ITA.pdf"
+        "downloadUrl": "/downloads/The_One_Prompt_Framework_AI_PM_Lab_ITA.pdf",
+        "previewUrl": "/downloads/The_One_Prompt_Framework_AI_PM_Lab_ITA.pdf"
       }
     ]
   },
@@ -60,8 +60,8 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "From_Vague_Request_to_Professional_Prompt_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/From_Vague_Request_to_Professional_Prompt_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/From_Vague_Request_to_Professional_Prompt_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/From_Vague_Request_to_Professional_Prompt_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/From_Vague_Request_to_Professional_Prompt_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
@@ -83,8 +83,8 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "20_Professional_Prompts_for_Everyday_Work_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/20_Professional_Prompts_for_Everyday_Work_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/20_Professional_Prompts_for_Everyday_Work_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/20_Professional_Prompts_for_Everyday_Work_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/20_Professional_Prompts_for_Everyday_Work_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
@@ -106,15 +106,15 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
         "format": "PDF",
         "filename": "25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab_ITA.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab_ITA.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab_ITA.pdf"
+        "downloadUrl": "/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab_ITA.pdf",
+        "previewUrl": "/downloads/25_Instructions_That_Improve_Almost_Any_AI_Answer_AI_PM_Lab_ITA.pdf"
       }
     ]
   },
@@ -129,8 +129,8 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "Which_AI_Tool_Should_You_Use_for_Each_Task_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/Which_AI_Tool_Should_You_Use_for_Each_Task_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/Which_AI_Tool_Should_You_Use_for_Each_Task_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/Which_AI_Tool_Should_You_Use_for_Each_Task_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/Which_AI_Tool_Should_You_Use_for_Each_Task_AI_PM_Lab.pdf"
       }
     ]
   },
@@ -145,15 +145,15 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "The_AI_Email_Toolkit_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/The_AI_Email_Toolkit_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/The_AI_Email_Toolkit_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/The_AI_Email_Toolkit_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/The_AI_Email_Toolkit_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
         "format": "PDF",
         "filename": "The_AI_Email_Toolkit_AI_PM_Lab_ITA.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/The_AI_Email_Toolkit_AI_PM_Lab_ITA.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/The_AI_Email_Toolkit_AI_PM_Lab_ITA.pdf"
+        "downloadUrl": "/downloads/The_AI_Email_Toolkit_AI_PM_Lab_ITA.pdf",
+        "previewUrl": "/downloads/The_AI_Email_Toolkit_AI_PM_Lab_ITA.pdf"
       }
     ]
   },
@@ -168,8 +168,8 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "Write_Like_a_Human_with_AI_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/Write_Like_a_Human_with_AI_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/Write_Like_a_Human_with_AI_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/Write_Like_a_Human_with_AI_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/Write_Like_a_Human_with_AI_AI_PM_Lab.pdf"
       }
     ]
   },
@@ -184,15 +184,15 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "Client_Follow_Up_Prompt_Pack_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
         "format": "PDF",
         "filename": "Client_Follow_Up_Prompt_Pack_AI_PM_Lab_ITA.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab_ITA.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab_ITA.pdf"
+        "downloadUrl": "/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab_ITA.pdf",
+        "previewUrl": "/downloads/Client_Follow_Up_Prompt_Pack_AI_PM_Lab_ITA.pdf"
       }
     ]
   },
@@ -253,15 +253,15 @@ export const libraryResources:LibraryResource[] = [
         "language": "English",
         "format": "PDF",
         "filename": "12_AI_Workflows_for_Small_Teams_AI_PM_Lab.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab.pdf"
+        "downloadUrl": "/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab.pdf",
+        "previewUrl": "/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab.pdf"
       },
       {
         "language": "Italiano",
         "format": "PDF",
         "filename": "12_AI_Workflows_for_Small_Teams_AI_PM_Lab_ITA.pdf",
-        "downloadUrl": "https://raw.githubusercontent.com/patpet21/ai-pm-small-business-consulting/main/public/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab_ITA.pdf",
-        "previewUrl": "https://aipmlab.propertydex.xyz/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab_ITA.pdf"
+        "downloadUrl": "/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab_ITA.pdf",
+        "previewUrl": "/downloads/12_AI_Workflows_for_Small_Teams_AI_PM_Lab_ITA.pdf"
       }
     ]
   },

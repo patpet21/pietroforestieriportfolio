@@ -60,11 +60,11 @@ export default function ResourcesLibrary(){
      {resource.files.map(file=><div className="pf-library-file-row" key={file.filename}>
       <span className="pf-library-file-language">{file.language==='Italiano'?'IT':file.language==='English'?'EN':'FILES'} <b>{file.language}</b> <small>{file.format}</small></span>
       <span className="pf-library-file-actions">{file.previewUrl&&<button type="button" onClick={()=>setPreview({title:resource.title,file})} aria-label={'Preview '+resource.title+' in '+file.language}>PREVIEW <ExternalLink size={13}/></button>}
-       <a href={file.downloadUrl} target="_blank" rel="noreferrer" aria-label={'Download '+resource.title+' in '+file.language}>DOWNLOAD <Download size={14}/></a></span>
+       <a href={file.downloadUrl} target="_blank" rel="noreferrer" download={file.filename} aria-label={'Download '+resource.title+' in '+file.language}>DOWNLOAD <Download size={14}/></a></span>
      </div>)}
     </div>
    </article>)}</div>:<div className="pf-library-empty"><Search size={27}/><h3>No matching resources</h3><p>Try a different search or category.</p><button type="button" onClick={()=>{setCategory('All resources');setSearch('');}}>SHOW ALL RESOURCES <ArrowRight size={15}/></button></div>}
-   <div className="pf-library-note"><BookOpen size={20}/><p>These files are published through the AI PM LAB project archive. They are shared for practical learning and are not a substitute for tailored professional advice.</p></div>
+   <div className="pf-library-note"><BookOpen size={20}/><p>Free to explore and download. Some larger documents are delivered directly from the original AI PM LAB GitHub archive. These materials are for practical learning, not tailored professional advice.</p></div>
   </section>
   <section className="pf-library-cta"><div className="wrap pf-library-cta-inner"><div><span>02 / FROM THEORY TO EXECUTION</span><h2>Need help applying these ideas<br/><em>to your business?</em></h2><p>I help teams improve project coordination, everyday operations and practical AI-supported workflows.</p></div><Link to="/book">BOOK A FREE CONSULTATION <ArrowUpRight size={19}/></Link></div></section>
   {preview&&<div className="pf-library-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setPreview(null);}}>
