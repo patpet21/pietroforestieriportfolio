@@ -386,3 +386,11 @@
  .pfpm-hero .pfpm-actions button{font-size:8px;line-height:1.35}
 }
 @media(prefers-reduced-motion:reduce){.pfpm-hero .pfpm-wire-energy{animation:none!important}}
+
+/* Workflow legend: why the simulation is here and where responsibility stays */
+.pfpm-guide{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.pfpm-guide span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;background:#101e17;border:1px solid #5b7c664a;padding:6px 9px;color:#afc5b7;font:500 9px/1.3 Manrope,system-ui,sans-serif}
+.pfpm-guide b{font-weight:850;color:#e8e4d8;letter-spacing:.4px}
+.pfpm-guide i{display:inline-block;width:7px;height:7px;border-radius:2px;background:#f2be93}
+.pfpm-guide i.is-ai{background:#83e8be}.pfpm-guide i.is-person{background:#edca8d}.pfpm-guide i.is-result{background:#9cccff}
+@media(max-width:580px){.pfpm-guide{gap:5px}.pfpm-guide span{font-size:7px;padding:5px}}
