@@ -58,7 +58,7 @@ export default function ResourcesLibrary(){
     <h3>{resource.title}</h3><p className="pf-library-card-description">{resource.description}</p>
     <div className="pf-library-card-bottom"><div className="pf-library-file-label">AVAILABLE DOWNLOADS</div>
      {resource.files.map(file=><div className="pf-library-file-row" key={file.filename}>
-      <span className="pf-library-file-language">{file.language==='Italiano'?'IT':file.language==='English'?'EN':'ZIP'} <b>{file.language}</b> <small>{file.format}</small></span>
+      <span className="pf-library-file-language">{file.language==='Italiano'?'IT':file.language==='English'?'EN':'FILES'} <b>{file.language}</b> <small>{file.format}</small></span>
       <span className="pf-library-file-actions">{file.previewUrl&&<button type="button" onClick={()=>setPreview({title:resource.title,file})} aria-label={'Preview '+resource.title+' in '+file.language}>PREVIEW <ExternalLink size={13}/></button>}
        <a href={file.downloadUrl} target="_blank" rel="noreferrer" aria-label={'Download '+resource.title+' in '+file.language}>DOWNLOAD <Download size={14}/></a></span>
      </div>)}
