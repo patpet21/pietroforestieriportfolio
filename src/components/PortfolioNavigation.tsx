@@ -2,7 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {NavLink,Link,useLocation} from 'react-router-dom';
 import {
  ArrowRight,ArrowUpRight,Blocks,BriefcaseBusiness,Fingerprint,FolderKanban,
- Home,Mail,CalendarDays,Menu,PanelLeftClose,PanelLeftOpen,UserRound,Workflow
+ Home,Mail,CalendarDays,Menu,PanelLeftClose,PanelLeftOpen,UserRound,Workflow,BookOpen
 } from 'lucide-react';
 import './PortfolioNavigation.css';
 
@@ -11,6 +11,7 @@ const primary=[
  {to:'/about',label:'About',Icon:UserRound},
  {to:'/projects',label:'Selected work',Icon:FolderKanban},
  {to:'/services',label:'Services',Icon:BriefcaseBusiness},
+ {to:'/resources',label:'Free resources',Icon:BookOpen},
  {to:'/gesture-lab',label:'Gesture Lab',Icon:Fingerprint},
  {to:'/contact',label:'Contact',Icon:Mail},
  {to:'/book',label:'Free consultation',Icon:CalendarDays},
