@@ -112,6 +112,12 @@ export default function HeroRealEstatePipeline(){
   <div className="pfpm-intro"><span>ILLUSTRATIVE REAL ESTATE CASE · QUEENS, NEW YORK</span>
    <strong>Watch how AI supports real project delivery.</strong>
    <small>Click any connected node to see the input, the action and the output. Then run the workflow or test a delay.</small>
+   <div className="pfpm-guide" aria-label="How the simulated workflow works">
+    <span><i className="is-input"/> <b>INPUT</b> real project information</span>
+    <span><i className="is-ai"/> <b>AI</b> drafts and flags</span>
+    <span><i className="is-person"/> <b>PM</b> validates and decides</span>
+    <span><i className="is-result"/> <b>OUTPUT</b> tracked deliverables</span>
+   </div>
   </div>
   <div className="pfpm-perspective" onPointerMove={tilt} onPointerLeave={untilt}>
    <div className="pfpm-orbit pfpm-orbit-one" aria-hidden="true"/>
