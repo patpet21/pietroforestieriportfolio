@@ -1,0 +1,137 @@
+/* PF · AI Project Workflow / premium n8n-inspired 3D interactive network */
+.pf26-flow-demo.pf10-scroll-section{height:540svh;background:#101416}
+.pf26-flow-demo .pf10-scroll-sticky{background:radial-gradient(ellipse at 19% 48%,#123345 0%,#111e27 38%,#101514 83%);color:#f3f5f4}
+.pf26-flow-demo .pf10-scroll-layout{gap:clamp(9px,1.5svh,19px)}
+.pf26-title h2 em{color:#96e6fa}
+.pf26-title>p{max-width:380px;color:#b6c8cc}
+.pf26-title>p strong{color:#b7f0f6}
+.pf26-workspace{grid-template-columns:minmax(0,1.6fr) minmax(290px,.65fr);gap:15px}
+.pf26-canvas.pf10-network-visual{position:relative;isolation:isolate;perspective:1100px;overflow:hidden;border:1px solid #719aab74;background:radial-gradient(ellipse at 38% 45%,#1c6d773a,transparent 65%),linear-gradient(140deg,#0c1b24,#0c1620 65%,#111e21);box-shadow:0 25px 45px #050b11ae,inset 0 1px #b7eefa18}
+.pf26-canvas:before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 140deg at 50% 50%,transparent,#2d96a61b,transparent,#d4b77c10,transparent);animation:pf26-halo 21s linear infinite;pointer-events:none}
+@keyframes pf26-halo{to{transform:rotate(360deg)}}
+.pf26-grid.pf10-grid{opacity:.62;mask-image:radial-gradient(ellipse at center,#000 5%,transparent 90%);background-size:30px 30px;background-image:linear-gradient(#8cc9df18 1px,transparent 1px),linear-gradient(90deg,#8cc9df18 1px,transparent 1px)}
+.pf26-canvas-caption,.pf26-canvas-footer{position:absolute;z-index:7;left:21px;right:21px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#bbd9df;font:800 9px/1.35 Manrope,system-ui,sans-serif;letter-spacing:1.1px}
+.pf26-canvas-caption{top:22px}
+.pf26-canvas-caption span{display:flex;align-items:center;gap:8px;color:#a7eef3}
+.pf26-canvas-caption i{display:block;background:#87f5e5;width:6px;height:6px;border-radius:50%;box-shadow:0 0 14px #82eadf}
+.pf26-canvas-caption b{color:#8799a7;font-size:8px;white-space:nowrap}
+.pf26-canvas-footer{bottom:21px;font-size:8px;letter-spacing:.6px;flex-wrap:wrap}
+.pf26-canvas-footer>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pf26-canvas-footer>span{display:inline-flex;align-items:center;gap:3px;color:#bde0e7}
+.pf26-legend-dot{width:6px;height:6px;display:inline-block;border-radius:2px}
+.pf26-legend-dot.is-ai{background:#c09cff}.pf26-legend-dot.is-human{background:#e8c58f}.pf26-legend-dot.is-system{background:#83d9d3}
+.pf26-flow-layer{position:absolute;inset:48px 17px 42px;transform-style:preserve-3d;transform:rotateX(var(--pf26-rotate-x,0deg)) rotateY(var(--pf26-rotate-y,0deg));transition:transform .25s ease;perspective:1000px}
+.pf26-connector-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1}
+.pf26-wire-back,.pf26-wire{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.pf26-wire-back{stroke:#2f555d;stroke-width:6;opacity:.38}
+.pf26-wire{stroke:#68b7c1;stroke-width:2;stroke-dasharray:8 11;opacity:.66;animation:pf26-electric 5s linear infinite;filter:drop-shadow(0 0 4px #69c3ca66)}
+.pf26-wire.is-passed{stroke:#80e3b4;stroke-width:3;opacity:.95;stroke-dasharray:none}
+.pf26-wire.is-current{stroke:#b3f4ee;opacity:1;stroke-width:3.3;filter:drop-shadow(0 0 9px #9debe7)}
+@keyframes pf26-electric{to{stroke-dashoffset:-152}}
+.pf26-node{--node-accent:#8dcbd4;position:absolute;z-index:3;left:10%;top:30%;width:clamp(118px,11.2vw,176px);min-height:111px;display:flex;flex-direction:column;gap:10px;text-align:left;padding:13px 12px 12px;border:1px solid #466c79;border-radius:12px;background:linear-gradient(148deg,#243847,#152733 70%,#14232f);color:#eef8fb;cursor:pointer;box-shadow:0 5px 0 #0a1823,0 16px 27px #0009,inset 0 1px #ffffff27;transform:translate(-50%,-50%) translateZ(var(--pf26-depth,0px)) rotateX(5deg);transform-style:preserve-3d;transition:transform .4s ease,border-color .35s,box-shadow .35s,filter .35s}
+.pf26-node:before{content:'';position:absolute;top:0;left:8px;right:8px;height:3px;background:var(--node-accent);border-radius:0 0 4px 4px}
+.pf26-node:hover,.pf26-node.is-active{border-color:var(--node-accent);transform:translate(-50%,-52%) translateZ(var(--pf26-depth,0px)) rotateX(2deg);box-shadow:0 6px 0 #091721,0 20px 45px #000d,0 0 32px color-mix(in srgb,var(--node-accent) 27%,transparent),inset 0 1px #ffffff42;z-index:5}
+.pf26-node:focus-visible{outline:2px solid #d4fffc;outline-offset:6px}
+.pf26-node.is-visited:not(.is-active){border-color:#69be9e;filter:saturate(.85)}
+.pf26-node.role-trigger{--node-accent:#efb78b}
+.pf26-node.role-ai-draft{--node-accent:#b89afa;background:linear-gradient(142deg,#312b4b,#201f37 70%,#1c2235)}
+.pf26-node.role-human-gate{--node-accent:#f0ca8e;background:linear-gradient(142deg,#433b2e,#292c2b 70%,#1e282c)}
+.pf26-node.role-project-task{--node-accent:#83b8fb}
+.pf26-node.role-automation{--node-accent:#8de9c3;background:linear-gradient(142deg,#20473f,#172c32 70%,#14262c)}
+.pf26-node.role-output{--node-accent:#91eae7;background:linear-gradient(142deg,#24515a,#15343f 70%,#14262c)}
+.pf26-node-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--node-accent);font:800 8px/1.25 Manrope,system-ui,sans-serif;letter-spacing:.9px}
+.pf26-node-led{height:7px;width:7px;background:var(--node-accent);border-radius:50%;box-shadow:0 0 9px var(--node-accent)}
+.pf26-node-main{display:flex;align-items:center;gap:8px;min-width:0}
+.pf26-node-main strong{font:750 clamp(10px,1vw,13px)/1.15 Manrope,system-ui,sans-serif;color:#fff;letter-spacing:-.2px}
+.pf26-node-icon{flex-shrink:0;width:31px;height:31px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--node-accent) 40%,transparent);background:color-mix(in srgb,var(--node-accent) 14%,transparent);color:var(--node-accent);border-radius:7px}
+.pf26-node>small{font:500 9px/1.35 Manrope,system-ui,sans-serif;color:#b7c7d2}
+.pf26-node-port{position:absolute;z-index:2;top:46%;height:12px;width:12px;border-radius:50%;border:3px solid var(--node-accent);background:#0c151c;box-shadow:0 0 0 4px #0e1c23}
+.pf26-node-in{left:-7px}.pf26-node-out{right:-7px}
+.pf26-node.is-active .pf26-node-port{background:var(--node-accent);box-shadow:0 0 14px var(--node-accent),0 0 0 4px #0e1c23}
+.pf26-story.pf10-scroll-story{padding:clamp(17px,2vw,28px);background:linear-gradient(149deg,#182b35,#101e29);border:1px solid #7899a66d;box-shadow:inset 0 1px #b9e2f224}
+.pf26-story-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:13px}
+.pf26-story-top>span:first-child{color:#8fe4e1;font:850 9px Manrope,system-ui,sans-serif;letter-spacing:1.3px}
+.pf26-story-role{display:flex;gap:7px;align-items:center;color:#d9c49a;border:1px solid #d9c49a53;padding:8px;font:850 8px Manrope,system-ui,sans-serif;letter-spacing:1px}
+.pf26-story.pf10-scroll-story h3{margin:clamp(15px,2.8vh,26px) 0 8px;font-size:clamp(24px,2.6vw,39px);letter-spacing:-1.45px;color:#f7f5ef}
+.pf26-story.pf10-scroll-story h4{color:#a4e9e5;font-size:clamp(13px,1.17vw,17px);margin-bottom:10px}
+.pf26-story.pf10-scroll-story>p{font-size:clamp(11px,.95vw,13px);line-height:1.65;color:#bacbd2;margin-bottom:13px}
+.pf26-story-example,.pf26-story-transition,.pf26-story-result,.pf26-story-value{width:100%;display:flex;gap:8px}
+.pf26-story-example{display:flex;flex-direction:column;gap:7px;background:#09151d;border-left:3px solid #b99ef4;padding:11px 13px}
+.pf26-story-example>span,.pf26-story-transition span,.pf26-story-result span{font:850 8px/1.4 Manrope,system-ui,sans-serif;letter-spacing:1.1px;color:#87b0b9}
+.pf26-story-example strong{font:600 11px/1.6 Manrope,system-ui,sans-serif;color:#ddeaf1}
+.pf26-story-transition{align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #85a7b52c}
+.pf26-story-transition>div{flex:1}
+.pf26-story-transition p{margin:4px 0 0;font:500 11px/1.5 Manrope,system-ui,sans-serif;color:#dce3e3}
+.pf26-story-transition svg{color:#f0d098}
+.pf26-story-result{align-items:flex-start;padding:12px;background:#8adaaa14;border:1px solid #71c4a64c;margin:11px 0 0}
+.pf26-story-result>svg{color:#80e1a9;flex-shrink:0}
+.pf26-story-result>div{display:flex;flex-direction:column;gap:5px}
+.pf26-story-result strong{color:#f2f7f2;font:650 11px/1.5 Manrope,system-ui,sans-serif}
+.pf26-story-value{align-items:flex-start;color:#a8c8c3;font:500 11px/1.45 Manrope,system-ui,sans-serif;margin:11px 0}
+.pf26-story-value svg{flex-shrink:0;color:#d5bf8d}
+.pf26-story-bottom{width:100%;display:flex;flex-direction:column;gap:9px;margin-top:auto;padding-top:10px}
+.pf26-story-bottom>span{display:flex;align-items:center;gap:6px;font:800 8px Manrope,system-ui,sans-serif;letter-spacing:1px;color:#a6b8c6}
+.pf26-story-pager{display:flex;gap:7px;width:100%}
+.pf26-story-pager button{flex:1;padding:7px 0;text-align:center;border:1px solid #6d8f9b50;background:#182e3a;color:#abc6cf;font:850 9px Manrope,system-ui,sans-serif;transition:background .2s,color .2s}
+.pf26-story-pager button[aria-pressed="true"]{color:#092229;background:#a3e9e6;border-color:#a3e9e6}
+.pf26-story-pager button:focus-visible{outline:2px solid #a3e9e6;outline-offset:3px}
+.pf26-scroll-progress>span{background:linear-gradient(90deg,#ad92fa,#a8ecdf,#e1c595)}
+@media(max-width:1150px){
+ .pf26-workspace{grid-template-columns:minmax(0,1.28fr) minmax(245px,.72fr)}
+ .pf26-node{width:clamp(100px,11vw,140px);padding:9px;min-height:93px;gap:7px}
+ .pf26-node-icon{width:25px;height:25px}
+ .pf26-node-icon svg{width:15px;height:15px}
+ .pf26-node-main strong{font-size:10px}
+ .pf26-node>small{font-size:8px}
+ .pf26-story.pf10-scroll-story h3{font-size:clamp(24px,2.5vw,30px)}
+}
+@media(max-width:740px){
+ .pf26-flow-demo.pf10-scroll-section{height:555svh}
+ .pf26-flow-demo .pf10-scroll-layout{padding-top:76px}
+ .pf26-flow-demo .pf10-scroll-title>p{display:block;font-size:10px;line-height:1.4;max-width:100%;margin-top:5px}
+ .pf26-title h2{font-size:clamp(24px,6vw,33px);margin-top:6px}
+ .pf26-workspace{display:flex;flex-direction:column;gap:10px}
+ .pf26-canvas.pf10-network-visual{flex:1.1;min-height:215px}
+ .pf26-story.pf10-scroll-story{flex:1;min-height:0;padding:12px 14px;overflow:auto}
+ .pf26-flow-layer{inset:35px 9px 29px}
+ .pf26-canvas-caption{left:10px;right:10px;top:11px;font-size:7px}
+ .pf26-canvas-caption b{font-size:6px;letter-spacing:0}
+ .pf26-canvas-footer{left:10px;right:10px;bottom:9px;font-size:6px;line-height:1.2}
+ .pf26-canvas-footer>span{display:none}
+ .pf26-node{width:clamp(65px,18.5vw,100px);min-height:64px;padding:6px;gap:3px;border-radius:7px;box-shadow:0 3px 0 #071923,0 10px 16px #0008}
+ .pf26-node-top{font-size:6px;letter-spacing:0}
+ .pf26-node-main{gap:3px}
+ .pf26-node-main strong{font-size:clamp(6.5px,1.75vw,9px);line-height:1.13}
+ .pf26-node-icon{width:19px;height:19px;border-radius:4px}
+ .pf26-node-icon svg{width:12px;height:12px}
+ .pf26-node>small{font-size:6px;line-height:1.12}
+ .pf26-node-port{width:7px;height:7px;border-width:2px;box-shadow:none}
+ .pf26-node-in{left:-5px}.pf26-node-out{right:-5px}
+ .pf26-story-top>span:first-child{font-size:8px}
+ .pf26-story-role{font-size:7px;padding:5px}
+ .pf26-story.pf10-scroll-story h3{font-size:clamp(20px,5vw,28px);margin:8px 0 5px}
+ .pf26-story.pf10-scroll-story h4{font-size:12px;margin:0 0 5px}
+ .pf26-story.pf10-scroll-story>p{font-size:10px;line-height:1.45;margin-bottom:7px}
+ .pf26-story-example{padding:7px 9px;gap:3px}
+ .pf26-story-example strong{font-size:10px;line-height:1.35}
+ .pf26-story-transition{padding:6px 0}
+ .pf26-story-transition p{font-size:10px;line-height:1.3}
+ .pf26-story-result{padding:7px;margin-top:6px}
+ .pf26-story-result strong{font-size:10px;line-height:1.3}
+ .pf26-story-value{font-size:9px;margin:6px 0}
+ .pf26-story-bottom{padding-top:6px}
+ .pf26-story-pager button{padding:5px}
+ .pf26-flow-demo .pf10-scroll-progress{height:3px}
+}
+@media(max-width:380px){
+ .pf26-flow-demo .pf10-scroll-layout{padding-top:74px}
+ .pf26-title h2{font-size:23px}
+ .pf26-node{width:62px;padding:4px;gap:2px}
+ .pf26-node-main strong{font-size:6.5px}
+ .pf26-node>small{font-size:5.8px}
+ .pf26-canvas-caption b{max-width:135px;text-align:right}
+}
+@media(prefers-reduced-motion:reduce){
+ .pf26-canvas:before,.pf26-wire{animation:none}
+ .pf26-node,.pf26-flow-layer{transition:none}
+}

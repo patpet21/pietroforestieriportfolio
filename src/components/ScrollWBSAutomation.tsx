@@ -1,151 +1,162 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
-import type {CSSProperties} from 'react';
-import {ArrowDownRight,ArrowRight,Blocks,CheckCheck,ClipboardList,GitBranch,Network,ShieldCheck,Sparkles,Workflow} from 'lucide-react';
+import type {CSSProperties,PointerEvent} from 'react';
+import {
+ ArrowRight,ArrowUpRight,BellRing,BrainCircuit,Check,ChevronRight,CircleCheck,
+ Clock3,GitBranch,LayoutDashboard,ListTodo,Mail,Play,ShieldCheck,UserRoundCheck,Workflow
+} from 'lucide-react';
+import './AIWorkflowStory.css';
 
 /**
- * Original, scroll-driven CSS 3D simulation:
- * WBS hierarchy -> exploded work packages -> automation sequence -> output.
- * No fake client metrics, no 3D libraries and no external network calls.
+ * Illustrated AI + PM operations workflow. This is a conceptual, interactive simulation;
+ * it does not process real email, call LLMs, create live tasks, or send reminders.
+ * AI drafts are reviewed by a human before a workflow produces outputs.
  */
-type Pose={x:number;y:number;z:number;tilt:number;scale:number;opacity:number};
-const p=(x:number,y:number,z=0,tilt=0,scale=1,opacity=1):Pose=>({x,y,z,tilt,scale,opacity});
-const nodeInfo=[
- {id:'0.0',name:'Project goal',hint:'Success criteria',Icon:ClipboardList},
- {id:'1.1',name:'Requirements',hint:'Define the scope',Icon:Blocks},
- {id:'1.2',name:'WBS',hint:'Split the work',Icon:GitBranch},
- {id:'1.3',name:'Stakeholders',hint:'Owners and vendors',Icon:Network},
- {id:'2.1',name:'Dependencies',hint:'Sequence tasks',Icon:ArrowDownRight},
- {id:'2.2',name:'Automation',hint:'Trigger and route',Icon:Workflow},
- {id:'2.3',name:'QA & risks',hint:'Check the outputs',Icon:ShieldCheck},
- {id:'3.0',name:'Delivery',hint:'Review milestones',Icon:CheckCheck}
-];
-const layouts:Pose[][]=[
- [p(50,15,50,0,1.08),p(13,43),p(38,43),p(63,43),p(87,43),p(26,72),p(50,72),p(76,72)],
- [p(48,10,125,-9,1.1),p(11,29,150,-19),p(39,24,195,13),p(74,26,180,-15),p(91,48,140,18),p(11,76,210,16),p(51,77,235,-11),p(86,77,160,17)],
- [p(50,12,15,0,1),p(12,42,35,0,.88),p(37,42,45,0,.88),p(62,42,45,0,.88),p(87,42,35,0,.88),p(24,72,80,0,.88),p(50,72,85,0,.88),p(77,72,80,0,.88)],
- [p(50,50,-120,0,.54,0),p(46,51,-160,0,.42,0),p(48,49,-140,0,.43,0),p(50,52,-130,0,.42,0),p(52,50,-160,0,.44,0),p(48,54,-120,0,.41,0),p(53,50,-120,0,.43,0),p(50,50,-125,0,.45,0)]
-];
 const steps=[
- {index:'01 / PLAN',title:'Start with a WBS.',subtitle:'Define what must be delivered.',body:'A project manager decomposes the objective into manageable work packages, owners and dependencies. The structure comes before the software.',metric:'PROJECT → WORK PACKAGES',Icon:GitBranch},
- {index:'02 / DECOMPOSE',title:'Watch the work break apart.',subtitle:'Every task becomes visible.',body:'Scroll to explode the WBS. Requirements, people, risks and technical tasks separate into independent but coordinated workstreams.',metric:'TASKS · OWNERS · DEPENDENCIES',Icon:Blocks},
- {index:'03 / ORCHESTRATE',title:'Connect the automation.',subtitle:'AI supports a controlled workflow.',body:'Once the work is understood, rules and AI-assisted checks can connect repetitive handoffs. A PM still coordinates owners, quality and exceptions.',metric:'TRIGGER → ACTION → REVIEW',Icon:Workflow},
- {index:'04 / DELIVER',title:'Turn activity into progress.',subtitle:'A structured output, not random tasks.',body:'Workstreams converge into a visible project view: milestone status, reviewed outputs, assigned ownership and next actions.',metric:'MONITOR · VALIDATE · IMPROVE',Icon:CheckCheck}
+ {role:'TRIGGER',number:'01',title:'The request arrives.',subtitle:'A real client question starts the process.',
+  body:'A vendor emails about a delayed delivery. Instead of letting it get buried in an inbox, the request enters one visible workflow.',
+  incoming:'“The kitchen delivery is delayed. Can we move the installation to Friday?”',
+  action:'Capture the message and keep a link to the original request.',
+  output:'A new change request, ready to classify.',
+  value:'Nothing is lost between the inbox and the project.',Icon:Mail},
+ {role:'AI DRAFT',number:'02',title:'AI reads and organizes.',subtitle:'Draft analysis — never an automatic decision.',
+  body:'AI proposes a short summary, the affected work package, a suggested urgency and questions that still need an answer.',
+  incoming:'Vendor email + project context.',
+  action:'Extract proposed date, affected activity and missing information.',
+  output:'Draft: delivery delay · kitchen work package · requires PM review.',
+  value:'The PM spends less time sorting information, more time deciding.',Icon:BrainCircuit},
+ {role:'HUMAN GATE',number:'03',title:'The PM verifies the impact.',subtitle:'A person decides what is safe to do.',
+  body:'The PM checks dependencies, contractor availability and project commitments. AI does not approve a scope or date change.',
+  incoming:'AI summary and linked source email.',
+  action:'Confirm facts, approve next steps, or request clarification.',
+  output:'Decision: validate a new installation date with the contractor.',
+  value:'Accountability stays with the project team.',Icon:UserRoundCheck},
+ {role:'PROJECT TASK',number:'04',title:'The approved task is created.',subtitle:'A clear owner, deadline and next action.',
+  body:'The accepted decision becomes an example project task with an assignee, target date, WBS link and a reference to the decision.',
+  incoming:'Human-approved action.',
+  action:'Create a trackable task in the project workflow.',
+  output:'Task: confirm installation · owner: PM · target: Friday.',
+  value:'Every request becomes work someone can actually finish.',Icon:ListTodo},
+ {role:'AUTOMATION',number:'05',title:'Follow-up stays on track.',subtitle:'Rules handle the repetition; humans handle exceptions.',
+  body:'If the task remains open, a rule can prepare a reminder or alert the PM. Client-facing messages are reviewed before sending.',
+  incoming:'Task status, owner and due date.',
+  action:'Check the status; trigger a reminder or escalation when needed.',
+  output:'Draft reminder to PM if no confirmation arrives.',
+  value:'Fewer overlooked handoffs and chasing emails.',Icon:BellRing},
+ {role:'OUTPUT',number:'06',title:'One clear project view.',subtitle:'The team sees what changed, who owns it and what comes next.',
+  body:'The workflow ends in a reviewable project dashboard: request, AI draft, PM approval, task owner, deadline and current status.',
+  incoming:'Validated request and updated task.',
+  action:'Update the project record and show the next decision.',
+  output:'Change request tracked · owner assigned · follow-up visible.',
+  value:'Better visibility without surrendering human control.',Icon:LayoutDashboard}
+] as const;
+const nodes=[
+ {x:16,y:32,step:0},
+ {x:45,y:32,step:1},
+ {x:74,y:32,step:2},
+ {x:74,y:70,step:3},
+ {x:45,y:70,step:4},
+ {x:16,y:70,step:5}
+] as const;
+const edges=[
+ 'M246 189 C290 189 321 189 361 189',
+ 'M535 189 C575 189 611 189 651 189',
+ 'M832 189 C935 189 935 413 836 413',
+ 'M651 413 C610 413 575 413 535 413',
+ 'M361 413 C319 413 290 413 246 413'
 ];
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
-const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
-function getPose(index:number,progress:number):Pose{
- const t=clamp(progress)*3;
- const a=Math.min(2,Math.floor(t)),b=Math.min(3,a+1);
- const fraction=t>=3?1:t-a;
- const u=fraction*fraction*(3-2*fraction);
- const x=layouts[a][index],y=layouts[b][index];
- return {x:mix(x.x,y.x,u),y:mix(x.y,y.y,u),z:mix(x.z,y.z,u),tilt:mix(x.tilt,y.tilt,u),scale:mix(x.scale,y.scale,u),opacity:mix(x.opacity,y.opacity,u)};
-}
 export default function ScrollWBSAutomation(){
- const sectionRef=useRef<HTMLElement|null>(null);
- const raf=useRef<number>(0);
- const reduced=useRef(false);
+ const section=useRef<HTMLElement|null>(null);
+ const visual=useRef<HTMLDivElement|null>(null);
+ const frame=useRef<number>(0);
+ const reduce=useRef(false);
  const [progress,setProgress]=useState(0);
- const [reduceMotion,setReduceMotion]=useState(false);
- const active=Math.min(3,Math.floor(progress*3+.5));
+ const [reduced,setReduced]=useState(false);
+ const active=Math.min(steps.length-1,Math.round(progress*(steps.length-1)));
  const current=steps[active];
- const StageIcon=current.Icon;
+ const CurrentIcon=current.Icon;
  useEffect(()=>{
-  const section=sectionRef.current;
-  if(!section)return;
-  const mq=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const onPreference=()=>{
-   reduced.current=mq.matches;setReduceMotion(mq.matches);
-   if(mq.matches)setProgress(0);
-   else calculate();
+  const el=section.current;
+  if(!el)return;
+  const media=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const read=()=>{
+   if(reduce.current)return;
+   const rect=el.getBoundingClientRect();
+   const range=Math.max(1,el.offsetHeight-window.innerHeight);
+   const value=clamp(-rect.top/range);
+   setProgress(last=>Math.abs(value-last)>.002?value:last);
   };
-  const calculate=()=>{
-   if(reduced.current)return;
-   const rect=section.getBoundingClientRect();
-   const distance=Math.max(1,section.offsetHeight-window.innerHeight);
-   const next=clamp(-rect.top/distance);
-   setProgress(old=>Math.abs(next-old)>.003?next:old);
-  };
-  const request=()=>{
-   if(raf.current)return;
-   raf.current=window.requestAnimationFrame(()=>{raf.current=0;calculate();});
-  };
-  onPreference();
-  window.addEventListener('scroll',request,{passive:true});
-  window.addEventListener('resize',request);
-  mq.addEventListener('change',onPreference);
-  return()=>{
-   window.removeEventListener('scroll',request);window.removeEventListener('resize',request);
-   mq.removeEventListener('change',onPreference);
-   window.cancelAnimationFrame(raf.current);
-  };
+  const onMedia=()=>{reduce.current=media.matches;setReduced(media.matches);if(!media.matches)read();};
+  const onScroll=()=>{if(frame.current)return;frame.current=window.requestAnimationFrame(()=>{frame.current=0;read();});};
+  onMedia();window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);media.addEventListener('change',onMedia);
+  return()=>{window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onScroll);media.removeEventListener('change',onMedia);window.cancelAnimationFrame(frame.current);};
  },[]);
- const goTo=useCallback((i:number)=>{
-  if(reduced.current){setProgress(i/3);return;}
-  const section=sectionRef.current;
-  if(!section)return;
-  const target=window.scrollY+section.getBoundingClientRect().top+
-   Math.max(0,section.offsetHeight-window.innerHeight)*(i/3);
-  window.scrollTo({top:target,behavior:'smooth'});
+ const select=useCallback((index:number)=>{
+  if(reduce.current){setProgress(index/(steps.length-1));return;}
+  const el=section.current;if(!el)return;
+  const start=window.scrollY+el.getBoundingClientRect().top;
+  const range=Math.max(0,el.offsetHeight-window.innerHeight);
+  window.scrollTo({top:start+range*index/(steps.length-1),behavior:'smooth'});
  },[]);
- const explode=clamp(1-Math.abs(progress*3-1))*1;
- const wiresWBS=clamp(1-progress*3*1.25);
- const wiresFlow=clamp(1-Math.abs(progress*3-2)*2.1);
- const result=clamp((progress*3-2.47)/.46);
- return <section className={'pf10-scroll-section '+(reduceMotion?'pf10-reduced':'')} ref={sectionRef} aria-label="Scroll interactive WBS to automation project simulation">
+ const onMove=(event:PointerEvent<HTMLDivElement>)=>{
+  if(event.pointerType==='touch'||reduce.current||!visual.current)return;
+  const box=event.currentTarget.getBoundingClientRect();
+  const px=(event.clientX-box.left)/box.width-.5;
+  const py=(event.clientY-box.top)/box.height-.5;
+  visual.current.style.setProperty('--pf26-rotate-y',(px*4).toFixed(2)+'deg');
+  visual.current.style.setProperty('--pf26-rotate-x',(-py*3).toFixed(2)+'deg');
+ };
+ const onLeave=()=>{visual.current?.style.setProperty('--pf26-rotate-y','0deg');visual.current?.style.setProperty('--pf26-rotate-x','0deg');};
+ return <section className={'pf10-scroll-section pf26-flow-demo'+(reduced?' pf26-reduced':'')} ref={section} aria-label="Six-stage AI and project management workflow simulation">
   <div className="pf10-scroll-sticky">
    <div className="wrap pf10-scroll-layout">
-    <div className="pf10-scroll-title">
-     <div><small className="eyebrow"><i/> 03 / PROJECT MANAGEMENT × AUTOMATION</small>
-      <h2>Break it down.<br/><em>Connect it. Deliver.</em></h2></div>
-     <p>A visual simulation of how a PM structures work before applying automation. <strong>Scroll to explode the WBS.</strong></p>
+    <div className="pf10-scroll-title pf26-title">
+     <div><small className="eyebrow"><i/> 03 / REAL BUSINESS WORKFLOW × AI + PROJECT MANAGEMENT</small>
+      <h2>From one email.<br/><em>To accountable action.</em></h2></div>
+     <p>See exactly how a request moves through AI analysis, a human approval gate, task creation and follow-up. <strong>Scroll or click a connected node.</strong></p>
     </div>
-    <div className="pf10-scroll-workspace">
-     <div className="pf10-network-visual" style={{'--pf10-explosion':String(explode)} as CSSProperties}>
-      <div className="pf10-grid" aria-hidden="true"/>
-      <span className="pf10-corner pf10-corner-a" aria-hidden="true"/>
-      <span className="pf10-corner pf10-corner-b" aria-hidden="true"/>
-      <div className="pf10-scene-label"><span><i/> LIVE SCROLL SIMULATION</span><b>{current.index}</b></div>
-      <svg className="pf10-edges" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-       <g style={{opacity:wiresWBS}}>
-        <path d="M500 105 V151 H130 M500 151 H870 M380 151 V245 M630 151 V245 M130 151 V245 M870 151 V245" />
-        <path d="M380 304 V363 H260 V417 M380 363 H500 V417 M630 304 V363 H760 V417" />
-       </g>
-       <g style={{opacity:wiresFlow}} className="pf10-flow-path">
-        <path d="M225 253 H310 M475 253 H545 M713 253 H790 M240 349 V390 H500 V425 M500 349 V425 M770 349 V425"/>
-       </g>
-      </svg>
-      <div className="pf10-sparks" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{'--pf10-angle':(i*30)+'deg','--pf10-distance':(125+i*5)+'px'} as CSSProperties}/>)}</div>
-      {nodeInfo.map((n,i)=>{
-       const pose=getPose(i,progress);
-       const Icon=n.Icon;
-       return <div key={n.id} className={'pf10-task-node '+(i===0?'pf10-task-root':'')+' '+(active===2&&i===5?'pf10-task-live':'')}
-         style={{left:pose.x+'%',top:pose.y+'%',opacity:pose.opacity,
-          transform:'translate(-50%,-50%) translateZ('+pose.z+'px) rotateZ('+pose.tilt+'deg) scale('+pose.scale+')'} as CSSProperties}>
-        <span className="pf10-task-index">{n.id}</span><Icon size={18}/><strong>{n.name}</strong><small>{n.hint}</small>
-       </div>;
-      })}
-      <div className="pf10-result" style={{opacity:result,transform:'translate(-50%,-50%) scale('+(0.82+result*.18)+')'}} aria-hidden={result<.75}>
-       <div className="pf10-result-top"><CheckCheck size={23}/><div><small>SIMULATED PROJECT OUTPUT</small><strong>Delivery Control Center</strong></div></div>
-       <div className="pf10-result-progress"><span>WORKSTREAM ALIGNMENT</span><b>VALIDATED IN DEMO</b><i/></div>
-       <div className="pf10-result-tiles"><div><small>WBS</small><strong>Structured</strong></div><div><small>AUTOMATION</small><strong>Connected</strong></div><div><small>OWNERSHIP</small><strong>Assigned</strong></div><div><small>DELIVERY</small><strong>Reviewed</strong></div></div>
-       <div className="pf10-result-foot"><span>PLAN</span><ArrowRight size={13}/><span>COORDINATE</span><ArrowRight size={13}/><span>DELIVER</span></div>
+    <div className="pf10-scroll-workspace pf26-workspace">
+     <div className="pf10-network-visual pf26-canvas" onPointerMove={onMove} onPointerLeave={onLeave} ref={visual}>
+      <div className="pf10-grid pf26-grid" aria-hidden="true"/>
+      <div className="pf26-canvas-caption"><span><i/> AI + PM / FLOW 01</span><b>EXAMPLE · NOT CONNECTED TO LIVE SYSTEMS</b></div>
+      <div className="pf26-flow-layer">
+       <svg className="pf26-connector-svg" viewBox="0 0 1000 590" preserveAspectRatio="none" aria-hidden="true">
+        <defs><marker id="pf26-arrowhead" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 Z" fill="#7ccbd1"/></marker></defs>
+        {edges.map((d,i)=><g key={d}><path className="pf26-wire-back" d={d}/><path className={'pf26-wire'+(active>i?' is-passed':'')+(active===i||active===i+1?' is-current':'')} d={d} markerEnd="url(#pf26-arrowhead)"/></g>)}
+       </svg>
+       {nodes.map(({x,y,step})=>{
+        const item=steps[step];const Icon=item.Icon;
+        const roleClass=item.role.toLowerCase().replace(' ','-');
+        return <button type="button" key={item.number} onClick={()=>select(step)} aria-pressed={active===step} aria-label={'Open step '+item.number+' '+item.title}
+         className={'pf26-node role-'+roleClass+(active===step?' is-active':'')+(active>step?' is-visited':'')}
+         style={{left:x+'%',top:y+'%','--pf26-depth':active===step?'42px':active>step?'14px':'0px'} as CSSProperties}>
+          <span className="pf26-node-port pf26-node-in" aria-hidden="true"/><span className="pf26-node-port pf26-node-out" aria-hidden="true"/>
+          <span className="pf26-node-top"><span>{item.number} / {item.role}</span>{active>step?<Check size={13}/>:<span className="pf26-node-led"/>}</span>
+          <span className="pf26-node-main"><span className="pf26-node-icon"><Icon size={19} strokeWidth={1.9}/></span><strong>{['Client email','AI extracts','PM approves','Create task','Follow-up rule','Project dashboard'][step]}</strong></span>
+          <small>{['Incoming request','Structured draft','Human checkpoint','Owner + deadline','Reminder / escalation','Status + next step'][step]}</small>
+         </button>;
+       })}
       </div>
-      <div className="pf10-scene-foot"><span>WBS / AUTOMATION / DELIVERY</span><span>CONCEPT DEMONSTRATION · NOT LIVE DATA</span></div>
+      <div className="pf26-canvas-footer">
+       <div><span className="pf26-legend-dot is-ai"/> AI DRAFT <span className="pf26-legend-dot is-human"/> HUMAN APPROVAL <span className="pf26-legend-dot is-system"/> CONTROLLED AUTOMATION</div>
+       <span>CLICK NODES TO INSPECT <ChevronRight size={12}/></span>
+      </div>
      </div>
-     <aside className="pf10-scroll-story">
-      <div className="pf10-story-top"><span>{current.index}</span><StageIcon size={24}/></div>
-      <h3>{current.title}</h3>
-      <h4>{current.subtitle}</h4>
+     <aside className="pf10-scroll-story pf26-story" aria-live="polite">
+      <div className="pf26-story-top"><span>STEP {current.number} / 06</span><span className="pf26-story-role"><CurrentIcon size={15}/>{current.role}</span></div>
+      <h3>{current.title}</h3><h4>{current.subtitle}</h4>
       <p>{current.body}</p>
-      <div className="pf10-story-output"><span>PM PRINCIPLE</span><strong>{current.metric}</strong></div>
-      <div className="pf10-step-selector" role="group" aria-label="Jump to simulation stage">
-       {steps.map((step,i)=><button type="button" key={step.index} aria-pressed={i===active} onClick={()=>goTo(i)} aria-label={'Show step '+(i+1)+': '+step.title}><span>{String(i+1).padStart(2,'0')}</span><i/></button>)}
-      </div>
-      <div className="pf10-scroll-hint"><span>{reduceMotion?'SELECT A STEP TO EXPLORE':'SCROLL DOWN TO ADVANCE THE PROJECT'}</span><ArrowRight size={17}/></div>
+      <div className="pf26-story-example"><span>WHAT COMES IN</span><strong>{current.incoming}</strong></div>
+      <div className="pf26-story-transition"><div><span>WHAT HAPPENS</span><p>{current.action}</p></div><ArrowRight size={19}/></div>
+      <div className="pf26-story-result"><CircleCheck size={19}/><div><span>VISIBLE OUTPUT</span><strong>{current.output}</strong></div></div>
+      <div className="pf26-story-value"><ShieldCheck size={16}/><span>{current.value}</span></div>
+      <div className="pf26-story-bottom"><div className="pf26-story-pager" role="group" aria-label="Choose a workflow step">
+       {steps.map((step,i)=><button type="button" key={step.number} aria-pressed={active===i} title={step.title} onClick={()=>select(i)}>{step.number}</button>)}
+      </div><span>{reduced?'SELECT A NODE OR STEP':'SCROLL TO ADVANCE'} <ArrowRight size={15}/></span></div>
      </aside>
     </div>
-    <div className="pf10-scroll-progress"><span style={{width:Math.max(2,progress*100)+'%'}}/></div>
+    <div className="pf10-scroll-progress pf26-scroll-progress" aria-label="Workflow progress"><span style={{width:Math.max(2,progress*100)+'%'}}/></div>
    </div>
   </div>
  </section>;
