@@ -344,3 +344,45 @@
 @media(prefers-reduced-motion:reduce){
  .pfpm-hero .pfpm-stage{animation:none!important}
 }
+
+/* 2026 / AI-assisted project workflow refresh: typed n8n-like ports and readable execution states */
+.pfpm-hero .pfpm-intro>strong{font-size:clamp(19px,2.6vw,32px);letter-spacing:-.04em}
+.pfpm-hero .pfpm-intro>small{max-width:620px;line-height:1.65;color:#c0cfc3}
+.pfpm-hero .pfpm-stage-deck{transform-style:preserve-3d}
+.pfpm-hero .pfpm-network{isolation:isolate}
+.pfpm-hero .pfpm-wires path{stroke-linecap:round;stroke-linejoin:round}
+.pfpm-hero .pfpm-stage{background:linear-gradient(145deg,#252c29 5%,#192b23 60%,#0d1e17)!important;border:1px solid #5c866b!important;border-radius:11px!important;box-shadow:0 5px 0 #0b1510,0 16px 25px #0009,inset 0 1px #ffffff13!important;gap:3px}
+.pfpm-hero .pfpm-stage:before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:#c8b18a;border-radius:10px 10px 0 0}
+.pfpm-hero .pfpm-stage[data-role="AI"]:before{background:#79e7b8;box-shadow:0 0 15px #79e7b884}
+.pfpm-hero .pfpm-stage[data-role="HUMAN"]:before,.pfpm-hero .pfpm-stage[data-role="PM"]:before{background:#e1c08d}
+.pfpm-hero .pfpm-stage[data-role="OUTPUT"]:before{background:#93c6ff}
+.pfpm-hero .pfpm-stage.is-active{border-color:#a8f9c6!important;background:linear-gradient(140deg,#355644,#1b3326)!important;box-shadow:0 6px 0 #0a1810,0 18px 33px #010905c7,0 0 28px #6ed99c44!important}
+.pfpm-hero .pfpm-stage strong{letter-spacing:.35px;font-weight:850}
+.pfpm-hero .pfpm-stage small{color:#aebfb3!important;font-size:clamp(6px,.62vw,9px)!important;white-space:normal;line-height:1.25}
+.pfpm-hero .pfpm-stage[data-role="AI"] small{color:#92e9c5!important}
+.pfpm-hero .pfpm-stage-top{color:#d5c5a1}
+.pfpm-node-port{width:10px;height:10px;border-radius:50%;position:absolute;top:48%;background:#10251a;border:2px solid #86b89a;box-shadow:0 0 0 4px #172c20;pointer-events:none}
+.pfpm-node-port-in{left:-6px}.pfpm-node-port-out{right:-6px}
+.pfpm-hero .pfpm-stage.is-active .pfpm-node-port{background:#81f6b4;box-shadow:0 0 13px #78ebb7,0 0 0 4px #172c20}
+.pfpm-hero .pfpm-stage[data-role="AI"] .pfpm-stage-icon{color:#91f3ca}
+.pfpm-hero .pfpm-stage[data-role="HUMAN"] .pfpm-stage-icon{color:#f1d59d}
+.pfpm-hero .pfpm-stage[data-role="OUTPUT"] .pfpm-stage-icon{color:#8fd0ff}
+.pfpm-hero .pfpm-readout{border:1px solid #598a71!important;background:linear-gradient(110deg,#172f23,#121e18)!important;padding:13px 14px!important;gap:6px}
+.pfpm-hero .pfpm-readout>strong{font-size:clamp(15px,1.4vw,19px)!important}
+.pfpm-hero .pfpm-readout>p{font-size:clamp(10px,.82vw,12px)!important;line-height:1.55}
+.pfpm-io-strip{border-top:1px solid #a3cfa041;display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr);align-items:center;gap:9px;margin-top:7px;padding-top:10px}
+.pfpm-io-strip>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pfpm-io-strip b{font:850 8px Manrope,system-ui,sans-serif;letter-spacing:1px;color:#d9be8a}
+.pfpm-io-strip span{font:600 10px/1.4 Manrope,system-ui,sans-serif;color:#d9e8d9}
+.pfpm-io-strip>svg{color:#90e6b0}
+.pfpm-hero .pfpm-actions .pfpm-start{background:linear-gradient(105deg,#eadbb3,#d9b979)!important;color:#162018!important}
+.pfpm-hero .pfpm-flow-hint{letter-spacing:.4px}
+@media(max-width:580px){
+ .pfpm-node-port{width:8px;height:8px;top:48%}
+ .pfpm-hero .pfpm-readout{min-height:0!important}
+ .pfpm-hero .pfpm-stage small{font-size:7px!important}
+ .pfpm-io-strip{gap:7px}
+ .pfpm-io-strip span{font-size:9px}
+ .pfpm-hero .pfpm-actions button{font-size:8px;line-height:1.35}
+}
+@media(prefers-reduced-motion:reduce){.pfpm-hero .pfpm-wire-energy{animation:none!important}}

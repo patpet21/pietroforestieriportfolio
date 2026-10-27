@@ -13,14 +13,14 @@ import './HeroRealEstatePipeline.css';
  * Nothing here claims to track an actual client or connect to project software.
  */
 const stages=[
- {label:'INITIATE',area:'PROJECT CHARTER',title:'Define the project.',detail:'Set project scope, objectives, three-unit boundaries, approval roles and acceptance criteria.',Icon:Flag},
- {label:'REQUIREMENTS',area:'SCOPE REGISTER',title:'Capture what matters.',detail:'Translate owner needs into traceable requirements, priorities and acceptance checks.',Icon:ClipboardList},
- {label:'WBS',area:'WORK PACKAGES',title:'Break down delivery.',detail:'Decompose the scope into costed work packages with ownership and dependencies.',Icon:GitBranch},
- {label:'SCHEDULE',area:'GANTT & MILESTONES',title:'Sequence dependent tasks.',detail:'Baseline dates, handoffs and key inspections on a 45-day project schedule.',Icon:CalendarDays},
- {label:'BUDGET',area:'COST CONTROL',title:'Set the cost baseline.',detail:'Distribute the illustrative $90,000 across measurable, accountable packages.',Icon:Wallet},
- {label:'EXECUTE',area:'VENDOR COORDINATION',title:'Coordinate execution.',detail:'Sequence contractors, site works and quality controls without losing visibility.',Icon:HardHat},
- {label:'MONITOR',area:'ISSUES & FORECAST',title:'Assess the variance.',detail:'Introduce a five-day contractor delay, then recover three days by replanning the critical path.',Icon:Activity},
- {label:'HANDOVER',area:'INSPECTION & CLOSEOUT',title:'Deliver with evidence.',detail:'Close inspections, secure approvals and assemble a documented final handover.',Icon:KeyRound}
+ {label:'BRIEF',area:'INPUT / PROJECT REQUEST',role:'INPUT',title:'A real request enters the project.',detail:'The owner shares the renovation brief, constraints and source documents. This is the starting point, not an AI-generated decision.',input:'Owner brief, plans and emails',output:'Captured project request',Icon:Flag},
+ {label:'AI INTAKE',area:'AI / DRAFT ANALYSIS',role:'AI',title:'AI organizes the information.',detail:'AI can extract requirements, summarize documents and flag missing details. Every finding remains a draft for review.',input:'Unstructured project documents',output:'Draft requirements and open questions',Icon:Sparkles},
+ {label:'PM REVIEW',area:'HUMAN / SCOPE APPROVAL',role:'HUMAN',title:'A project manager validates the scope.',detail:'The PM checks AI suggestions with the owner, confirms priorities and assigns accountable people. Nothing progresses on an unverified assumption.',input:'AI draft plus owner feedback',output:'Approved scope and responsibilities',Icon:Check},
+ {label:'WBS',area:'PM / WORK BREAKDOWN',role:'PM',title:'Turn the scope into work packages.',detail:'The approved requirements become deliverables, owners and dependencies. Select WBS on the right to inspect the seven example work packages.',input:'Approved scope',output:'Work breakdown structure and owners',Icon:GitBranch},
+ {label:'PLAN',area:'PM / SCHEDULE & COST',role:'PM',title:'Build a plan people can execute.',detail:'The team agrees on sequencing, milestones and a sample $90,000 cost baseline. Use the Gantt, Milestones and Budget tabs to inspect the outputs.',input:'WBS and dependencies',output:'45-day baseline, budget and milestones',Icon:CalendarDays},
+ {label:'AI CHECK',area:'AI / PROPOSED RISK SIGNALS',role:'AI',title:'AI helps spot potential issues.',detail:'AI can summarize status updates and highlight possible cost or schedule variance. A flagged delay is a suggestion to investigate, not a confirmed fact.',input:'Updates, issues and planned dates',output:'Risk summary for PM review',Icon:Activity},
+ {label:'PM DECIDE',area:'HUMAN / CHANGE CONTROL',role:'HUMAN',title:'The PM makes the change decision.',detail:'Try “Introduce +5d delay”, then “Review recovery”. The PM evaluates the proposed replan before changing the forecast.',input:'Risk signals and options',output:'Approved revised forecast',Icon:ClipboardList},
+ {label:'HANDOVER',area:'OUTPUT / PROJECT CLOSEOUT',role:'OUTPUT',title:'Deliver a traceable closeout.',detail:'The example ends with inspections, decisions, approved documents and a handover record, not merely an AI-generated summary.',input:'Completed work and sign-offs',output:'Closeout pack and handover',Icon:KeyRound}
 ] as const;
 type Scenario='baseline'|'delay'|'replanned';
 type View='gantt'|'wbs'|'milestones'|'budget';
@@ -70,9 +70,9 @@ export default function HeroRealEstatePipeline(){
    const next=progress+1;
    setProgress(next);
    setActive(next);
-   if(next===2)setView('wbs');
-   if(next===3)setView('gantt');
-   if(next===4)setView('budget');
+   if(next===3)setView('wbs');
+   if(next===4)setView('gantt');
+   if(next===5)setView('budget');
    if(next===6)setView('milestones');
   },950);
   return()=>window.clearTimeout(timer);
@@ -86,9 +86,9 @@ export default function HeroRealEstatePipeline(){
   setPlaying(true);
  };
  const choose=(index:number)=>{setPlaying(false);setActive(index);
-  if(index===2)setView('wbs');
-  if(index===3)setView('gantt');
-  if(index===4)setView('budget');
+  if(index===3)setView('wbs');
+  if(index===4)setView('gantt');
+  if(index===5)setView('budget');
   if(index===6||index===7)setView('milestones');
  };
  const reset=()=>{setPlaying(false);setProgress(-1);setActive(0);setScenario('baseline');setView('gantt');};
@@ -108,16 +108,16 @@ export default function HeroRealEstatePipeline(){
  };
  const move=(direction:number)=>choose((active+direction+stages.length)%stages.length);
  return <aside className="pf3-hero-engine pfpm-hero" aria-label="Interactive real estate project management case simulation">
-  <div className="pfpm-topline"><span><i/> PF / PROJECT DELIVERY ENGINE</span><span><Layers3 size={12}/> 3D INTERACTIVE / 08</span></div>
-  <div className="pfpm-intro"><span>ILLUSTRATIVE REAL ESTATE CASE · QUEENS, NYC</span>
-   <strong>From requirements to handover.</strong>
-   <small>Three-apartment renovation · select a phase, inspect the WBS or run the project</small>
+  <div className="pfpm-topline"><span><i/> PF / AI-ASSISTED DELIVERY FLOW</span><span><Layers3 size={12}/> INTERACTIVE WORKFLOW / 08</span></div>
+  <div className="pfpm-intro"><span>ILLUSTRATIVE REAL ESTATE CASE · QUEENS, NEW YORK</span>
+   <strong>Watch how AI supports real project delivery.</strong>
+   <small>Click any connected node to see the input, the action and the output. Then run the workflow or test a delay.</small>
   </div>
   <div className="pfpm-perspective" onPointerMove={tilt} onPointerLeave={untilt}>
    <div className="pfpm-orbit pfpm-orbit-one" aria-hidden="true"/>
    <div className="pfpm-orbit pfpm-orbit-two" aria-hidden="true"/>
    <div className="pfpm-stage-deck" ref={panel}>
-    <div className="pfpm-stage-deck-title"><span><Workflow size={13}/> PROJECT SYSTEM / PROCESS MAP</span><span>08 CONNECTED PHASES</span></div>
+    <div className="pfpm-stage-deck-title"><span><Workflow size={13}/> CONNECTED PROCESS / FROM INPUT TO OUTPUT</span><span>AI SUGGESTS · PEOPLE APPROVE</span></div>
     <div className="pfpm-network" role="group" aria-label="Project phase selector">
      <div className="pfpm-network-glow" aria-hidden="true"/>
      <svg className="pfpm-wires pfpm-wires-desktop" viewBox="0 0 500 255" preserveAspectRatio="none" aria-hidden="true">
@@ -130,14 +130,14 @@ export default function HeroRealEstatePipeline(){
       <path className="pfpm-wire-energy" d="M64 44 H196 V140 H64 V230 H196 V323 H64"/>
       <path className="pfpm-wire-progress" d="M64 44 H196 V140 H64 V230 H196 V323 H64" pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
      </svg>
-     {stages.map(({label,area,Icon},index)=>{
+     {stages.map(({label,area,role,Icon},index)=>{
       const selected=index===active,done=index<=progress;
       return <button type="button" key={label} style={cardPosition(index)}
        className={'pfpm-stage'+(selected?' is-active':'')+(done?' is-complete':'')+(scenario==='delay'&&index===5?' is-warning':'')}
-       aria-pressed={selected} aria-label={label+' — '+area} onClick={()=>choose(index)}>
+       aria-pressed={selected} aria-label={label+' — '+area} onClick={()=>choose(index)} data-role={role}>
        <span className="pfpm-stage-top"><span>{String(index+1).padStart(2,'0')}</span>{done?<Check size={12}/>:<span className="pfpm-led"/>}</span>
        <Icon size={20} className="pfpm-stage-icon" strokeWidth={1.65} aria-hidden="true"/>
-       <strong>{label}</strong><small>{area}</small>
+       <strong>{label}</strong><small>{role} · {area.split(' / ').pop()}</small><span className="pfpm-node-port pfpm-node-port-in" aria-hidden="true"/><span className="pfpm-node-port pfpm-node-port-out" aria-hidden="true"/>
       </button>;
      })}
     </div>
@@ -145,10 +145,10 @@ export default function HeroRealEstatePipeline(){
   </div>
   <div className="pfpm-readout" aria-live="polite" aria-atomic="true">
    <span>{String(active+1).padStart(2,'0')} / 08 · {current.area}</span>
-   <strong>{current.title}</strong><p>{current.detail}</p>
+   <strong>{current.title}</strong><p>{current.detail}</p><div className="pfpm-io-strip"><div><b>INPUT</b><span>{current.input}</span></div><ArrowRight size={13} aria-hidden="true"/><div><b>OUTPUT</b><span>{current.output}</span></div></div>
   </div>
   <div className="pfpm-data-card" aria-label="Project outputs">
-   <div className="pfpm-data-head"><strong><span className="pfpm-data-led"/> DELIVERY INTELLIGENCE</strong><span>{scenario==='baseline'?'BASELINE / 45 DAYS':scenario==='delay'?'RISK SCENARIO / +5D':'REPLANNED / +2D'}</span></div>
+   <div className="pfpm-data-head"><strong><span className="pfpm-data-led"/> PROJECT OUTPUTS · INTERACTIVE DEMO</strong><span>{scenario==='baseline'?'BASELINE / 45 DAYS':scenario==='delay'?'RISK SCENARIO / +5D':'REPLANNED / +2D'}</span></div>
    <div className="pfpm-tablist" role="tablist" aria-label="Explore project management artifacts">
     {tabs.map(([id,label,Icon])=><button type="button" role="tab" id={'pfpm-tab-'+id} aria-selected={view===id}
      aria-controls="pfpm-output-panel" key={id} onClick={()=>{setView(id);setPlaying(false);}}
@@ -193,15 +193,15 @@ export default function HeroRealEstatePipeline(){
    <span className={shift?'pfpm-variance':'pfpm-ontrack'}><small>FINISH FORECAST</small><strong>{forecast} DAYS {shift?'(+'+shift+')':''}</strong></span>
   </div>
   <div className="pfpm-actions">
-   <button type="button" className="pfpm-start" onClick={run} disabled={playing}><Play size={12} fill="currentColor"/> {playing?'SIMULATING…':'RUN PROJECT'}</button>
-   <button type="button" onClick={delay} className={scenario==='delay'?'pfpm-action-alert':''}><AlertTriangle size={13}/> DELAY +5D</button>
-   <button type="button" onClick={replan} disabled={scenario!=='delay'}><Sparkles size={14}/> REPLAN</button>
+   <button type="button" className="pfpm-start" onClick={run} disabled={playing}><Play size={12} fill="currentColor"/> {playing?'SIMULATING…':'RUN WORKFLOW'}</button>
+   <button type="button" onClick={delay} className={scenario==='delay'?'pfpm-action-alert':''}><AlertTriangle size={13}/> INTRODUCE +5D DELAY</button>
+   <button type="button" onClick={replan} disabled={scenario!=='delay'}><Sparkles size={14}/> REVIEW RECOVERY</button>
    <button type="button" className="pfpm-reset" onClick={reset} aria-label="Reset the project demo"><RotateCcw size={15}/></button>
   </div>
   <div className="pfpm-footer">
-   <span>{scenario==='replanned'?'RECOVERY SCENARIO · 3 DAYS REGAINED':scenario==='delay'?'SIMULATED TRADE DELAY · CRITICAL PATH':'INTERACTIVE CONCEPT · ALL PROJECT DATA ILLUSTRATIVE'}</span>
+   <span>{scenario==='replanned'?'SIMULATED PM REVIEW · 3 DAYS RECOVERED':scenario==='delay'?'SIMULATED TRADE DELAY · CRITICAL PATH':'INTERACTIVE CONCEPT · ALL PROJECT DATA ILLUSTRATIVE'}</span>
    <div><button type="button" onClick={()=>move(-1)} aria-label="Previous phase"><ChevronLeft size={16}/></button><span>{String(active+1).padStart(2,'0')} / 08</span><button type="button" onClick={()=>move(1)} aria-label="Next phase"><ChevronRight size={16}/></button></div>
   </div>
-  <span className="pfpm-flow-hint" aria-hidden="true">SCOPE <ArrowRight size={11}/> PLAN <ArrowRight size={11}/> EXECUTE</span>
+  <span className="pfpm-flow-hint" aria-hidden="true">CLIENT BRIEF <ArrowRight size={11}/> AI DRAFT <ArrowRight size={11}/> PM VALIDATION <ArrowRight size={11}/> HANDOVER</span>
  </aside>;
 }
