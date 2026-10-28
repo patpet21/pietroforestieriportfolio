@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import './HeroRealEstatePipeline.css';
 import './HeroRealEstatePipeline3D.css';
+import './HeroRealEstatePipelineHolographic.css';
 
 /**
  * Portfolio-only interactive case simulation.
@@ -48,6 +49,8 @@ const cardPosition=(index:number):CSSProperties=>({
  '--pfpm-mobile-col':String(index%4===0||index%4===3?1:2),
  '--pfpm-mobile-row':String(Math.floor(index/2)+1)
 } as CSSProperties);
+const desktopFlowPath='M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190';
+const mobileFlowPath='M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323';
 const delayShift=(scenario:Scenario)=>scenario==='baseline'?0:scenario==='delay'?5:2;
 const taskStart=(task:WorkPackage,offset:number)=>task.start+(task.start>25?offset:0);
 const taskEnd=(task:WorkPackage,offset:number)=>task.end+(task.end>=25?offset:0);
@@ -108,7 +111,7 @@ export default function HeroRealEstatePipeline(){
   panel.current?.style.setProperty('--pfpm-tilt-x','0deg');
  };
  const move=(direction:number)=>choose((active+direction+stages.length)%stages.length);
- return <aside className="pf3-hero-engine pfpm-hero pfpm-neural" data-playing={playing?'true':'false'} data-scenario={scenario} aria-label="Interactive real estate project management case simulation">
+ return <aside className="pf3-hero-engine pfpm-hero pfpm-neural pfpm-holo" data-step={active} data-view={view} data-playing={playing?'true':'false'} data-scenario={scenario} aria-label="Interactive real estate project management case simulation">
   <div className="pfpm-topline"><span><i/> PF / AI-ASSISTED DELIVERY FLOW</span><span><Layers3 size={12}/> INTERACTIVE WORKFLOW / 08</span></div>
   <div className="pfpm-intro"><span>ILLUSTRATIVE REAL ESTATE CASE · QUEENS, NEW YORK</span>
    <strong>Watch how AI supports real project delivery.</strong>
@@ -127,6 +130,7 @@ export default function HeroRealEstatePipeline(){
     <div className="pfpm-stage-deck-title"><span><Workflow size={13}/> CONNECTED PROCESS / FROM INPUT TO OUTPUT</span><span className="pfpm-execution-pill" role="status">{playing?'● EXECUTING':scenario==='delay'?'● RISK FLAGGED':scenario==='replanned'?'✓ PM REVIEWED':'● READY · PM APPROVAL'}</span></div>
     <div className="pfpm-network" role="group" aria-label="Project phase selector">
      <div className="pfpm-network-glow" aria-hidden="true"/>
+     <div className="pfpm-holo-circuit" aria-hidden="true"><span/><span/><span/></div>
      <svg className="pfpm-wires pfpm-wires-desktop" viewBox="0 0 500 255" preserveAspectRatio="none" aria-hidden="true">
       <path className="pfpm-wire-base" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190"/>
       <path className="pfpm-wire-energy" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190"/>
@@ -137,11 +141,20 @@ export default function HeroRealEstatePipeline(){
        <path className="pfpm-neural-link" d="M250 128 C276 153 296 180 313 190"/>
        <path className="pfpm-neural-link" d="M250 128 C222 158 210 181 188 190"/>
       </g>
+      <g className="pfpm-signal-packets" aria-hidden="true">
+       <circle r="5" className="pfpm-signal-packet pfpm-packet-primary"><animateMotion dur={playing?'3s':'10s'} repeatCount="indefinite" path={desktopFlowPath}/></circle>
+       <circle r="2.7" className="pfpm-signal-packet pfpm-packet-secondary"><animateMotion dur={playing?'3s':'10s'} begin="-1.5s" repeatCount="indefinite" path={desktopFlowPath}/></circle>
+       <circle r="2" className="pfpm-signal-packet pfpm-packet-tertiary"><animateMotion dur={playing?'3s':'10s'} begin="-3s" repeatCount="indefinite" path={desktopFlowPath}/></circle>
+      </g>
      </svg>
      <svg className="pfpm-wires pfpm-wires-mobile" viewBox="0 0 260 370" preserveAspectRatio="none" aria-hidden="true">
       <path className="pfpm-wire-base" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323"/>
       <path className="pfpm-wire-energy" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323"/>
-      <path className="pfpm-wire-progress" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323" pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
+      <path className="pfpm-wire-progress" d={mobileFlowPath} pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
+      <g className="pfpm-signal-packets" aria-hidden="true">
+       <circle r="4" className="pfpm-signal-packet pfpm-packet-primary"><animateMotion dur={playing?'4s':'11s'} repeatCount="indefinite" path={mobileFlowPath}/></circle>
+       <circle r="2.4" className="pfpm-signal-packet pfpm-packet-secondary"><animateMotion dur={playing?'4s':'11s'} begin="-2s" repeatCount="indefinite" path={mobileFlowPath}/></circle>
+      </g>
      </svg>
      <div className="pfpm-neural-core" aria-hidden="true">
       <span className="pfpm-core-pulse"/>
@@ -167,11 +180,13 @@ export default function HeroRealEstatePipeline(){
   </div>
   <div className="pfpm-data-card" aria-label="Project outputs">
    <div className="pfpm-data-head"><strong><span className="pfpm-data-led"/> PROJECT OUTPUTS · INTERACTIVE DEMO</strong><span>{scenario==='baseline'?'BASELINE / 45 DAYS':scenario==='delay'?'RISK SCENARIO / +5D':'REPLANNED / +2D'}</span></div>
+   <div className="pfpm-holo-status" aria-hidden="true"><span className="pfpm-holo-status-light"/> PROJECT CONTROL ROOM <span>AI ASSISTS <b>•</b> PM APPROVES</span></div>
    <div className="pfpm-tablist" role="tablist" aria-label="Explore project management artifacts">
     {tabs.map(([id,label,Icon])=><button type="button" role="tab" id={'pfpm-tab-'+id} aria-selected={view===id}
      aria-controls="pfpm-output-panel" key={id} onClick={()=>{setView(id);setPlaying(false);}}
      className={view===id?'is-selected':''}><Icon size={13}/>{label}</button>)}
    </div>
+   <div className="pfpm-holo-progress" aria-hidden="true"><span style={{width:Math.round(Math.max(0,progress+1)/stages.length*100)+'%'}}/></div>
    <div className="pfpm-tabpanel" role="tabpanel" id="pfpm-output-panel" aria-labelledby={'pfpm-tab-'+view}>
     {view==='gantt'&&<div className="pfpm-gantt" aria-label={'Illustrative Gantt forecast '+forecast+' days'}>
      <div className="pfpm-gantt-scale"><span>WORK PACKAGE</span><span>DAY 01</span><span>DAY 15</span><span>DAY 30</span><span>DAY {forecast}</span></div>
@@ -180,7 +195,7 @@ export default function HeroRealEstatePipeline(){
       const percent=(first-1)/forecast*100,length=(last-first+1)/forecast*100;
       return <div className="pfpm-gantt-row" key={item.id}>
        <span title={item.label}>{item.id} · {item.label}</span>
-       <div className="pfpm-gantt-track"><span className={'pfpm-gantt-bar'+(index<=Math.min(6,progress-1)?' is-done':'')} style={{left:percent+'%',width:length+'%'}}/>
+       <div className="pfpm-gantt-track"><span className={'pfpm-gantt-bar'+(index<=Math.min(6,progress-1)?' is-done':'')} style={{left:percent+'%',width:length+'%',animationDelay:(index*.15)+'s'}}/>
         {item.milestone&&<i className="pfpm-gantt-milestone" style={{left:Math.min(98,percent+length)+'%'}} aria-label={item.milestone}/>}
        </div>
       </div>;
