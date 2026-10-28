@@ -2,10 +2,11 @@ import {useEffect,useRef,useState} from 'react';
 import type {CSSProperties,PointerEvent} from 'react';
 import {
  Activity,AlertTriangle,ArrowRight,BarChart3,CalendarDays,Check,ChevronLeft,ChevronRight,
- ClipboardList,Flag,GitBranch,HardHat,KeyRound,Layers3,Play,RotateCcw,Sparkles,Wallet,
+ ClipboardList,Flag,GitBranch,HardHat,KeyRound,Layers3,Play,RotateCcw,Sparkles,Wallet,BrainCircuit,
  Workflow,ChartGantt
 } from 'lucide-react';
 import './HeroRealEstatePipeline.css';
+import './HeroRealEstatePipeline3D.css';
 
 /**
  * Portfolio-only interactive case simulation.
@@ -107,7 +108,7 @@ export default function HeroRealEstatePipeline(){
   panel.current?.style.setProperty('--pfpm-tilt-x','0deg');
  };
  const move=(direction:number)=>choose((active+direction+stages.length)%stages.length);
- return <aside className="pf3-hero-engine pfpm-hero" aria-label="Interactive real estate project management case simulation">
+ return <aside className="pf3-hero-engine pfpm-hero pfpm-neural" data-playing={playing?'true':'false'} data-scenario={scenario} aria-label="Interactive real estate project management case simulation">
   <div className="pfpm-topline"><span><i/> PF / AI-ASSISTED DELIVERY FLOW</span><span><Layers3 size={12}/> INTERACTIVE WORKFLOW / 08</span></div>
   <div className="pfpm-intro"><span>ILLUSTRATIVE REAL ESTATE CASE · QUEENS, NEW YORK</span>
    <strong>Watch how AI supports real project delivery.</strong>
@@ -123,19 +124,30 @@ export default function HeroRealEstatePipeline(){
    <div className="pfpm-orbit pfpm-orbit-one" aria-hidden="true"/>
    <div className="pfpm-orbit pfpm-orbit-two" aria-hidden="true"/>
    <div className="pfpm-stage-deck" ref={panel}>
-    <div className="pfpm-stage-deck-title"><span><Workflow size={13}/> CONNECTED PROCESS / FROM INPUT TO OUTPUT</span><span>AI SUGGESTS · PEOPLE APPROVE</span></div>
+    <div className="pfpm-stage-deck-title"><span><Workflow size={13}/> CONNECTED PROCESS / FROM INPUT TO OUTPUT</span><span className="pfpm-execution-pill" role="status">{playing?'● EXECUTING':scenario==='delay'?'● RISK FLAGGED':scenario==='replanned'?'✓ PM REVIEWED':'● READY · PM APPROVAL'}</span></div>
     <div className="pfpm-network" role="group" aria-label="Project phase selector">
      <div className="pfpm-network-glow" aria-hidden="true"/>
      <svg className="pfpm-wires pfpm-wires-desktop" viewBox="0 0 500 255" preserveAspectRatio="none" aria-hidden="true">
       <path className="pfpm-wire-base" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190"/>
       <path className="pfpm-wire-energy" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190"/>
       <path className="pfpm-wire-progress" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190" pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
+      <g className="pfpm-neural-links">
+       <path className="pfpm-neural-link" d="M250 128 C227 106 215 78 188 68"/>
+       <path className="pfpm-neural-link" d="M250 128 C277 94 294 78 313 68"/>
+       <path className="pfpm-neural-link" d="M250 128 C276 153 296 180 313 190"/>
+       <path className="pfpm-neural-link" d="M250 128 C222 158 210 181 188 190"/>
+      </g>
      </svg>
      <svg className="pfpm-wires pfpm-wires-mobile" viewBox="0 0 260 370" preserveAspectRatio="none" aria-hidden="true">
       <path className="pfpm-wire-base" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323"/>
       <path className="pfpm-wire-energy" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323"/>
       <path className="pfpm-wire-progress" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323" pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
      </svg>
+     <div className="pfpm-neural-core" aria-hidden="true">
+      <span className="pfpm-core-pulse"/>
+      <span className="pfpm-core-shell"><BrainCircuit size={34} strokeWidth={1.35}/></span>
+      <span className="pfpm-core-label">AI COPILOT<small>SIMULATED SIGNALS</small></span>
+     </div>
      {stages.map(({label,area,role,Icon},index)=>{
       const selected=index===active,done=index<=progress;
       return <button type="button" key={label} style={cardPosition(index)}
