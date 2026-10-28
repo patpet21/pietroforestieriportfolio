@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620" role="img" aria-labelledby="title desc">
+<title id="title">n8n workflow automation</title><desc id="desc">Premium dark n8n visual with branching workflow nodes, coral automation connectors, and recognizable n8n branding</desc>
+<defs>
+ <radialGradient id="bg"><stop stop-color="#262735"/><stop offset=".57" stop-color="#161a27"/><stop offset="1" stop-color="#090e17"/></radialGradient>
+ <radialGradient id="halo"><stop stop-color="#fa6582" stop-opacity=".27"/><stop offset="1" stop-color="#fa6582" stop-opacity="0"/></radialGradient>
+ <linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#fd7a86"/><stop offset=".55" stop-color="#f1bd91"/><stop offset="1" stop-color="#79d5c5"/></linearGradient>
+ <linearGradient id="panel" x1="0" x2=".9" y1="0" y2="1"><stop stop-color="#293044"/><stop offset="1" stop-color="#151b2c"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="9"/></filter>
+ <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#8193b4" stroke-opacity=".1" stroke-width="1"/></pattern>
+ <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#000" flood-opacity=".7"/></filter>
+</defs>
+<rect width="960" height="620" fill="url(#bg)"/><rect width="960" height="620" fill="url(#grid)"/>
+<ellipse cx="480" cy="275" rx="480" ry="320" fill="url(#halo)"/>
+<path d="M0 4H960" stroke="#ff8b9a" stroke-width="5"/>
+<g opacity=".5" fill="none"><ellipse cx="480" cy="315" rx="430" ry="245" stroke="#9a8bc7" opacity=".3" transform="rotate(-11 480 315)"/><ellipse cx="480" cy="315" rx="355" ry="202" stroke="#ff9caa" opacity=".25" transform="rotate(12 480 315)"/></g>
+<g transform="translate(62 58)" fill="#ff778d">
+ <path d="M8 34C8 20 18 11 31 11c12 0 23 9 23 21s-11 23-23 23C18 55 8 47 8 34Zm52 0h50m0 0v-19m0 19v19m0-19h57m0 0v-25m0 25v24" fill="none" stroke="#ff7187" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle cx="8" cy="34" r="8"/><circle cx="111" cy="15" r="11"/><circle cx="111" cy="53" r="11"/><circle cx="168" cy="9" r="11"/><circle cx="168" cy="58" r="11"/>
+</g>
+<text x="274" y="121" font-family="Arial,Helvetica,sans-serif" font-size="89" font-weight="800" letter-spacing="-8" fill="#fff1ee">n8n</text>
+<text x="67" y="181" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" letter-spacing="5" fill="#ffd7bd">AUTOMATION CANVAS</text>
+<text x="65" y="219" font-family="Arial,Helvetica,sans-serif" font-size="21" font-weight="500" fill="#b9c2d9">Connect apps · Route data · Reduce manual work</text>
+<g stroke-linecap="round" stroke-linejoin="round" fill="none">
+ <path d="M239 369 C306 369 310 344 356 344 S424 344 437 344" stroke="#ff7891" stroke-width="12" opacity=".35" filter="url(#glow)"/>
+ <path d="M239 369 C306 369 310 344 356 344 S424 344 437 344" stroke="url(#line)" stroke-width="5"/>
+ <path d="M601 344 C653 344 663 283 701 283" stroke="#faa0a7" stroke-width="12" opacity=".4" filter="url(#glow)"/>
+ <path d="M601 344 C653 344 663 283 701 283" stroke="#ff8499" stroke-width="5"/>
+ <path d="M601 344 C652 344 653 433 704 433" stroke="#70d9c5" stroke-width="12" opacity=".35" filter="url(#glow)"/>
+ <path d="M601 344 C652 344 653 433 704 433" stroke="#7fdecf" stroke-width="5"/>
+ <circle cx="348" cy="346" r="7" fill="#ff9dab" stroke="#fff1db" stroke-width="2"/>
+ <circle cx="660" cy="311" r="6" fill="#ffd5a7"/>
+ <circle cx="659" cy="402" r="6" fill="#7bdec4"/>
+</g>
+<g filter="url(#shadow)" font-family="Arial,Helvetica,sans-serif">
+ <g transform="translate(75 313)"><rect width="165" height="112" rx="18" fill="url(#panel)" stroke="#f3a7a7" stroke-width="2"/><rect x="0" y="0" width="165" height="7" rx="4" fill="#ff8996"/><rect x="17" y="19" width="43" height="43" rx="11" fill="#ec7483"/><path d="M35 28v23l16-12Z" fill="#fff5ee"/><text x="74" y="39" fill="#fff" font-size="21" font-weight="700">Trigger</text><text x="17" y="90" fill="#bac4d7" font-size="14">New event</text><circle cx="165" cy="56" r="7" fill="#ffb3bb" stroke="#192131" stroke-width="3"/></g>
+ <g transform="translate(436 288)"><rect width="166" height="116" rx="18" fill="url(#panel)" stroke="#b9a7ff" stroke-width="2"/><rect width="166" height="7" rx="4" fill="#b6a0ff"/><rect x="17" y="21" width="45" height="45" rx="12" fill="#6156a2"/><g stroke="#eee6ff" fill="none" stroke-width="3" stroke-linecap="round"><path d="m30 43 8-9 10 10-10 11-8-12zm8-9v21m-8-12h18"/></g><text x="76" y="40" fill="#fff" font-size="21" font-weight="700">Logic</text><text x="17" y="93" fill="#b7c3dc" font-size="14">Filter &amp; route</text><circle cy="58" r="7" fill="#c3b7ff" stroke="#202235" stroke-width="3"/><circle cx="166" cy="58" r="7" fill="#c3b7ff" stroke="#202235" stroke-width="3"/></g>
+ <g transform="translate(702 233)"><rect width="194" height="104" rx="17" fill="url(#panel)" stroke="#e8b78f" stroke-width="2"/><rect width="194" height="7" rx="4" fill="#e8b78f"/><rect x="18" y="19" width="45" height="43" rx="11" fill="#795c4d"/><path d="M29 41h23m-18-10h13m-13 20h13" stroke="#fff0df" stroke-width="4" stroke-linecap="round"/><text x="76" y="41" fill="#fff" font-size="19" font-weight="700">Notify</text><text x="20" y="83" fill="#c8cee0" font-size="14">Send update</text><circle cy="51" r="7" fill="#efc19c" stroke="#192131" stroke-width="3"/></g>
+ <g transform="translate(702 388)"><rect width="194" height="104" rx="17" fill="url(#panel)" stroke="#7ce1d1" stroke-width="2"/><rect width="194" height="7" rx="4" fill="#72d8ca"/><rect x="18" y="19" width="45" height="43" rx="11" fill="#31675f"/><path d="M30 33h18M30 42h18M30 51h12" stroke="#e1fffa" stroke-width="4" stroke-linecap="round"/><text x="76" y="41" fill="#fff" font-size="19" font-weight="700">Record</text><text x="20" y="83" fill="#c8cee0" font-size="14">Sync data</text><circle cy="51" r="7" fill="#9fe8d7" stroke="#192131" stroke-width="3"/></g>
+</g>
+<g transform="translate(66 555)" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="700" letter-spacing="3"><rect x="0" y="-16" width="11" height="11" rx="3" fill="#ff8094"/><text x="25" y="-6" fill="#e1d3cf">WORKFLOW DESIGN</text><text x="478" y="-6" fill="#8792a8">ILLUSTRATIVE FLOW</text></g>
+</svg>
