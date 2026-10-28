@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {ArrowUpRight} from 'lucide-react';
 import {Link,useNavigate} from 'react-router-dom';
 import GlassFolder from './GlassFolder';
+import ServiceMotionCover from './ServiceMotionCovers';
 import type {FolderFile} from './GlassFolder';
 import './ServiceFolders.css';
 
@@ -45,7 +46,8 @@ export default function ServiceFolders(){
   {cards.map((item,i)=><article key={item.id} data-service={item.id} className={'pf-glass-service-card'+(openId===item.id?' is-open':'')}>
     <div className="pf-glass-service-folder">
      <GlassFolder width={dimension} tone="dark" label={item.folder} meta={item.meta}
-      image={item.image} files={item.files} action="more" appearDelay={i*110}
+      image={item.image} coverVisual={item.id==='automation'?<ServiceMotionCover kind="n8n"/>:item.id==='ai-pm'?<ServiceMotionCover kind="ai-pm"/>:undefined}
+      files={item.files} action="more" appearDelay={i*110}
       open={openId===item.id} onOpenChange={state=>setOpenId(state?item.id:null)}
       menu={[{label:'Explore project',onSelect:()=>navigate(item.href)}]}
       />

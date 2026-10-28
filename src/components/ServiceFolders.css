@@ -128,3 +128,52 @@
 .pf-glass-service-card[data-service="ai-pm"] .pf-glass-service-details>small{
  color:#b7dfc6;
 }
+
+/* Live animated front layers — the rest of the folder (hinge, menu, files,
+   keyboard controls) remains unchanged. These scenes never catch clicks. */
+.pf-glass-service-card[data-service="automation"] .gf-front-cover,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front-cover{
+ visibility:hidden;
+}
+.pf-glass-service-folder .gf-front-motion{
+ position:absolute;inset:0;z-index:0;
+ overflow:hidden;pointer-events:none;isolation:isolate;
+ border-radius:inherit;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-tint{
+ z-index:1;
+ background:linear-gradient(180deg,rgba(9,9,20,.01) 0%,rgba(9,9,19,.03) 62%,rgba(5,6,14,.82) 83%,rgba(5,7,13,.98) 100%)!important;
+}
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-tint{
+ z-index:1;
+ background:linear-gradient(180deg,rgba(6,9,27,.01) 0%,rgba(7,9,22,.02) 60%,rgba(9,8,27,.78) 83%,rgba(7,8,17,.98) 100%)!important;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-spec,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-spec{z-index:2}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-rim,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-rim{z-index:3}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-hit,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-hit{z-index:5}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-label,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-label{
+ z-index:4;bottom:18px;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-title,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-title{
+ font-size:18px;
+ text-shadow:0 2px 11px #02040b,0 0 19px #02040b,0 0 3px #02040b!important;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-meta,
+.pf-glass-service-card[data-service="ai-pm"] .gf-front .gf-meta{
+ font-size:9px!important;color:#f6e3c3!important;letter-spacing:1.2px;
+}
+.pf-glass-service-card[data-service="automation"] .gf-root[data-open] .sfm-cover *,
+.pf-glass-service-card[data-service="ai-pm"] .gf-root[data-open] .sfm-cover *{
+ animation-play-state:paused!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .pf-glass-service-card[data-service="automation"] .gf-front-motion *,
+ .pf-glass-service-card[data-service="ai-pm"] .gf-front-motion *{
+  animation:none!important;
+ }
+}
