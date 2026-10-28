@@ -79,6 +79,8 @@ export type GlassFolderProps = {
   seed?: number
   /** Your own picture for the back panel, instead of generated art. */
   image?: string
+  /** Optional decorative motion scene behind the existing interactive glass controls. */
+  coverVisual?: React.ReactNode
   /** The folder's contents. Read once; after that the folder owns the list. */
   files?: FolderFile[]
   /** `add` drops new files in, `more` opens a menu, `none` hides the key. */
@@ -548,6 +550,7 @@ export default function GlassFolder({
   art = "aurora",
   seed = 3,
   image,
+  coverVisual,
   files: initialFiles = SAMPLE_FILES,
   action = "add",
   onAdd,
@@ -758,6 +761,7 @@ export default function GlassFolder({
             style={{ clipPath: "path('" + FRONT_PATH + "')" }}
           >
             {image ? <img className="gf-front-cover" src={image} alt="" draggable={false} onError={handlePosterError}/> : null}
+            {coverVisual ? <div className="gf-front-motion" aria-hidden="true">{coverVisual}</div> : null}
             <div className="gf-tint" aria-hidden="true" />
             <div className="gf-spec" aria-hidden="true" />
             <svg className="gf-rim gf-front-rim" viewBox={"0 0 " + W + " " + FRONT_H} aria-hidden="true">
