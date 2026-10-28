@@ -136,6 +136,17 @@
  inset 0 1px rgba(255,255,255,.38)!important;
  filter:brightness(1.12);z-index:6;
 }
+/* Staggered depth motion, superseding the earlier flat hover animation. */
+@media(min-width:1021px){
+ .pfpm-neural .pfpm-stage{animation:pfpm-neural-float 6.2s ease-in-out infinite!important}
+ .pfpm-neural .pfpm-stage:nth-of-type(3n){animation-delay:-2s!important}
+ .pfpm-neural .pfpm-stage:nth-of-type(3n + 1){animation-delay:-4s!important}
+ .pfpm-neural .pfpm-stage.is-active,.pfpm-neural .pfpm-stage:hover{animation:none!important}
+}
+@keyframes pfpm-neural-float{
+ 0%,100%{transform:translateZ(18px) perspective(620px) rotateX(8deg) rotateY(-3deg) translateY(0)}
+ 50%{transform:translateZ(27px) perspective(620px) rotateX(6deg) rotateY(-3deg) translateY(-3px)}
+}
 .pfpm-neural .pfpm-stage.is-complete:not(.is-active){border-color:color-mix(in srgb,var(--pfpm-role) 80%,#afeed7)!important}
 .pfpm-neural .pfpm-stage.is-warning{--pfpm-role:#ffc17a;background:linear-gradient(135deg,#533c30,#2f2725)!important}
 .pfpm-neural .pfpm-stage-top{font-size:10px;letter-spacing:1px;color:var(--pfpm-role)}
@@ -193,7 +204,7 @@
 }
 @keyframes pfpm-core-breathe{50%{opacity:.35;transform:scale(1.18)}}
 .pfpm-core-label{
- position:absolute;top:calc(100% + 16px);left:50%;transform:translateX(-50%);
+ position:absolute;top:50%;left:calc(100% + 17px);transform:translateY(-50%);
  display:block;white-space:nowrap;text-align:center;color:#bdf6e7;
  text-shadow:0 0 12px rgba(108,225,198,.5);
  font:850 8px/1.2 Manrope,system-ui,sans-serif;letter-spacing:1.4px;
@@ -282,6 +293,7 @@
  .pfpm-neural .pfpm-network{height:361px;row-gap:12px;column-gap:22px;padding:13px 8px 8px;background:none}
  .pfpm-neural .pfpm-neural-core{display:none}
  .pfpm-neural .pfpm-stage{
+  animation:none!important;
   transform:perspective(500px) rotateX(5deg) translateZ(0);
   padding:7px!important;gap:3px!important;
   box-shadow:0 5px 0 #061719,0 9px 0 #091c1d,3px 13px 13px #0009,inset 0 1px #ffffff24!important;
