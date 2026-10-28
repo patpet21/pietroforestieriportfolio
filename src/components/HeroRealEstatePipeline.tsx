@@ -8,6 +8,7 @@ import {
 import './HeroRealEstatePipeline.css';
 import './HeroRealEstatePipeline3D.css';
 import './HeroRealEstatePipelineHolographic.css';
+import './HeroRealEstatePipelineN8n.css';
 
 /**
  * Portfolio-only interactive case simulation.
@@ -49,8 +50,8 @@ const cardPosition=(index:number):CSSProperties=>({
  '--pfpm-mobile-col':String(index%4===0||index%4===3?1:2),
  '--pfpm-mobile-row':String(Math.floor(index/2)+1)
 } as CSSProperties);
-const desktopFlowPath='M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190';
-const mobileFlowPath='M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323';
+const editorPath='M220 86 C244 86 256 86 280 86 L470 86 C494 86 506 86 530 86 L720 86 C744 86 756 86 780 86 L970 86 C1024 86 1024 241 970 241 L780 241 C756 241 744 241 720 241 L530 241 C506 241 494 241 470 241 L280 241 C256 241 244 241 220 241';
+const editorMobilePath='M152 55 C164 55 166 55 178 55 L316 55 C342 55 342 152 316 152 L178 152 C166 152 164 152 152 152 L14 152 C-12 152 -12 249 14 249 L152 249 C164 249 166 249 178 249 L316 249 C342 249 342 346 316 346 L178 346 C166 346 164 346 152 346';
 const delayShift=(scenario:Scenario)=>scenario==='baseline'?0:scenario==='delay'?5:2;
 const taskStart=(task:WorkPackage,offset:number)=>task.start+(task.start>25?offset:0);
 const taskEnd=(task:WorkPackage,offset:number)=>task.end+(task.end>=25?offset:0);
@@ -111,7 +112,7 @@ export default function HeroRealEstatePipeline(){
   panel.current?.style.setProperty('--pfpm-tilt-x','0deg');
  };
  const move=(direction:number)=>choose((active+direction+stages.length)%stages.length);
- return <aside className="pf3-hero-engine pfpm-hero pfpm-neural pfpm-holo" data-step={active} data-view={view} data-playing={playing?'true':'false'} data-scenario={scenario} aria-label="Interactive real estate project management case simulation">
+ return <aside className="pf3-hero-engine pfpm-hero pfpm-neural pfpm-holo pfpm-n8n" data-step={active} data-view={view} data-playing={playing?'true':'false'} data-scenario={scenario} aria-label="Interactive real estate project management case simulation">
   <div className="pfpm-topline"><span><i/> PF / AI-ASSISTED DELIVERY FLOW</span><span><Layers3 size={12}/> INTERACTIVE WORKFLOW / 08</span></div>
   <div className="pfpm-intro"><span>ILLUSTRATIVE REAL ESTATE CASE · QUEENS, NEW YORK</span>
    <strong>Watch how AI supports real project delivery.</strong>
@@ -131,44 +132,49 @@ export default function HeroRealEstatePipeline(){
     <div className="pfpm-network" role="group" aria-label="Project phase selector">
      <div className="pfpm-network-glow" aria-hidden="true"/>
      <div className="pfpm-holo-circuit" aria-hidden="true"><span/><span/><span/></div>
-     <svg className="pfpm-wires pfpm-wires-desktop" viewBox="0 0 500 255" preserveAspectRatio="none" aria-hidden="true">
-      <path className="pfpm-wire-base" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190"/>
-      <path className="pfpm-wire-energy" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190"/>
-      <path className="pfpm-wire-progress" d="M62 68 C104 68 146 68 188 68 S272 68 313 68 S396 68 438 68 C486 68 486 190 438 190 C396 190 355 190 313 190 S230 190 188 190 S104 190 62 190" pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
-      <g className="pfpm-neural-links">
-       <path className="pfpm-neural-link" d="M250 128 C227 106 215 78 188 68"/>
-       <path className="pfpm-neural-link" d="M250 128 C277 94 294 78 313 68"/>
-       <path className="pfpm-neural-link" d="M250 128 C276 153 296 180 313 190"/>
-       <path className="pfpm-neural-link" d="M250 128 C222 158 210 181 188 190"/>
+     <div className="pfpm-n8n-editor-bar" aria-hidden="true">
+      <span className="pfpm-n8n-editor-crumb"><span className="pfpm-n8n-appmark"><Workflow size={13}/></span> Personal <b>/</b> Project delivery workflow</span>
+      <span className="pfpm-n8n-editor-tabs"><b>Editor</b><span>Executions</span></span>
+      <span className="pfpm-n8n-editor-tag">DEMO · 8 NODES</span>
+     </div>
+     <svg className="pfpm-n8n-cables pfpm-n8n-cables-desktop" viewBox="0 0 1000 338" preserveAspectRatio="none" aria-hidden="true">
+      <path className="pfpm-n8n-cable-shadow" d={editorPath}/>
+      <path className="pfpm-n8n-cable" d={editorPath}/>
+      <path className="pfpm-n8n-cable-executed" d={editorPath} pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
+      <g className="pfpm-n8n-packets">
+       <circle r="4.2" className="pfpm-n8n-packet"><animateMotion dur={playing?'3.2s':'15s'} repeatCount="indefinite" path={editorPath}/></circle>
+       <circle r="2.8" className="pfpm-n8n-packet is-secondary"><animateMotion dur={playing?'3.2s':'15s'} begin="-2.2s" repeatCount="indefinite" path={editorPath}/></circle>
       </g>
-      <g className="pfpm-signal-packets" aria-hidden="true">
-       <circle r="5" className="pfpm-signal-packet pfpm-packet-primary"><animateMotion dur={playing?'3s':'10s'} repeatCount="indefinite" path={desktopFlowPath}/></circle>
-       <circle r="2.7" className="pfpm-signal-packet pfpm-packet-secondary"><animateMotion dur={playing?'3s':'10s'} begin="-1.5s" repeatCount="indefinite" path={desktopFlowPath}/></circle>
-       <circle r="2" className="pfpm-signal-packet pfpm-packet-tertiary"><animateMotion dur={playing?'3s':'10s'} begin="-3s" repeatCount="indefinite" path={desktopFlowPath}/></circle>
+      <path className="pfpm-n8n-tool-wire" d="M375 109 V139 C375 149 339 149 339 159 M375 139 C375 149 417 149 417 159"/>
+     </svg>
+     <svg className="pfpm-n8n-cables pfpm-n8n-cables-mobile" viewBox="0 0 330 418" preserveAspectRatio="none" aria-hidden="true">
+      <path className="pfpm-n8n-cable-shadow" d={editorMobilePath}/>
+      <path className="pfpm-n8n-cable" d={editorMobilePath}/>
+      <path className="pfpm-n8n-cable-executed" d={editorMobilePath} pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
+      <g className="pfpm-n8n-packets">
+       <circle r="3.3" className="pfpm-n8n-packet"><animateMotion dur={playing?'4.4s':'16s'} repeatCount="indefinite" path={editorMobilePath}/></circle>
       </g>
      </svg>
-     <svg className="pfpm-wires pfpm-wires-mobile" viewBox="0 0 260 370" preserveAspectRatio="none" aria-hidden="true">
-      <path className="pfpm-wire-base" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323"/>
-      <path className="pfpm-wire-energy" d="M64 44 C108 44 152 44 196 44 C220 44 220 140 196 140 C152 140 108 140 64 140 C40 140 40 230 64 230 C108 230 152 230 196 230 C220 230 220 323 196 323 C152 323 108 323 64 323"/>
-      <path className="pfpm-wire-progress" d={mobileFlowPath} pathLength={7} strokeDasharray={7} strokeDashoffset={7-Math.max(0,progress)}/>
-      <g className="pfpm-signal-packets" aria-hidden="true">
-       <circle r="4" className="pfpm-signal-packet pfpm-packet-primary"><animateMotion dur={playing?'4s':'11s'} repeatCount="indefinite" path={mobileFlowPath}/></circle>
-       <circle r="2.4" className="pfpm-signal-packet pfpm-packet-secondary"><animateMotion dur={playing?'4s':'11s'} begin="-2s" repeatCount="indefinite" path={mobileFlowPath}/></circle>
-      </g>
-     </svg>
-     <div className="pfpm-neural-core" aria-hidden="true">
-      <span className="pfpm-core-pulse"/>
-      <span className="pfpm-core-shell"><BrainCircuit size={34} strokeWidth={1.35}/></span>
-      <span className="pfpm-core-label">AI COPILOT<small>SIMULATED SIGNALS</small></span>
+     <div className="pfpm-n8n-tools" aria-hidden="true">
+      <span className="pfpm-n8n-tool"><BrainCircuit size={17}/><small>AI model</small></span>
+      <span className="pfpm-n8n-tool"><Layers3 size={17}/><small>Context</small></span>
      </div>
      {stages.map(({label,area,role,Icon},index)=>{
       const selected=index===active,done=index<=progress;
+      const appName=index===0?'Form Trigger':index===1?'AI Agent':index===2?'Approval Gate':index===3?'Work Breakdown':index===4?'Schedule & Cost':index===5?'Risk Analysis':index===6?'Human Decision':'Deliverables';
+      const caption=index===0?'New project brief':index===1?'Extract requirements':index===2?'Approve scope':index===3?'Build work packages':index===4?'Create baseline':index===5?'Flag deviations':index===6?'Review changes':'Close out';
       return <button type="button" key={label} style={cardPosition(index)}
+       data-index={index} data-role={role} data-desktop-reverse={index>=4?'true':'false'} data-mobile-reverse={[2,3,6,7].includes(index)?'true':'false'}
        className={'pfpm-stage'+(selected?' is-active':'')+(done?' is-complete':'')+(scenario==='delay'&&index===5?' is-warning':'')}
-       aria-pressed={selected} aria-label={label+' — '+area} onClick={()=>choose(index)} data-role={role}>
-       <span className="pfpm-stage-top"><span>{String(index+1).padStart(2,'0')}</span>{done?<Check size={12}/>:<span className="pfpm-led"/>}</span>
-       <Icon size={20} className="pfpm-stage-icon" strokeWidth={1.65} aria-hidden="true"/>
-       <strong>{label}</strong><small>{role} · {area.split(' / ').pop()}</small><span className="pfpm-node-port pfpm-node-port-in" aria-hidden="true"/><span className="pfpm-node-port pfpm-node-port-out" aria-hidden="true"/>
+       aria-pressed={selected} aria-label={label+' — '+area} onClick={()=>choose(index)}>
+       <span className="pfpm-n8n-node">
+        <span className="pfpm-node-port pfpm-node-port-in" aria-hidden="true"/>
+        <span className="pfpm-n8n-icon"><Icon size={25} strokeWidth={2} aria-hidden="true"/></span>
+        <span className="pfpm-n8n-node-info"><strong>{appName}</strong><small>{role==='AI'?'AI-assisted draft':role==='HUMAN'?'Requires PM approval':role==='INPUT'?'New submission':role==='OUTPUT'?'Project records':'Project management'}</small></span>
+        <span className="pfpm-n8n-state" aria-hidden="true">{done?<Check size={13}/>:String(index+1).padStart(2,'0')}</span>
+        <span className="pfpm-node-port pfpm-node-port-out" aria-hidden="true"/>
+       </span>
+       <span className="pfpm-n8n-node-caption"><strong>{label}</strong><small>{caption}</small></span>
       </button>;
      })}
     </div>
