@@ -54,3 +54,77 @@
  .pf-glass-service-details p{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.pf-glass-service-card,.pf-glass-service-title svg{transition:none}}
+
+/* Five distinct service folders — three balanced first-row folders, two centered on the second. */
+@media(min-width:1100px){
+ .pf-glass-service-grid{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:27px 19px;
+  margin-top:37px;
+ }
+ .pf-glass-service-grid>.pf-glass-service-card{grid-column:span 2}
+ .pf-glass-service-grid>.pf-glass-service-card:nth-child(4){grid-column:2/span 2}
+ .pf-glass-service-grid>.pf-glass-service-card:nth-child(5){grid-column:4/span 2}
+ .pf-glass-service-details{min-height:180px}
+ .pf-glass-service-title h3{font-size:clamp(20px,1.6vw,24px);max-width:none}
+}
+@media(min-width:621px) and (max-width:1099px){
+ .pf-glass-service-grid>.pf-glass-service-card{grid-column:auto}
+ .pf-glass-service-grid>.pf-glass-service-card:last-child{
+  grid-column:1/-1;
+  width:calc(50% - 10px);
+  justify-self:center;
+ }
+}
+@media(max-width:620px){
+ .pf-glass-service-grid>.pf-glass-service-card{grid-column:auto;width:100%}
+}
+/* Distinctive but understated service categories. Artwork remains inside the original interactive glass folders. */
+.pf-glass-service-card[data-service="automation"]{
+ border-color:rgba(255,151,161,.50);
+ background:linear-gradient(155deg,#29272e,#171d25 62%,#151c20);
+}
+.pf-glass-service-card[data-service="automation"]:hover,
+.pf-glass-service-card[data-service="automation"]:focus-within,
+.pf-glass-service-card[data-service="automation"].is-open{
+ border-color:rgba(255,156,168,.85);
+ box-shadow:0 24px 55px rgba(38,12,30,.48),0 0 25px rgba(247,113,137,.12);
+}
+.pf-glass-service-card[data-service="automation"] .gf-back{
+ background:linear-gradient(170deg,#46313c,#1a2231)!important;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front-rim path{
+ stroke:#f3a1a9!important;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front .gf-tint{
+ background:linear-gradient(180deg,rgba(14,10,24,.02),rgba(13,10,22,.08) 47%,rgba(12,14,22,.72) 77%,rgba(7,11,17,.91))!important;
+}
+.pf-glass-service-card[data-service="automation"] .gf-front-cover{
+ object-position:center 43%;
+}
+.pf-glass-service-card[data-service="automation"] .pf-glass-service-details>small{
+ color:#ffa8b5;
+}
+.pf-glass-service-card[data-service="ai-pm"]{
+ border-color:rgba(164,220,195,.45);
+ background:linear-gradient(155deg,#1e332e,#182823 65%,#182221);
+}
+.pf-glass-service-card[data-service="ai-pm"]:hover,
+.pf-glass-service-card[data-service="ai-pm"]:focus-within,
+.pf-glass-service-card[data-service="ai-pm"].is-open{
+ border-color:#c5f4df;
+ box-shadow:0 24px 55px rgba(3,27,21,.48),0 0 24px rgba(98,211,166,.12);
+}
+.pf-glass-service-card[data-service="ai-pm"] .gf-back{
+ background:linear-gradient(170deg,#315549,#142b2c)!important;
+}
+.pf-glass-service-card[data-service="ai-pm"] .gf-front-cover{
+ object-position:center 35%;
+}
+.pf-glass-service-card[data-service="ai-pm"] .gf-front-rim path{
+ stroke:#b9d5ae!important;
+}
+.pf-glass-service-card[data-service="ai-pm"] .pf-glass-service-details>small{
+ color:#b7dfc6;
+}

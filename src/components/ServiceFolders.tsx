@@ -6,7 +6,9 @@ import type {FolderFile} from './GlassFolder';
 import './ServiceFolders.css';
 
 const AI='https://i.ibb.co/nqvcC4J6/workflow-pmlab.png';
-const N8N='https://i.ibb.co/rK4pdpvp/workflow-pm.png';
+const N8N='/service-covers/n8n-workflow.svg';
+const AI_PM='/service-covers/ai-pm-copilot.svg';
+const N8N_REAL='/project-media/n8n-workflow-detail.webp';
 const FRAMEWORK='https://i.ibb.co/qLV28zzf/framework.png';
 
 const cards:{
@@ -15,11 +17,13 @@ const cards:{
 }[]=[
  {id:'delivery',number:'01',category:'PROJECT & OPERATIONS',title:'Project coordination',description:'Plan the work. Connect owners, dependencies and milestones.',folder:'Project Delivery',image:AI,href:'/services',meta:'PLANNING · PM',
  files:[{name:'AI PM Lab',meta:'Learning & tools',image:AI,href:'/projects/e-learning'},{name:'Project delivery',meta:'Planning · WBS',href:'/services'},{name:'Discuss a project',meta:'Start here',href:'/contact'}]},
- {id:'automation',number:'02',category:'PROCESS & AUTOMATION',title:'Workflow automation',description:'Design useful automations for repetitive business processes.',folder:'Automations',image:N8N,href:'/projects/n8n-automation',meta:'N8N · WORKFLOWS',
- files:[{name:'n8n workflow',meta:'Publishing & cleanup',image:N8N,href:'/projects/n8n-automation'},{name:'Process map',meta:'Original workflow',image:'/project-media/n8n-workflow-overview.webp',href:'/projects/n8n-automation'}]},
- {id:'privacy',number:'03',category:'PRIVACY-FIRST SOFTWARE',title:'Thoughtful AI solutions',description:'Build privacy-aware tools that make AI safer to use.',folder:'Privacy & AI',image:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',href:'/projects/privacygate',meta:'PRODUCT · SYSTEMS',
+ {id:'automation',number:'02',category:'N8N · BUSINESS AUTOMATION',title:'n8n workflow automation',description:'Connect tools, route information and reduce repetitive work with practical n8n flows.',folder:'n8n Automations',image:N8N,href:'/projects/n8n-automation',meta:'N8N · INTEGRATIONS',
+ files:[{name:'n8n flow example',meta:'Real workflow screenshot',image:N8N_REAL,href:'/projects/n8n-automation'},{name:'Process map',meta:'Triggers · branches · checks',image:'/project-media/n8n-workflow-overview.webp',href:'/projects/n8n-automation'},{name:'Automation services',meta:'Explore my approach',href:'/services'}]},
+ {id:'ai-pm',number:'03',category:'AI · PROJECT DELIVERY',title:'AI-assisted project workflows',description:'Use AI to organize project inputs and surface risks, while people approve decisions.',folder:'AI Project Workflows',image:AI_PM,href:'/services',meta:'AI COPILOT · PM',
+ files:[{name:'AI delivery simulation',meta:'Interactive project flow',image:AI_PM,href:'/'},{name:'AI PM Lab',meta:'Free learning resources',image:AI,href:'/projects/e-learning'},{name:'Project coordination',meta:'Services & approach',href:'/services'}]},
+ {id:'privacy',number:'04',category:'PRIVACY-FIRST SOFTWARE',title:'Thoughtful AI solutions',description:'Build privacy-aware tools that make AI safer to use.',folder:'Privacy & AI',image:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',href:'/projects/privacygate',meta:'PRODUCT · SYSTEMS',
  files:[{name:'PrivacyGate',meta:'Privacy-first AI',image:'https://i.ibb.co/rfmcfCF5/Privacy-Gate-workflow.png',href:'/projects/privacygate'},{name:'Product journey',meta:'Protect · Restore',href:'/projects/privacygate'}]},
- {id:'realestate',number:'04',category:'PROPTECH RESEARCH',title:'Real estate innovation',description:'Explore practical digital frameworks for property and off-market work.',folder:'Real Estate Tech',image:FRAMEWORK,href:'/projects/propertydex-framework',meta:'PROPTECH · RESEARCH',
+ {id:'realestate',number:'05',category:'PROPTECH RESEARCH',title:'Real estate innovation',description:'Explore practical digital frameworks for property and off-market work.',folder:'Real Estate Tech',image:FRAMEWORK,href:'/projects/propertydex-framework',meta:'PROPTECH · RESEARCH',
  files:[{name:'PropertyDEX',meta:'Framework',image:FRAMEWORK,href:'/projects/propertydex-framework'},{name:'PrivateStone',meta:'Off-market network',image:'/project-covers/privatestone.svg',href:'/projects/privatestone'}]}
 ];
 
@@ -34,11 +38,11 @@ export default function ServiceFolders(){
   observer.observe(node);
   return()=>observer.disconnect();
  },[]);
- const cols=available>=1050?4:available>=590?2:1;
- const gap=cols===4?17:cols===2?22:14;
+ const cols=available>=1050?3:available>=590?2:1;
+ const gap=cols===3?18:cols===2?22:14;
  const dimension=Math.min(cols===1?368:340,Math.max(220,Math.floor((available-gap*(cols-1))/cols)));
  return <div className="pf-glass-service-grid" ref={gridRef} aria-label="Interactive service folders">
-  {cards.map((item,i)=><article key={item.id} className={'pf-glass-service-card'+(openId===item.id?' is-open':'')}>
+  {cards.map((item,i)=><article key={item.id} data-service={item.id} className={'pf-glass-service-card'+(openId===item.id?' is-open':'')}>
     <div className="pf-glass-service-folder">
      <GlassFolder width={dimension} tone="dark" label={item.folder} meta={item.meta}
       image={item.image} files={item.files} action="more" appearDelay={i*110}

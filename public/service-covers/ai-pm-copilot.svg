@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620" role="img" aria-labelledby="title desc">
+<title id="title">AI-assisted Project Management</title><desc id="desc">Dark luxury project command center illustration combining human approvals, AI assistance, milestone planning and project timelines</desc>
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#171e24"/><stop offset=".46" stop-color="#102d2b"/><stop offset="1" stop-color="#11151f"/></linearGradient>
+ <linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#315251"/><stop offset="1" stop-color="#132a2f"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#f8e3a9"/><stop offset="1" stop-color="#bf8c5c"/></linearGradient>
+ <radialGradient id="aura"><stop stop-color="#6de8c8" stop-opacity=".29"/><stop offset="1" stop-color="#6de8c8" stop-opacity="0"/></radialGradient>
+ <pattern id="grid" width="33" height="33" patternUnits="userSpaceOnUse"><path d="M33 0H0V33" fill="none" stroke="#8ccbb8" stroke-opacity=".12"/></pattern>
+ <filter id="shadow"><feDropShadow dx="0" dy="15" stdDeviation="13" flood-color="#000" flood-opacity=".65"/></filter>
+</defs>
+<rect width="960" height="620" fill="url(#bg)"/><rect width="960" height="620" fill="url(#grid)"/><ellipse cx="550" cy="300" rx="425" ry="345" fill="url(#aura)"/><path d="M0 0H960" stroke="#d8b888" stroke-width="5"/>
+<g font-family="Arial,Helvetica,sans-serif"><text x="67" y="94" font-size="18" font-weight="700" letter-spacing="5" fill="#d9c39c">PROJECT INTELLIGENCE</text><text x="61" y="184" font-size="98" font-weight="800" letter-spacing="-7" fill="#fff7e9">AI <tspan fill="#e4c18b">×</tspan> PM</text><text x="67" y="222" font-size="20" fill="#b6d8cb">From AI suggestions to human-approved project plans</text></g>
+<g transform="translate(62 266)" filter="url(#shadow)" font-family="Arial,Helvetica,sans-serif">
+ <rect width="840" height="252" rx="23" fill="#0f2025" stroke="#8fceb380" stroke-width="2"/>
+ <g transform="translate(25 21)"><rect width="255" height="197" rx="15" fill="url(#card)" stroke="#91d7b77a"/><text x="19" y="27" fill="#eac994" font-size="14" font-weight="700" letter-spacing="2">PROJECT INPUT</text><path d="M23 58h145m-145 22h191m-191 22h169" stroke="#9acdc3" stroke-opacity=".5" stroke-width="9" stroke-linecap="round"/><rect x="21" y="129" width="210" height="49" rx="9" fill="#1a3b32" stroke="#88dbac88"/><circle cx="46" cy="153" r="10" fill="#7febbd"/><path d="m41 152 5 5 8-10" stroke="#1a4539" stroke-width="3" fill="none"/><text x="67" y="159" fill="#ecfff3" font-size="16" font-weight="700">Requirements</text></g>
+ <g transform="translate(330 22)"><rect x="0" y="0" width="145" height="145" rx="28" fill="#274a53" stroke="#a3fbe1" stroke-width="2"/><path d="M46 60c-21-29 16-49 33-30 22-17 51 12 30 30 23 26-10 52-30 37-24 18-54-15-33-37z" fill="none" stroke="#b6ffed" stroke-width="5"/><path d="M80 31v64m-37-33h75m-58-20 39 39m-39 1 39-41" stroke="#80dfc8" stroke-width="3" stroke-opacity=".95"/><circle cx="46" cy="61" r="6" fill="#f9d594"/><circle cx="80" cy="95" r="6" fill="#f9d594"/><text x="72" y="182" fill="#d4f9e8" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="1.8">AI COPILOT</text></g>
+ <g transform="translate(527 20)"><rect width="286" height="198" rx="15" fill="#1a2e35" stroke="#c9b38999"/><text x="17" y="27" font-size="14" font-weight="700" letter-spacing="2" fill="#f4d49c">PM APPROVAL</text><g stroke="#b2d9d4" stroke-width="6" stroke-linecap="round" opacity=".5"><path d="M20 58h99m-99 31h142m-142 31h173m-173 31h112"/></g><g fill="#84e7c0"><rect x="174" y="52" width="67" height="12" rx="4"/><rect x="130" y="83" width="101" height="12" rx="4"/><rect x="198" y="114" width="67" height="12" rx="4"/></g><path d="M20 174h244" stroke="#d6b98c" stroke-width="2"/><circle cx="237" cy="174" r="8" fill="#f7dfab"/></g>
+ <g fill="none" stroke="#f0d298" stroke-width="4" stroke-linecap="round"><path d="M282 119h36m-9-8 9 8-9 8M477 119h34m-9-8 9 8-9 8"/></g>
+</g>
+<g font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="13" letter-spacing="2.5"><text x="66" y="567" fill="#e8c796">PLAN · TRACK · IMPROVE</text><text x="720" y="567" fill="#a6c8c1">CONCEPT DEMO</text></g>
+</svg>
