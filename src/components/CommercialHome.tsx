@@ -19,10 +19,10 @@ const challenges = [
 ];
 
 const serviceSummaries = [
-  {number:'01',title:'Operations Improvement',description:'Review day-to-day processes, identify friction and develop practical ways of working.',icon:ClipboardCheck,theme:'operations'},
-  {number:'02',title:'Project & Vendor Coordination',description:'Clarify priorities, track milestones and keep people, suppliers and deliverables aligned.',icon:Network,theme:'projects'},
-  {number:'03',title:'Digital Solutions & Automation',description:'Plan or implement focused digital tools and automation around actual business needs.',icon:Workflow,theme:'digital'},
-  {number:'04',title:'Business Support for Retail & Offices',description:'Coordinate everyday operational improvements and technology-related tasks.',icon:Store,theme:'retail'}
+  {number:'01',title:'Operations Improvement',description:'Review day-to-day processes, identify friction and develop practical ways of working.',icon:ClipboardCheck,theme:'operations',image:'https://i.ibb.co/wrWFJ9YF/NYC-Retail-IT-Coordination-Dashboard.png'},
+  {number:'02',title:'Project & Vendor Coordination',description:'Clarify priorities, track milestones and keep people, suppliers and deliverables aligned.',icon:Network,theme:'projects',image:'https://i.ibb.co/nqvcC4J6/workflow-pmlab.png'},
+  {number:'03',title:'Digital Solutions & Automation',description:'Plan or implement focused digital tools and automation around actual business needs.',icon:Workflow,theme:'digital',image:'https://i.ibb.co/XfJGQVd6/Luxury-Booking-Solutions-Dashboard.png'},
+  {number:'04',title:'Business Support for Retail & Offices',description:'Coordinate everyday operational improvements and technology-related tasks.',icon:Store,theme:'retail',image:'/project-covers/retail-it.svg'}
 ];
 
 const steps = [
@@ -39,8 +39,8 @@ const questions = [
   {q:'Is this consulting or hands-on implementation support?',a:'It can involve analysis, planning, practical setup and coordination, depending on what is needed. We agree on the scope and responsibilities before moving ahead.'}
 ];
 
-export function CommercialIntro(){
-  return <section className="tc-commercial" aria-labelledby="tc-commercial-heading">
+export function CommercialLead(){
+  return <section className="tc-commercial tc-lead" aria-labelledby="tc-commercial-heading">
     <div className="tc-intro">
       <div className="tc-container tc-intro-grid">
         <div className="tc-intro-copy">
@@ -52,6 +52,7 @@ export function CommercialIntro(){
             <Link className="tc-button tc-button-outline" to="/services">Explore Services <ArrowUpRight size={17}/></Link>
           </div>
           <span className="tc-intro-note"><CheckCircle2 size={15}/> First conversation: complimentary 30-minute consultation</span>
+          <div className="tc-intro-offers" aria-label="Primary business services"><span>Operations</span><span>Project Coordination</span><span>Digital Solutions</span><span>Retail & Offices</span></div>
         </div>
         <div className="tc-visual" aria-label="Illustrative business workflow dashboard: understand, plan and coordinate">
           <div className="tc-visual-shape tc-visual-shape-one"/>
@@ -72,24 +73,33 @@ export function CommercialIntro(){
         </div>
       </div>
     </div>
+  </section>;
+}
 
+export function CommercialChallenges(){
+  return <section className="tc-commercial tc-challenges-block" aria-label="Common business challenges">
     <div className="tc-container tc-challenges">
       <div className="tc-challenges-title"><span className="tc-section-kicker">THE CHALLENGE</span><h3>Common Challenges<br/><span>I Help Solve</span></h3><div className="tc-heading-underline"/></div>
       <div className="tc-challenges-list">{challenges.map(item=><div className="tc-challenge" key={item.title}><CheckCircle2 size={21}/><div><strong>{item.title}</strong><p>{item.description}</p></div></div>)}</div>
     </div>
+  </section>;
+}
 
+export function CommercialServices(){
+  return <section className="tc-commercial tc-services-block" aria-label="Services overview">
     <div className="tc-container tc-services">
       <div className="tc-section-heading"><span className="tc-section-kicker">WHAT I CAN HELP WITH</span><h3>Services</h3><p>Practical, tailored support to help your business run smoother, complete projects with confidence and make better use of digital tools.</p></div>
       <div className="tc-services-grid">{serviceSummaries.map(item=>{
         const Icon=item.icon;
         return <article className="tc-service" key={item.number}>
           <div className={'tc-service-art tc-service-art-'+item.theme} aria-hidden="true">
+            <img className="tc-service-art-image" src={item.image} loading="lazy" alt="" onError={event=>{event.currentTarget.style.display="none";}}/>
             <div className="tc-service-art-ring"/><Icon size={49} strokeWidth={1.2}/><span>{item.number} / TRIGOSAT</span>
           </div>
           <div className="tc-service-body"><span className="tc-service-icon"><Icon size={20}/></span><h4>{item.title}</h4><p>{item.description}</p><Link to="/services" aria-label={'Explore '+item.title+' services'}>Learn More <ArrowRight size={16}/></Link></div>
         </article>;
       })}</div>
-      <p className="tc-services-note">Looking for more detail? The full interactive services page is available <Link to="/services">here <ArrowUpRight size={14}/></Link>.</p>
+      <p className="tc-services-note">These are the main business areas. Explore the detailed <Link to="/services">services and engagement approaches <ArrowUpRight size={14}/></Link>, or continue below to see selected work.</p>
     </div>
   </section>;
 }
@@ -118,7 +128,13 @@ export function CommercialFAQ(){
         <summary><strong>{item.q}</strong><ChevronDown size={20}/></summary>
         <p>{item.a}</p>
       </details>)}</div>
-      <div className="tc-cta">
+    </div>
+  </section>;
+}
+
+export function CommercialCTA(){
+  return <section className="tc-faq tc-cta-block" aria-label="Discuss your business needs">
+    <div className="tc-container"><div className="tc-cta">
         <div className="tc-cta-text"><span>LET'S FIND A PRACTICAL NEXT STEP</span><h2>Ready to Improve<br/>Your Operations?</h2><p>Tell me what is slowing things down or what you want to improve. We can begin with a conversation.</p></div>
         <div className="tc-cta-actions">
           <Link className="tc-button tc-button-light" to="/book"><CalendarDays size={17}/> Start a Conversation <ArrowUpRight size={17}/></Link>
