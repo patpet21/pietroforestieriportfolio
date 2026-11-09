@@ -28,7 +28,7 @@ html{scroll-padding-top:88px}
 .pf-sidebar-item,.pf-sidebar-project{color:#d3e7ee!important}
 .pf-sidebar-item:hover,.pf-sidebar-item.is-active{color:#fff!important;background:#0d7f9470!important}
 .pf-sidebar-book-cta{background:#d7f5f5!important;color:#0d344a!important}
-.pf-engineering-home{background:#f5f9fb;color:#0d2c46;overflow:clip}
+.pf-engineering-home{background:#f5f9fb;color:#0d2c46}
 .pf-engineering-home .tc-commercial,.pf-engineering-home .tc-approach,.pf-engineering-home .tc-faq{font-family:Manrope,'DM Sans',system-ui,sans-serif}
 .pf-engineering-home .tc-container{max-width:1320px;width:min(1320px,calc(100% - 110px))}
 .pf-engineering-home .tc-intro-grid{max-width:1320px;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:70px;padding-top:132px!important;padding-bottom:86px!important}
