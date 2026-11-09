@@ -44,15 +44,15 @@ export function CommercialLead(){
     <div className="tc-intro">
       <div className="tc-container tc-intro-grid">
         <div className="tc-intro-copy">
-          <span className="tc-eyebrow"><span className="tc-eyebrow-dot"/> TRIGOSAT CONSULTING / BUSINESS SUPPORT</span>
-          <h2 id="tc-commercial-heading">Clarity for Operations,<br/>Projects, and <span>Digital Change.</span></h2>
-          <p>I support small businesses with organization, project coordination and practical digital solutions that improve everyday operations. The goal is to understand what needs to work better — then help make it happen.</p>
+          <span className="tc-eyebrow"><span className="tc-eyebrow-dot"/> PROJECT COORDINATION · OPERATIONS · DIGITAL DELIVERY</span>
+          <h2 id="tc-commercial-heading">Bring structure<br/>to complex work.<span> Deliver with clarity.</span></h2>
+          <p>Engineering-informed project coordination, process improvement, and practical digital implementation for small businesses and growing teams. From defining requirements to aligning stakeholders and moving work forward.</p>
           <div className="tc-actions">
             <Link className="tc-button tc-button-primary" to="/book"><CalendarDays size={17}/> Start a Conversation <ArrowRight size={18}/></Link>
             <Link className="tc-button tc-button-outline" to="/services">Explore Services <ArrowUpRight size={17}/></Link>
           </div>
           <span className="tc-intro-note"><CheckCircle2 size={15}/> First conversation: complimentary 30-minute consultation</span>
-          <div className="tc-intro-offers" aria-label="Primary business services"><span>Operations</span><span>Project Coordination</span><span>Digital Solutions</span><span>Retail & Offices</span></div>
+          <div className="tc-intro-offers" aria-label="Primary business services"><span>Operations & Processes</span><span>Project Delivery</span><span>Digital Systems</span><span>Vendor Coordination</span></div>
         </div>
         <div className="tc-visual" aria-label="Illustrative business workflow dashboard: understand, plan and coordinate">
           <div className="tc-visual-shape tc-visual-shape-one"/>
@@ -60,17 +60,24 @@ export function CommercialLead(){
           <div className="tc-visual-panel">
             <div className="tc-visual-top"><span className="tc-visual-mark"><Network size={18}/></span><span>OPERATIONS / OVERVIEW</span><i/><i/><i/></div>
             <div className="tc-visual-content">
-              <div className="tc-visual-headline"><small>WORKFLOW CLARITY</small><strong>From challenge<br/>to action.</strong><span className="tc-visual-status">PRACTICAL APPROACH</span></div>
+              <div className="tc-visual-headline"><small>PROJECT DELIVERY FRAMEWORK</small><strong>From requirements<br/>to execution.</strong><span className="tc-visual-status">STRUCTURED APPROACH</span></div>
               <div className="tc-visual-flow">
-                <div><span><CheckCircle2 size={17}/></span><p><strong>Understand</strong><small>Define the actual need</small></p></div>
-                <div><span><ListChecks size={17}/></span><p><strong>Organize</strong><small>Agree on clear next steps</small></p></div>
-                <div><span><Network size={17}/></span><p><strong>Coordinate</strong><small>Move the work forward</small></p></div>
+                <div><span><CheckCircle2 size={17}/></span><p><strong>01 — Scope & requirements</strong><small>Document needs, owners and constraints</small></p></div>
+                <div><span><ListChecks size={17}/></span><p><strong>02 — Plan & coordinate</strong><small>Milestones, dependencies and communication</small></p></div>
+                <div><span><Network size={17}/></span><p><strong>03 — Execute & review</strong><small>Track progress, resolve issues and improve</small></p></div>
               </div>
               <div className="tc-visual-bottom"><div className="tc-visual-bars"><b/><b/><b/><b/><b/></div><span>PEOPLE <em>×</em> PROCESS <em>×</em> TOOLS</span></div>
             </div>
           </div>
-          <div className="tc-visual-floating"><Globe2 size={17}/> Built around your business</div>
+          <div className="tc-visual-floating"><Globe2 size={17}/> ENGINEERING MINDSET · PRACTICAL DELIVERY</div>
         </div>
+      </div>
+    </div>
+    <div className="tc-credentials" aria-label="Professional background and approach">
+      <div className="tc-container tc-credentials-grid">
+        <div><span>01 / FOUNDATION</span><strong>Civil & Environmental Engineering</strong><small>Technical analysis and structured problem-solving</small></div>
+        <div><span>02 / DEVELOPMENT</span><strong>M.S. Project Management</strong><small>Currently pursuing graduate studies</small></div>
+        <div><span>03 / PRACTICE</span><strong>Operations & Vendor Coordination</strong><small>Hands-on work across projects and business systems</small></div>
       </div>
     </div>
   </section>;
@@ -93,13 +100,12 @@ export function CommercialServices(){
         const Icon=item.icon;
         return <article className="tc-service" key={item.number}>
           <div className={'tc-service-art tc-service-art-'+item.theme} aria-hidden="true">
-            <img className="tc-service-art-image" src={item.image} loading="lazy" alt="" onError={event=>{event.currentTarget.style.display="none";}}/>
-            <div className="tc-service-art-ring"/><Icon size={49} strokeWidth={1.2}/><span>{item.number} / TRIGOSAT</span>
+            <div className="tc-service-art-grid"/><div className="tc-service-art-ring"/><Icon size={49} strokeWidth={1.2}/><span>{item.number} / TRIGOSAT</span>
           </div>
           <div className="tc-service-body"><span className="tc-service-icon"><Icon size={20}/></span><h4>{item.title}</h4><p>{item.description}</p><Link to="/services" aria-label={'Explore '+item.title+' services'}>Learn More <ArrowRight size={16}/></Link></div>
         </article>;
       })}</div>
-      <p className="tc-services-note">These are the main business areas. Explore the detailed <Link to="/services">services and engagement approaches <ArrowUpRight size={14}/></Link>, or continue below to see selected work.</p>
+      <p className="tc-services-note">Every engagement starts with understanding the problem and defining a realistic scope. <Link to="/services">Explore how I can help <ArrowUpRight size={14}/></Link> or review selected projects below.</p>
     </div>
   </section>;
 }

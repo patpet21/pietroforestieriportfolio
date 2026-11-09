@@ -64,12 +64,15 @@ export default function PortfolioNavigation(){
    <div className="pf-shell-brandline">
     <button type="button" ref={toggleRef} className="pf-shell-mobile-trigger" onClick={open} aria-expanded={expanded} aria-controls="pf-super-sidebar" aria-label="Open portfolio navigation"><Menu size={23}/></button>
     <Link className="pf-shell-brand" to="/" aria-label="Pietro Forestieri — Home">
-     <img src="https://i.ibb.co/vvqkpWh8/trigosatconsulting.png" alt="" width={45} height={45} onError={e=>{e.currentTarget.style.display='none';}}/>
-     <span><strong>PIETRO FORESTIERI</strong><small>PROJECTS · SYSTEMS · INNOVATION</small></span>
+     <img src="/project-media/trigosat-logo.webp" alt="" width={45} height={45} onError={e=>{if(!e.currentTarget.src.includes('trigosatconsulting.png'))e.currentTarget.src='https://i.ibb.co/vvqkpWh8/trigosatconsulting.png';}}/>
+     <span><strong>TRIGOSAT CONSULTING</strong><small>PIETRO FORESTIERI · PROJECTS & OPERATIONS</small></span>
     </Link>
    </div>
-   <span className="pf-shell-edition">INDEPENDENT DIGITAL PRACTICE <i/> NEW YORK · WORLDWIDE</span>
-   <Link to="/book" className="pf-shell-contact">FREE CONSULTATION <ArrowUpRight size={17}/></Link>
+   <nav className="pf-header-links" aria-label="Primary website pages">
+    <NavLink to="/" end>Home</NavLink><NavLink to="/services">Services</NavLink><NavLink to="/projects">Selected Work</NavLink><NavLink to="/about">About</NavLink><NavLink to="/resources">Resources</NavLink>
+   </nav>
+   <span className="pf-shell-edition">NEW YORK · INDEPENDENT PRACTICE</span>
+   <Link to="/book" className="pf-shell-contact">BOOK AN INTRO CALL <ArrowUpRight size={17}/></Link>
   </header>
 
   <aside className="pf-nav-rail" aria-label="Quick navigation">

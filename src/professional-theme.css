@@ -1,0 +1,208 @@
+/* Trigosat / Pietro Forestieri — engineering & project delivery visual system.
+   Intentionally layered after luxury-theme.css. Homepage scoped; existing app views
+   and all interactions remain intact. */
+
+:root{--pf-prof-navy:#102d46;--pf-prof-deep:#092337;--pf-prof-teal:#087f89;--pf-prof-blue:#247ca0;--pf-prof-surface:#f5f9fb;--pf-prof-border:#d4e2ea}
+html{scroll-padding-top:88px}
+.pf-shell-header{background:#fffffffa!important;border-bottom:1px solid #d7e4eb!important;box-shadow:0 4px 20px #102d460b!important;color:#102d46!important}
+.pf-shell-brand{color:#102d46!important;gap:14px!important}
+.pf-shell-brand img{width:45px!important;height:45px!important;border-radius:8px!important;border:1px solid #d7e5ea!important;background:#e8f3f7!important;object-fit:contain!important;padding:3px}
+.pf-shell-brand strong{color:#092c45!important;font:800 15px/1.15 Manrope,system-ui,sans-serif!important;letter-spacing:.2px!important}
+.pf-shell-brand small{color:#477184!important;font:740 9px/1.25 Manrope,system-ui,sans-serif!important;letter-spacing:.3px!important}
+.pf-shell-edition{display:none!important}
+.pf-header-links{display:flex;align-items:center;gap:clamp(16px,2.3vw,37px);margin-left:auto}
+.pf-header-links a{font:750 12px/1.3 Manrope,system-ui,sans-serif;color:#3c576b;position:relative;text-decoration:none;white-space:nowrap;padding:29px 0}
+.pf-header-links a:hover,.pf-header-links a.active{color:#076c80}
+.pf-header-links a.active:after{content:"";height:3px;left:0;right:0;bottom:17px;position:absolute;background:#0a9aa2;border-radius:3px}
+.pf-shell-contact{background:#0d3b59!important;color:#fff!important;border:1px solid #0d3b59!important;border-radius:8px!important;padding:14px 17px!important;font:800 11px Manrope,system-ui,sans-serif!important;letter-spacing:.15px!important;box-shadow:0 7px 18px #0b375219!important;transition:background .2s,transform .2s!important}
+.pf-shell-contact:hover{background:#076b83!important;transform:translateY(-2px)}
+.pf-shell-contact svg{color:#fff!important}
+.pf-nav-rail{background:#0d2a43!important;border-right:1px solid #33556a!important;box-shadow:4px 0 23px #0d2a431c!important}
+.pf-rail-expand{background:#164460!important;color:#d7faff!important;border:1px solid #51748c!important;border-radius:9px!important}
+.pf-rail-link{color:#9cc0d0!important}
+.pf-rail-link:hover,.pf-rail-link.is-active{background:#0d7b8b48!important;color:#dcffff!important;border-color:#56b0bc6a!important}
+.pf-rail-link.is-active:before{background:#65cbd0!important}
+.pf-rail-bottom{color:#bfe9ec!important}
+.pf-sidebar-monogram{background:#0d334e!important;color:#e4ffff!important;border-color:#4ca6b6!important}
+.pf-super-sidebar{background:linear-gradient(155deg,#0f3751,#081e2d 76%)!important;border-color:#266478!important;color:#fff!important}
+.pf-sidebar-item,.pf-sidebar-project{color:#d3e7ee!important}
+.pf-sidebar-item:hover,.pf-sidebar-item.is-active{color:#fff!important;background:#0d7f9470!important}
+.pf-sidebar-book-cta{background:#d7f5f5!important;color:#0d344a!important}
+.pf-engineering-home{background:#f5f9fb;color:#0d2c46;overflow:clip}
+.pf-engineering-home .tc-commercial,.pf-engineering-home .tc-approach,.pf-engineering-home .tc-faq{font-family:Manrope,'DM Sans',system-ui,sans-serif}
+.pf-engineering-home .tc-container{max-width:1320px;width:min(1320px,calc(100% - 110px))}
+.pf-engineering-home .tc-intro-grid{max-width:1320px;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:70px;padding-top:132px!important;padding-bottom:86px!important}
+.pf-engineering-home .tc-intro{background:radial-gradient(circle at 87% 47%,#d8eaf0 0%,#eaf4f8 39%,transparent 70%),linear-gradient(115deg,#ffffff,#f2f8fb 60%,#e5f0f6)!important}
+.pf-engineering-home .tc-intro:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#0d78930a 1px,transparent 1px),linear-gradient(90deg,#0d78930a 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(90deg,transparent 23%,#0009 100%);pointer-events:none}
+.pf-engineering-home .tc-intro-copy{z-index:1;position:relative}
+.pf-engineering-home .tc-eyebrow{font-size:11px;letter-spacing:1.5px;color:#127a86;font-weight:850}
+.pf-engineering-home .tc-intro-copy h2{font-size:clamp(47px,4.45vw,70px);line-height:1.08;letter-spacing:-.049em;color:#102e48;max-width:675px;margin:25px 0 24px}
+.pf-engineering-home .tc-intro-copy h2 span{display:block;color:#167a90}
+.pf-engineering-home .tc-intro-copy>p{font-size:17px;line-height:1.72;color:#405d70;max-width:600px}
+.pf-engineering-home .tc-button{font-size:14px;min-height:55px;border-radius:7px;box-shadow:none}
+.pf-engineering-home .tc-button-primary{background:#0b3c5e!important;color:white!important}
+.pf-engineering-home .tc-button-outline{border:1px solid #8eafbf;background:#fff!important;color:#0c3953!important}
+.pf-engineering-home .tc-intro-offers{margin-top:29px;gap:9px}
+.pf-engineering-home .tc-intro-offers span{font-size:11px;color:#1b536c;border-radius:5px;border:1px solid #c6dbe4;background:#fff;padding:10px 12px}
+.pf-engineering-home .tc-intro-note{font-size:12px}
+.pf-engineering-home .tc-visual{min-height:465px}
+.pf-engineering-home .tc-visual-panel{border:1px solid #b3ccd8;border-radius:10px;box-shadow:0 18px 46px #0b36541f;transform:none}
+.pf-engineering-home .tc-visual:hover .tc-visual-panel{transform:translateY(-4px)}
+.pf-engineering-home .tc-visual-top{background:#10364e;height:50px}
+.pf-engineering-home .tc-visual-content{padding:31px}
+.pf-engineering-home .tc-visual-headline strong{font-size:33px;color:#12334b}
+.pf-engineering-home .tc-visual-flow{gap:12px}
+.pf-engineering-home .tc-visual-flow>div{border-radius:6px;padding:14px;background:#f6fafc}
+.pf-engineering-home .tc-visual-flow strong{font-size:13px}
+.pf-engineering-home .tc-visual-flow small{font-size:11px}
+.pf-engineering-home .tc-visual-floating{border-radius:6px;font-size:10px;letter-spacing:.5px;font-weight:850}
+.pf-engineering-home .tc-credentials{background:#fff;border-top:1px solid #dbe7ed;border-bottom:1px solid #dbe7ed}
+.pf-engineering-home .tc-credentials-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding-top:26px;padding-bottom:26px}
+.pf-engineering-home .tc-credentials-grid>div{padding:4px 26px;border-left:1px solid #d8e5ec;display:flex;flex-direction:column;gap:7px}
+.pf-engineering-home .tc-credentials-grid>div:first-child{border-left:0;padding-left:0}
+.pf-engineering-home .tc-credentials-grid span{font-size:10px;color:#127f8d;font-weight:900;letter-spacing:1.2px}
+.pf-engineering-home .tc-credentials-grid strong{font-size:16px;color:#14374e;line-height:1.3}
+.pf-engineering-home .tc-credentials-grid small{font-size:12px;color:#567184;line-height:1.5}
+.pf-engineering-home .tc-challenges-block{background:#f6fafc}
+.pf-engineering-home .tc-challenges{padding-top:69px;padding-bottom:69px;max-width:1220px;grid-template-columns:.85fr 1.15fr}
+.pf-engineering-home .tc-challenges-title h3{font-size:clamp(35px,3.4vw,49px);line-height:1.12}
+.pf-engineering-home .tc-challenge{gap:18px}
+.pf-engineering-home .tc-challenge strong{font-size:15px}
+.pf-engineering-home .tc-challenge p{font-size:13px}
+.pf-engineering-home .tc-challenges-list{gap:21px}
+.pf-engineering-home .tc-services-block{background:#fff}
+.pf-engineering-home .tc-services{padding:92px 0 101px}
+.pf-engineering-home .tc-section-kicker{letter-spacing:1.4px}
+.pf-engineering-home .tc-section-heading h2,.pf-engineering-home .tc-section-heading h3{font-size:clamp(35px,3.2vw,48px);letter-spacing:-.042em}
+.pf-engineering-home .tc-section-heading p{font-size:15px;color:#547185}
+.pf-engineering-home .tc-services-grid{gap:20px}
+.pf-engineering-home .tc-service{border-radius:9px;box-shadow:0 5px 22px #173d5410;border-color:#d5e4eb}
+.pf-engineering-home .tc-service-art{height:156px;background:linear-gradient(128deg,#d7eaf1,#eff7fa)!important;color:#166a83}
+.pf-engineering-home .tc-service-art:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#18768a1a 1px,transparent 1px),linear-gradient(90deg,#18768a1a 1px,transparent 1px);background-size:23px 23px;transform:skewY(-7deg) scale(1.2)}
+.pf-engineering-home .tc-service-art-grid{position:absolute;inset:0;background:linear-gradient(122deg,transparent 48%,#0d778c16 49%,#0d778c16 51%,transparent 52%);opacity:.8}
+.pf-engineering-home .tc-service-art>svg{display:block!important;z-index:1;filter:none;stroke:#1d7089}
+.pf-engineering-home .tc-service-art-ring{display:block;top:-75px;right:-47px;border-color:#a3cbd8;box-shadow:0 0 0 25px #c8e2ea40,0 0 0 50px #c8e2ea35}
+.pf-engineering-home .tc-service-art:after{background:linear-gradient(0deg,#b0d9e258,transparent 72%)}
+.pf-engineering-home .tc-service-art>span{z-index:2;color:#1e6278!important;text-shadow:none!important;font-size:10px}
+.pf-engineering-home .tc-service-body{padding:34px 23px 26px}
+.pf-engineering-home .tc-service-icon{border:4px solid white;background:#0a8794}
+.pf-engineering-home .tc-service h4{font-size:20px;line-height:1.27;min-height:52px}
+.pf-engineering-home .tc-service p{font-size:14px;line-height:1.7}
+.pf-engineering-home .tc-service a{font-size:13px}
+.pf-engineering-home .tc-services-note{font-size:13px}
+.pf-engineering-home .hero.pf10-home-hero{background:radial-gradient(circle at 80% 35%,#163d5b 0%,#0f2f47 53%,#092234 100%)!important;border-block:1px solid #174b66}
+.pf-engineering-home .hero:after{background:linear-gradient(90deg,#091e31ed,#0f3044af 57%,transparent 100%)!important}
+.pf-engineering-home .hero .hero-gradient{background:linear-gradient(105deg,#e9f8ff,#5cc0c7)!important;-webkit-background-clip:text!important;background-clip:text!important}
+.pf-engineering-home .hero .outlined{-webkit-text-stroke:1.2px #81aabc!important}
+.pf-engineering-home .hero .eyebrow,.pf-engineering-home .hero .hero-ny{color:#7fc8d2!important}
+.pf-engineering-home .hero .hero-bottom p{color:#d1e5ea!important;font-size:16px!important;line-height:1.7}
+.pf-engineering-home .hero .primary,.pf-engineering-home .gsl-home-promo a{background:#e0f7f8!important;color:#0b354d!important;border-color:#d0f1f2!important;border-radius:7px!important}
+.pf-engineering-home .hero .secondary{background:#ffffff15!important;border:1px solid #75a9b6!important;color:#ecfdff!important;border-radius:7px!important}
+.pf-engineering-home .hero-inner.pf10-hero-grid{padding-top:100px!important;padding-bottom:80px!important}
+.pf-engineering-home .pf-showcase-section{background:#f1f7fa!important;border-top:1px solid #d8e6eb;border-bottom:1px solid #d8e6eb;padding:91px 0 88px!important}
+.pf-engineering-home .section-head h2{color:#11334c!important;font-size:clamp(39px,4.6vw,66px);letter-spacing:-.05em}
+.pf-engineering-home .section-head p{color:#4d697b!important;font-size:15px;line-height:1.75}
+.pf-engineering-home .section-head .eyebrow{color:#117d8d!important}
+.pf-engineering-home .pf-stage-current strong,.pf-engineering-home .pf-stage-current b,.pf-engineering-home .pf-stage-instruction{color:#13374e!important}
+.pf-engineering-home .pf-stage-footer{border-color:#b7d4df!important}
+.pf-engineering-home .pf-stage-navigation button{color:#087b87!important}
+.pf-engineering-home .pf-stage-story{background:white!important;border:1px solid #cbdfe7!important;box-shadow:0 11px 22px #163e5812!important}
+.pf-engineering-home .pf-stage-story-head h3{color:#163b53!important}
+.pf-engineering-home .pf-stage-story-detail p{color:#4b6576!important}
+.pf-engineering-home .pf-stage-story-head span,.pf-engineering-home .pf-stage-story-head small,.pf-engineering-home .pf-stage-story-detail>span{color:#097e8b!important}
+.pf-engineering-home .pf-showcase-section .underlink{color:#0a5368!important;border-color:#24939b!important}
+.pf-engineering-home .pf-marquee{background:#102d46!important;border-color:#2f667b!important}
+.pf-engineering-home .pf-marquee b{color:#72ccd0!important}
+.pf-engineering-home .gsl-home-promo{background:linear-gradient(115deg,#103650,#0b2a42 63%,#0c344b)!important;border-color:#295c71!important}
+.pf-engineering-home .gsl-home-promo h2{color:#f0f9fa!important}
+.pf-engineering-home .gsl-home-promo h2 em{color:#80d7d8!important}
+.pf-engineering-home .gsl-home-promo p{font-size:15px;color:#bfd8e0!important}
+.pf-engineering-home .section.services{background:#edf5f9!important;padding:94px 0 109px!important}
+.pf-engineering-home .section.services .section-head h2{color:#11354e!important}
+.pf-engineering-home .pf-glass-service-card{background:linear-gradient(145deg,#14364d,#0e2b41)!important;border-color:#2d6a7e!important;box-shadow:0 11px 25px #0a324c20!important;border-radius:11px!important}
+.pf-engineering-home .pf-glass-service-details{border-color:#427c8f!important}
+.pf-engineering-home .pf-glass-service-details>small{color:#8bd6dd!important}
+.pf-engineering-home .pf-glass-service-details h3{color:#f0fafd!important}
+.pf-engineering-home .pf-glass-service-details p{color:#c3dce4!important}
+.pf-engineering-home .pf-glass-service-hint{color:#8fd0d8!important}
+.pf-engineering-home .pf-glass-service-title svg{color:#76d0d5!important}
+.pf-engineering-home .tc-approach{background:#e8f3f8;padding:83px 0 91px}
+.pf-engineering-home .tc-step{border-radius:8px;box-shadow:none;border-color:#cfe1e9}
+.pf-engineering-home .tc-step h3{font-size:19px}
+.pf-engineering-home .tc-step p{font-size:13px}
+.pf-engineering-home .pf-founder-home-section{background:#fff!important;border-block:1px solid #dbe7ed!important}
+.pf-engineering-home .pf-founder-home-copy h2{color:#102d47!important;font-size:clamp(42px,4.6vw,68px)}
+.pf-engineering-home .pf-founder-home-copy h2 em{color:#197e92!important}
+.pf-engineering-home .pf-founder-home-copy>p{color:#426276!important;font-size:15px;line-height:1.8}
+.pf-engineering-home .pf-founder-home-copy .pf-founder-note{color:#3e7892!important}
+.pf-engineering-home .pf-founder-home-copy .eyebrow{color:#117d8d!important}
+.pf-engineering-home .pf-founder-portrait-frame{background:linear-gradient(145deg,#daeaf2,#b5d2df)!important;border:1px solid #b8d2de!important;box-shadow:0 16px 35px #143c5420!important}
+.pf-engineering-home .pf-founder-portrait-frame img{position:relative;z-index:1}
+.pf-engineering-home .pf-founder-photo-mark{z-index:2;background:#0d334adf!important;border-color:#619cac!important;color:#fff!important}
+.pf-engineering-home .pf-founder-link{color:#0a6d83!important;border-color:#0e8997!important;font-size:12px}
+.pf-engineering-home .pf-resources-teaser{background:#113a55!important;border-block:1px solid #376b80!important}
+.pf-engineering-home .pf-resources-teaser h2{color:#eefaff!important}
+.pf-engineering-home .pf-resources-teaser p{color:#d2e4e9!important;font-size:14px}
+.pf-engineering-home .pf-resources-teaser .eyebrow{color:#9cdee1!important}
+.pf-engineering-home .section.featured{background:#edf5f9!important;padding:91px 0!important}
+.pf-engineering-home .section.featured h2{color:#102d46!important}
+.pf-engineering-home .section.featured h2 em{color:#147d8c!important}
+.pf-engineering-home .section.featured p{color:#526e7e!important;font-size:15px}
+.pf-engineering-home .section.featured .eyebrow{color:#147d8c!important}
+.pf-engineering-home .section.featured .btn.primary{background:#0b415f!important;color:white!important;border-color:#0b415f!important;box-shadow:none!important}
+.pf-engineering-home .tc-faq{background:#f7fafc}
+.pf-engineering-home .tc-faq-list{max-width:1060px}
+.pf-engineering-home .tc-faq-item{border-radius:7px;box-shadow:none}
+.pf-engineering-home .tc-faq-item summary strong{font-size:15px}
+.pf-engineering-home .tc-faq-item>p{font-size:14px}
+.pf-engineering-home .tc-cta-block .tc-cta{border-radius:9px;background:linear-gradient(120deg,#082d49,#104965 65%,#14637b)!important}
+.pf-engineering-home .tc-cta-text p{font-size:15px}
+footer{background:linear-gradient(120deg,#0b273d,#0d354d 70%,#0c3449)!important;border-top:1px solid #2d6475!important}
+footer em{color:#8bdee0!important}
+@media(max-width:1260px){
+ .pf-header-links{gap:17px}
+ .pf-header-links a{font-size:11px}
+ .pf-shell-brand strong{font-size:13px!important}
+ .pf-engineering-home .tc-intro-grid{gap:40px}
+}
+@media(max-width:1060px){
+ .pf-header-links{display:none}
+ .pf-shell-edition{display:none!important}
+ .pf-engineering-home .tc-container{width:calc(100% - 70px)}
+ .pf-engineering-home .tc-intro-grid{gap:25px}
+ .pf-engineering-home .tc-intro-copy h2{font-size:clamp(37px,5vw,54px)}
+}
+@media(max-width:760px){
+ .pf-shell-header{padding:0 16px!important;height:74px!important}
+ .pf-shell-brand strong{font-size:12px!important}
+ .pf-shell-brand small{font-size:8px!important}
+ .pf-shell-contact{font-size:9px!important;padding:12px!important}
+ .pf-engineering-home .tc-container{width:calc(100% - 38px)}
+ .pf-engineering-home .tc-intro-grid{grid-template-columns:1fr;padding-top:99px!important;padding-bottom:47px!important;gap:23px}
+ .pf-engineering-home .tc-intro-copy h2{font-size:clamp(36px,8.5vw,52px)}
+ .pf-engineering-home .tc-intro-copy>p{font-size:15px}
+ .pf-engineering-home .tc-visual{min-height:390px}
+ .pf-engineering-home .tc-credentials-grid{grid-template-columns:1fr;gap:12px;padding:20px 0}
+ .pf-engineering-home .tc-credentials-grid>div{padding:9px 5px!important;border-left:0;border-top:1px solid #e0e9ef}
+ .pf-engineering-home .tc-credentials-grid>div:first-child{border-top:0}
+ .pf-engineering-home .tc-challenges{grid-template-columns:1fr;gap:29px;padding:56px 0}
+ .pf-engineering-home .tc-services{padding:66px 0}
+ .pf-engineering-home .tc-services-grid{grid-template-columns:1fr 1fr}
+ .pf-engineering-home .tc-service h4{font-size:17px;min-height:0}
+ .pf-engineering-home .tc-service p{font-size:12px}
+ .pf-engineering-home .tc-service-art{height:122px}
+ .pf-engineering-home .pf-showcase-section,.pf-engineering-home .section.services,.pf-engineering-home .section.featured{padding:68px 0!important}
+ .pf-engineering-home .hero-inner.pf10-hero-grid{padding-top:96px!important}
+}
+@media(max-width:470px){
+ .pf-shell-contact{display:none!important}
+ .pf-shell-brand img{width:39px!important;height:39px!important}
+ .pf-engineering-home .tc-services-grid{grid-template-columns:1fr}
+ .pf-engineering-home .tc-service-art{height:135px}
+ .pf-engineering-home .tc-service h4{font-size:20px}
+ .pf-engineering-home .tc-service p{font-size:14px}
+ .pf-engineering-home .tc-visual{min-height:370px}
+}
+@media(prefers-reduced-motion:reduce){
+ .pf-engineering-home .tc-service,.pf-engineering-home .tc-visual-panel,.pf-shell-contact{transition:none!important}
+}
