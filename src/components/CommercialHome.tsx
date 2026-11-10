@@ -40,10 +40,10 @@ const challenges = [
 ] as const;
 
 const serviceSummaries = [
-  {number:'01',title:'Operations Improvement',description:'Review day-to-day processes, identify friction and develop practical ways of working.',icon:ClipboardCheck,theme:'operations',image:'https://i.ibb.co/wrWFJ9YF/NYC-Retail-IT-Coordination-Dashboard.png'},
-  {number:'02',title:'Project & Vendor Coordination',description:'Clarify priorities, track milestones and keep people, suppliers and deliverables aligned.',icon:Network,theme:'projects',image:'https://i.ibb.co/nqvcC4J6/workflow-pmlab.png'},
-  {number:'03',title:'Digital Solutions & Automation',description:'Plan or implement focused digital tools and automation around actual business needs.',icon:Workflow,theme:'digital',image:'https://i.ibb.co/XfJGQVd6/Luxury-Booking-Solutions-Dashboard.png'},
-  {number:'04',title:'Business Support for Retail & Offices',description:'Coordinate everyday operational improvements and technology-related tasks.',icon:Store,theme:'retail',image:'/project-covers/retail-it.svg'}
+  {number:'01',title:'Operations & Process Improvement',description:'Reduce repeated work and clarify how tasks move between people.',problem:'Manual handoffs and duplicated tasks',deliverable:'Process map + improvement priorities',topic:'process',icon:ClipboardCheck,theme:'operations',image:'https://i.ibb.co/wrWFJ9YF/NYC-Retail-IT-Coordination-Dashboard.png',fallback:'/project-covers/retail-it.svg'},
+  {number:'02',title:'Project & Vendor Coordination',description:'Bring responsibilities, suppliers, timelines and follow-ups into one manageable plan.',problem:'Projects delayed by unclear ownership',deliverable:'Action plan + ownership tracker',topic:'projects',icon:Network,theme:'projects',image:'https://i.ibb.co/nqvcC4J6/workflow-pmlab.png',fallback:'/project-covers/privatestone.svg'},
+  {number:'03',title:'Digital Solutions & Automation',description:'Identify practical improvements before choosing software or automating a process.',problem:'Disconnected systems and repetitive entries',deliverable:'Requirements + focused pilot proposal',topic:'digital',icon:Workflow,theme:'digital',image:'/project-media/n8n-workflow-overview.webp',fallback:'/service-covers/n8n-workflow.svg'},
+  {number:'04',title:'Retail & Office Operations',description:'Coordinate issues, changes and technical vendors around everyday business needs.',problem:'Store or office issues without clear follow-up',deliverable:'Issue log + coordination plan',topic:'retail',icon:Store,theme:'retail',image:'/project-covers/retail-it.svg',fallback:'/project-covers/retail-it.svg'}
 ];
 
 const steps = [
@@ -66,32 +66,32 @@ export function CommercialLead(){
     <div className="tc-intro">
       <div className="tc-container tc-intro-grid">
         <div className="tc-intro-copy">
-          <span className="tc-eyebrow"><span className="tc-eyebrow-dot"/> PROJECT COORDINATION · OPERATIONS IMPROVEMENT · DIGITAL DELIVERY</span>
-          <h2 id="tc-commercial-heading">Organize the work.<br/><span>Improve the way it runs.</span></h2>
-          <p>I help small businesses, retail teams and professional offices organize projects, improve everyday processes and coordinate practical digital solutions. We start with the real business problem, clarify priorities and involve the right people to move the work forward.</p>
+          <span className="tc-eyebrow"><span className="tc-eyebrow-dot"/> ENGINEERING-INFORMED · PROJECTS & OPERATIONS · NEW YORK CITY</span>
+          <h2 id="tc-commercial-heading">From operational problems<br/><span>to organized execution.</span></h2>
+          <p>I help small businesses, retail stores and professional teams make work easier to manage: clearer processes, coordinated projects and practical digital improvements. I assess the problem, organize the right people and turn ideas into actionable next steps.</p>
           <div className="tc-actions">
-            <Link className="tc-button tc-button-primary" to="/book"><CalendarDays size={17}/> Start a Conversation <ArrowRight size={18}/></Link>
-            <Link className="tc-button tc-button-outline" to="/services">Explore Services <ArrowUpRight size={17}/></Link>
+            <Link className="tc-button tc-button-primary" to="/contact"><MessageSquareText size={17}/> Discuss Your Challenge <ArrowRight size={18}/></Link>
+            <Link className="tc-button tc-button-outline" to="/book"><CalendarDays size={17}/> Book a Free Intro Call <ArrowUpRight size={17}/></Link>
           </div>
-          <span className="tc-intro-note"><CheckCircle2 size={15}/> Free 30-minute introduction · No finished project brief needed</span>
-          <div className="tc-intro-offers" aria-label="Primary business services"><span>Process Improvement</span><span>Project & Vendor Coordination</span><span>Digital Implementation</span><span>Retail & Office Operations</span></div>
+          <span className="tc-intro-note"><CheckCircle2 size={15}/> Not sure what solution you need? Start with the problem, not the software.</span>
+          <div className="tc-intro-offers" aria-label="Who I help"><span>Retail & Showrooms</span><span>Small Businesses</span><span>Professional Offices</span><span>Project Teams</span></div>
         </div>
-        <div className="tc-visual" aria-label="Illustrative business workflow dashboard: understand, plan and coordinate">
+        <div className="tc-visual" aria-label="Example: a business issue translated into a structured action plan">
           <div className="tc-visual-shape tc-visual-shape-one"/>
           <div className="tc-visual-shape tc-visual-shape-two"/>
           <div className="tc-visual-panel">
-            <div className="tc-visual-top"><span className="tc-visual-mark"><Network size={18}/></span><span>OPERATIONS / OVERVIEW</span><i/><i/><i/></div>
+            <div className="tc-visual-top"><span className="tc-visual-mark"><Network size={18}/></span><span>OPERATIONS / PROJECT DELIVERY</span><i/><i/><i/></div>
             <div className="tc-visual-content">
-              <div className="tc-visual-headline"><small>PROJECT DELIVERY FRAMEWORK</small><strong>From requirements<br/>to execution.</strong><span className="tc-visual-status">STRUCTURED APPROACH</span></div>
+              <div className="tc-visual-headline"><small>EXAMPLE · BUSINESS IMPROVEMENT BRIEF</small><strong>See the problem.<br/>Organize the response.</strong><span className="tc-visual-status">FROM DIAGNOSIS TO ACTION</span></div>
               <div className="tc-visual-flow">
-                <div><span><CheckCircle2 size={17}/></span><p><strong>01 — Scope & requirements</strong><small>Document needs, owners and constraints</small></p></div>
-                <div><span><ListChecks size={17}/></span><p><strong>02 — Plan & coordinate</strong><small>Milestones, dependencies and communication</small></p></div>
-                <div><span><Network size={17}/></span><p><strong>03 — Execute & review</strong><small>Track progress, resolve issues and improve</small></p></div>
+                <div><span><Search size={17}/></span><p><strong>01 — Identify the friction</strong><small>Repeated work, delays, open issues</small></p></div>
+                <div><span><ListChecks size={17}/></span><p><strong>02 — Define a practical plan</strong><small>Priorities, owners, milestones</small></p></div>
+                <div><span><CheckCircle2 size={17}/></span><p><strong>03 — Coordinate implementation</strong><small>Follow-ups, testing, clear next steps</small></p></div>
               </div>
-              <div className="tc-visual-bottom"><div className="tc-visual-bars"><b/><b/><b/><b/><b/></div><span>PEOPLE <em>×</em> PROCESS <em>×</em> TOOLS</span></div>
+              <div className="tc-visual-bottom"><div className="tc-visual-result"><small>POSSIBLE OUTPUTS</small><strong>Process map · Action tracker · Scoped pilot</strong></div><span>PEOPLE <em>×</em> PROCESS <em>×</em> TOOLS</span></div>
             </div>
           </div>
-          <div className="tc-visual-floating"><Globe2 size={17}/> ENGINEERING MINDSET · PRACTICAL DELIVERY</div>
+          <div className="tc-visual-floating"><ClipboardCheck size={17}/> PRACTICAL DELIVERABLES · NO BUZZWORDS</div>
         </div>
       </div>
     </div>
@@ -146,17 +146,17 @@ export function CommercialChallenges(){
 export function CommercialServices(){
   return <section className="tc-commercial tc-services-block" aria-label="Services overview">
     <div className="tc-container tc-services">
-      <div className="tc-section-heading"><span className="tc-section-kicker">WHAT I CAN HELP WITH</span><h3>Services</h3><p>Practical, tailored support to help your business run smoother, complete projects with confidence and make better use of digital tools.</p></div>
+      <div className="tc-section-heading"><span className="tc-section-kicker">BUSINESS PROBLEMS → CLEAR DELIVERABLES</span><h3>How I can help your business</h3><p>Not a catalog of software. Four practical ways to make projects and daily operations more organized, with an identifiable first deliverable.</p></div>
       <div className="tc-services-grid">{serviceSummaries.map(item=>{
         const Icon=item.icon;
         return <article className="tc-service" key={item.number}>
           <div className={'tc-service-art tc-service-art-'+item.theme} aria-hidden="true">
-            <div className="tc-service-art-grid"/><div className="tc-service-art-ring"/><Icon size={49} strokeWidth={1.2}/><span>{item.number} / TRIGOSAT</span>
+            <img className="tc-service-art-image" src={item.image} alt="" loading="lazy" decoding="async" onError={event=>{if(!event.currentTarget.src.endsWith(item.fallback))event.currentTarget.src=item.fallback;}}/><div className="tc-service-art-grid"/><div className="tc-service-art-ring"/><Icon size={49} strokeWidth={1.2}/><span>{item.number} / SERVICE AREA</span>
           </div>
-          <div className="tc-service-body"><span className="tc-service-icon"><Icon size={20}/></span><h4>{item.title}</h4><p>{item.description}</p><Link to="/services" aria-label={'Explore '+item.title+' services'}>Learn More <ArrowRight size={16}/></Link></div>
+          <div className="tc-service-body"><span className="tc-service-icon"><Icon size={20}/></span><h4>{item.title}</h4><p>{item.description}</p><div className="tc-service-value"><small>COMMON PROBLEM</small><strong>{item.problem}</strong><small>STARTING DELIVERABLE</small><strong>{item.deliverable}</strong></div><Link to={"/contact?topic="+item.topic} aria-label={"Discuss "+item.title}>Discuss This Challenge <ArrowRight size={16}/></Link></div>
         </article>;
       })}</div>
-      <p className="tc-services-note">Every engagement starts with understanding the problem and defining a realistic scope. <Link to="/services">Explore how I can help <ArrowUpRight size={14}/></Link> or review selected projects below.</p>
+      <p className="tc-services-note">Examples describe possible starting deliverables, not guaranteed results. Every engagement begins with understanding the problem and agreeing on a realistic scope. <Link to="/services">Explore how I can help <ArrowUpRight size={14}/></Link> or review selected projects below.</p>
     </div>
   </section>;
 }
