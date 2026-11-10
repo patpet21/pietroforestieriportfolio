@@ -212,7 +212,18 @@ function Case(){const {pathname}=useLocation();const id=pathname.split('/').filt
  {p.id==='privacygate'?<PrivacyGateJourney/>:<CompactCasePath project={p}/>}{p.id==='retail-it'&&<RetailAutomationExploration/>}
  <div className="ccase-rest">{p.id!=='privacygate'&&<CaseShowcase id={p.id}/>}<ProjectExtras id={p.id}/></div><ProjectStory project={p}/><section className="section services ccase-details"><div className="wrap"><div className="case-row"><small className="eyebrow">05 / TOOLS & TECHNOLOGIES</small><div className="tags">{p.tools.map(t=><span key={t}>{t}</span>)}</div></div>{Boolean(brandMedia[p.id]?.gallery.length||p.website||p.repository)&&<div className="case-row"><small className="eyebrow">06 / PROJECT MEDIA</small><div><h2>Project visuals & resources.</h2><p>Original brand assets and screenshots are shown only where available; prototype and research stages remain clearly identified.</p>{Boolean(brandMedia[p.id]?.gallery.length)&&<div className="pf-real-media-grid">{(brandMedia[p.id]?.gallery??[]).map(item=><div className="pf-real-media-item" key={item.src}><img src={item.src} loading="lazy" alt={item.title} onError={event=>{event.currentTarget.parentElement?.setAttribute("hidden","");}}/><span>{item.title}</span></div>)}</div>}{p.website&&<a href={p.website} target="_blank" rel="noopener noreferrer">VISIT PROJECT ↗</a>}{p.repository&&<a href={p.repository} target="_blank" rel="noopener noreferrer">VIEW REPOSITORY ↗</a>}</div></div>}</div></section><NextProjectSpotlight current={p} projects={projects}/></>}
 function Services(){return <ServiceExperience/>}
+const inquiryTopics = {
+ process:{label:'Manual processes and bottlenecks',category:'Process improvement',prompt:'Which everyday steps are slowing things down? Who is involved, and what would you like to improve?'},
+ projects:{label:'Project and vendor coordination',category:'Project coordination',prompt:'What project is currently stalled or difficult to coordinate? Which people, suppliers or deadlines are involved?'},
+ digital:{label:'Digital tools and disconnected systems',category:'Digital solution',prompt:'Which tools are not working well together, and what manual work do they create today?'},
+ retail:{label:'Retail or office operational coordination',category:'Project coordination',prompt:'What operational or vendor-related issue needs attention? What is happening in your store or office?'},
+ automation:{label:'AI and workflow automation',category:'Digital solution',prompt:'What repeatable task would you like to simplify? Which tools do you use today?'},
+ website:{label:'Website or booking experience',category:'Website / Booking',prompt:'What should visitors be able to understand or do more easily on your website?'}
+} as const;
 function Contact(){
+  const location=useLocation();
+  const topicKey=new URLSearchParams(location.search).get('topic')||'';
+  const selectedTopic=inquiryTopics[topicKey as keyof typeof inquiryTopics];
  const[status,setStatus]=useState<'idle'|'loading'|'success'|'error'>('idle');
  const[message,setMessage]=useState('');
  async function submit(event:React.FormEvent<HTMLFormElement>){
@@ -240,17 +251,20 @@ function Contact(){
  return <><PageHead tag="CONTACT / START A CONVERSATION" description="Have a business challenge, project idea, or an opportunity to collaborate? Tell me what you have in mind.">Let's build something<br/><em>meaningful.</em></PageHead>
   <section className="section services"><div className="wrap contact-grid">
    <div><h2>Start with<br/>a conversation<span className="dot">.</span></h2>
-    <p>Even a short description of your challenge is enough to get started.</p>
+    <p>Even a short description of your challenge is enough to get started. I will review the fit before proposing a scope or next step.</p>
+     {selectedTopic&&<p className="pf-contact-selected-context">You are contacting me about: <strong>{selectedTopic.label}</strong></p>}
     <p className="contact-place"><MapPin size={19}/> New York City, NY</p>
     <a href="https://github.com/patpet21" target="_blank" rel="noreferrer">GITHUB ↗</a>
     <Link className="pf-contact-book-link" to="/book">OR SCHEDULE AN INTRO CALL <ArrowUpRight size={16}/></Link>
    </div>
    <form action="https://formspree.io/f/mojboraw" method="POST" onSubmit={submit} aria-label="Send Pietro a message">
     <input type="hidden" name="_subject" value="Portfolio inquiry — Pietro Forestieri"/>
+     {selectedTopic&&<input type="hidden" name="selected-challenge" value={selectedTopic.label}/>}
     <div className="two"><label>YOUR NAME<input name="name" placeholder="Your name" autoComplete="name" required/></label><label>EMAIL ADDRESS<input type="email" name="email" placeholder="you@company.com" autoComplete="email" required/></label></div>
     <div className="two"><label>COMPANY<input name="company" placeholder="Optional" autoComplete="organization"/></label>
-    <label>PROJECT TYPE<select name="project-type" required defaultValue=""><option value="" disabled>Select a topic</option><option>Project coordination</option><option>Process improvement</option><option>Digital solution</option><option>Website / Booking</option><option>Other collaboration</option></select></label></div>
-    <label>YOUR MESSAGE<textarea name="message" rows={6} minLength={10} required placeholder="Tell me about your challenge..."/></label>
+    <label>PROJECT TYPE<select name="project-type" required defaultValue={selectedTopic?.category||''}><option value="" disabled>Select a topic</option><option>Project coordination</option><option>Process improvement</option><option>Digital solution</option><option>Website / Booking</option><option>Other collaboration</option></select></label></div>
+    <label>YOUR MESSAGE<textarea name="message" rows={6} minLength={10} required placeholder={selectedTopic?.prompt||'What is happening today, who is involved and what would you like to improve?'}/></label>
+     <p className="pf-contact-form-context">A few lines are enough. No technical brief or solution proposal required.</p>
     <button className="btn primary" disabled={status==='loading'} type="submit">{status==='loading'?'SENDING...':'SEND YOUR MESSAGE'} <ArrowUpRight/></button>
     <p aria-live="polite" className={'form-note pf-form-message'+(status==='error'?' is-error':'')}>{status==='success'?<CheckCircle2 size={16}/>:null}{message||'Your details are used only to respond to your inquiry.'}</p>
    </form>
