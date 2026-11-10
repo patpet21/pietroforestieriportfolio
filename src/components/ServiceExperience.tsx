@@ -11,6 +11,7 @@ const offers:Service[]=[
  {number:'05',title:'Website & Booking Journeys',tagline:'Make the next action obvious.',problem:'Visitors may struggle to understand services or complete contact and booking requests.',approach:'Review the customer journey, define essential content and connect a focused contact or booking flow.',output:'Responsive concept, integration plan and clear visitor actions.',focus:'DIGITAL EXPERIENCE'}
 ];
 const icons=[ClipboardCheck,Network,Blocks,Workflow,Globe2];
+const inquiryTopics=['process','projects','digital','automation','website'] as const;
 
 export default function ServiceExperience(){
  const [selected,setSelected]=useState(0);
@@ -39,7 +40,7 @@ export default function ServiceExperience(){
   </section>
   <section className="svx-offers-section">
    <div className="wrap">
-    <div className="svx-section-heading"><div><small className="eyebrow"><i/> HOW I CAN HELP</small><h2>Choose a challenge.<br/><em>Explore an approach.</em></h2></div><p>Five ways to structure work, reduce friction and move forward. Select a service to see what the engagement could look like.</p></div>
+    <div className="svx-section-heading"><div><small className="eyebrow"><i/> HOW I CAN HELP</small><h2>Choose a challenge.<br/><em>Explore an approach.</em></h2></div><p>Five practical starting points for small businesses and lean teams. Select a service to understand the problem, the approach and a possible first deliverable.</p></div>
     <div className="svx-selector" aria-label="Explore services" role="group">{offers.map((item,i)=>{
      const Mark=icons[i];
      return <button type="button" key={item.title} className={i===selected?'active':''} aria-pressed={i===selected} onClick={()=>setSelected(i)}>
@@ -53,7 +54,7 @@ export default function ServiceExperience(){
       <small>SELECTED SERVICE / {offer.number}</small>
       <h3>{offer.title}</h3>
       <p>{offer.tagline}</p>
-      <Link to="/contact" className="svx-detail-link">TALK ABOUT THIS SERVICE <ArrowUpRight size={16}/></Link>
+      <Link to={'/contact?topic='+inquiryTopics[selected]} className="svx-detail-link">TALK ABOUT THIS SERVICE <ArrowUpRight size={16}/></Link>
      </div>
      <div className="svx-detail-flow">
       <div><span>01 / THE CHALLENGE</span><p>{offer.problem}</p></div>
