@@ -14,26 +14,26 @@ import './CommercialHome.css';
  */
 const challenges = [
   {
-    id:'process', title:'Manual processes take too much time',
-    description:'Repeated tasks, handoffs and scattered information make everyday work slower.',
+    id:'process', title:'Tired of repeating the same tasks?',
+    description:'Copying information between emails, spreadsheets and apps can take time away from your actual work.',
     firstStep:'Map the current workflow, identify bottlenecks and rank realistic improvements.',
     output:'A simple process map and a prioritized improvement shortlist.'
   },
   {
-    id:'projects', title:'Projects are difficult to keep on track',
-    description:'Unclear owners, supplier follow-ups and open decisions delay progress.',
+    id:'projects', title:'Too many tasks and deadlines to follow?',
+    description:'Projects become stressful when updates, suppliers and responsibilities are scattered.',
     firstStep:'Clarify the scope, dependencies, responsibilities and the next milestones.',
     output:'An action plan with owners, priorities and a practical tracking structure.'
   },
   {
-    id:'digital', title:'Business tools create more work',
-    description:'Disconnected systems and duplicated data entry complicate daily operations.',
+    id:'digital', title:'Your tools do not work together?',
+    description:'Moving the same information by hand can be a sign that your workflow needs simplifying.',
     firstStep:'Review the existing tools and requirements before choosing an integration or automation.',
     output:'A requirements brief and a small, testable improvement proposal.'
   },
   {
-    id:'retail', title:'Retail or office changes need coordination',
-    description:'Store operations, devices and outside providers need one clear point of contact.',
+    id:'retail', title:'Everyone is waiting for someone else?',
+    description:'Open issues, vendor responses and small operational changes can get stuck without clear ownership.',
     firstStep:'List open issues, identify the right specialists and organize the follow-up.',
     output:'An issue tracker, responsibility map and proposed next steps.'
   }
@@ -53,7 +53,8 @@ const steps = [
 ];
 
 const questions = [
-  {q:'What types of businesses do you work with?',a:'My focus is on small businesses and lean teams, including retail stores, showrooms and office-based operations. We can discuss whether the project is a good fit during an introductory conversation.'},
+  {q:'Who can you help?',a:'I work with independent professionals who want practical one-to-one support, and small businesses or project teams that need clearer processes, coordination or digital improvements. We first check whether the request matches my experience.'},
+  {q:'Can you show me how to use AI on my own work?',a:'Yes. One-to-one support can focus on your actual documents, emails, project tasks and digital tools, with practical guidance rather than a generic software course. We agree on the scope before starting.'},
   {q:'Do I need to have a specific project in mind?',a:'No. You can start with a recurring problem, a process that could run better or an idea you have not yet structured. The first step is to understand the situation before recommending an approach.'},
   {q:'Can you coordinate outside vendors or technical specialists?',a:'Depending on the scope, I can help organize requirements, communication, priorities and follow-ups with your existing providers. Specialist work stays with appropriately qualified professionals.'},
   {q:'Can we work remotely or on-site?',a:'Remote coordination can work well for many projects. On-site support in the New York City area can be discussed based on the activity, timing and availability.'},
@@ -66,15 +67,15 @@ export function CommercialLead(){
     <div className="tc-intro">
       <div className="tc-container tc-intro-grid">
         <div className="tc-intro-copy">
-          <span className="tc-eyebrow"><span className="tc-eyebrow-dot"/> ENGINEERING-INFORMED · PROJECTS & OPERATIONS · NEW YORK CITY</span>
-          <h2 id="tc-commercial-heading">From operational problems<br/><span>to organized execution.</span></h2>
-          <p>I help small businesses, retail stores and professional teams make work easier to manage: clearer processes, coordinated projects and practical digital improvements. I assess the problem, organize the right people and turn ideas into actionable next steps.</p>
+          <span className="tc-eyebrow"><span className="tc-eyebrow-dot"/> PRACTICAL SUPPORT · OPERATIONS · PROJECTS · AI</span>
+          <h2 id="tc-commercial-heading">Make work easier.<br/><span>Keep projects moving.</span></h2>
+          <p>I help independent professionals and small businesses simplify everyday work, organize projects and make digital tools or AI genuinely useful. We start with what you want to improve, then choose a practical way forward.</p>
           <div className="tc-actions">
-            <Link className="tc-button tc-button-primary" to="/contact"><MessageSquareText size={17}/> Discuss Your Challenge <ArrowRight size={18}/></Link>
-            <Link className="tc-button tc-button-outline" to="/book"><CalendarDays size={17}/> Book a Free Intro Call <ArrowUpRight size={17}/></Link>
+            <Link className="tc-button tc-button-primary" to="/book"><CalendarDays size={17}/> Book a Free Intro Call <ArrowUpRight size={17}/></Link>
+            <a className="tc-button tc-button-outline" href="#work-together">See How I Can Help <ArrowRight size={18}/></a>
           </div>
-          <span className="tc-intro-note"><CheckCircle2 size={15}/> Not sure what solution you need? Start with the problem, not the software.</span>
-          <div className="tc-intro-offers" aria-label="Who I help"><span>Retail & Showrooms</span><span>Small Businesses</span><span>Professional Offices</span><span>Project Teams</span></div>
+          <span className="tc-intro-note"><CheckCircle2 size={15}/> No technical brief needed. Tell me what is difficult in your work today.</span>
+          <div className="tc-intro-offers" aria-label="Who I help"><span>Independent Professionals</span><span>Small Businesses</span><span>Retail & Offices</span><span>Project Teams</span></div>
         </div>
         <div className="tc-visual" aria-label="Example: a business issue translated into a structured action plan">
           <div className="tc-visual-shape tc-visual-shape-one"/>
@@ -143,10 +144,50 @@ export function CommercialChallenges(){
   </section>;
 }
 
+
+export function CommercialCollaboration(){
+  return <section className="tc-commercial tc-collaboration" id="work-together" aria-labelledby="tc-collaboration-heading">
+    <div className="tc-container">
+      <div className="tc-section-heading">
+        <span className="tc-section-kicker">TWO WAYS TO WORK TOGETHER</span>
+        <h2 id="tc-collaboration-heading">Practical support, built around your work.</h2>
+        <p>You do not need to know which AI tool or service to ask for. Choose the kind of help you need and we can define the next step together.</p>
+      </div>
+      <div className="tc-collaboration-grid">
+        <article className="tc-collaboration-card">
+          <div className="tc-collaboration-tag"><Globe2 size={17}/> FOR INDIVIDUALS</div>
+          <h3>1:1 Work & AI Support</h3>
+          <p>Get hands-on guidance to organize your day, use AI with your actual tasks and simplify repetitive work.</p>
+          <ul>
+            <li><CheckCircle2 size={17}/> Work through your own emails, documents or workflows</li>
+            <li><CheckCircle2 size={17}/> Learn useful methods and tools step by step</li>
+            <li><CheckCircle2 size={17}/> Leave with a practical process you can use</li>
+          </ul>
+          <span className="tc-collaboration-output">POSSIBLE STARTING POINT: A WORKFLOW REVIEW & GUIDED SESSION</span>
+          <Link to="/contact?topic=individual">Discuss 1:1 Support <ArrowUpRight size={17}/></Link>
+        </article>
+        <article className="tc-collaboration-card tc-collaboration-card-business">
+          <div className="tc-collaboration-tag"><Network size={17}/> FOR BUSINESSES</div>
+          <h3>Operations & Digital Projects</h3>
+          <p>Improve the way people, tasks and systems work together, from project coordination to carefully scoped automation.</p>
+          <ul>
+            <li><CheckCircle2 size={17}/> Clarify processes, responsibilities and bottlenecks</li>
+            <li><CheckCircle2 size={17}/> Coordinate projects, vendors and follow-ups</li>
+            <li><CheckCircle2 size={17}/> Plan or implement useful digital improvements</li>
+          </ul>
+          <span className="tc-collaboration-output">POSSIBLE STARTING POINT: A PROCESS MAP & PRIORITY PLAN</span>
+          <Link to="/contact?topic=projects">Discuss a Business Project <ArrowUpRight size={17}/></Link>
+        </article>
+      </div>
+      <p className="tc-collaboration-disclaimer">Examples of how an engagement could begin. Activities, scope, delivery and any fees are agreed individually after an introductory discussion.</p>
+    </div>
+  </section>;
+}
+
 export function CommercialServices(){
   return <section className="tc-commercial tc-services-block" aria-label="Services overview">
     <div className="tc-container tc-services">
-      <div className="tc-section-heading"><span className="tc-section-kicker">BUSINESS PROBLEMS → CLEAR DELIVERABLES</span><h3>How I can help your business</h3><p>Not a catalog of software. Four practical ways to make projects and daily operations more organized, with an identifiable first deliverable.</p></div>
+      <div className="tc-section-heading"><span className="tc-section-kicker">BUSINESS PROBLEMS → CLEAR DELIVERABLES</span><h3>Where I can help with projects and operations</h3><p>Four practical areas of support for teams and businesses. Every project begins by checking the actual need and defining an achievable first deliverable.</p></div>
       <div className="tc-services-grid">{serviceSummaries.map(item=>{
         const Icon=item.icon;
         return <article className="tc-service" key={item.number}>
@@ -192,7 +233,7 @@ export function CommercialFAQ(){
 export function CommercialCTA(){
   return <section className="tc-faq tc-cta-block" aria-label="Discuss your business needs">
     <div className="tc-container"><div className="tc-cta">
-        <div className="tc-cta-text"><span>LET'S FIND A PRACTICAL NEXT STEP</span><h2>Ready to Improve<br/>Your Operations?</h2><p>Tell me about a recurring problem, a delayed project or a process you want to improve. You do not need to have the solution figured out.</p></div>
+        <div className="tc-cta-text"><span>LET'S FIND A PRACTICAL NEXT STEP</span><h2>Ready to Make<br/>Work Easier?</h2><p>Tell me what you need help with: a daily task, a project, a difficult process or a digital tool. You do not need to know the solution yet.</p></div>
         <div className="tc-cta-actions">
           <Link className="tc-button tc-button-light" to="/book"><CalendarDays size={17}/> Start a Conversation <ArrowUpRight size={17}/></Link>
           <Link className="tc-cta-link" to="/contact"><MessageSquareText size={17}/> Prefer to send a message? <ArrowRight size={17}/></Link>
