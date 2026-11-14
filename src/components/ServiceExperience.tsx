@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import {Link} from 'react-router-dom';
+import {CommercialCollaboration} from './CommercialHome';
 import {ArrowUpRight,ArrowRight,Workflow,Network,ClipboardCheck,Blocks,Globe2,CheckCircle2} from 'lucide-react';
 
 type Service={title:string;tagline:string;problem:string;approach:string;output:string;focus:string;number:string};
@@ -22,7 +23,7 @@ export default function ServiceExperience(){
    <div className="svx-hero-copy">
     <small className="eyebrow"><i/> SERVICES / PROJECT MANAGEMENT × AI</small>
     <h1>Clarity first.<br/><em>Better execution.</em></h1>
-    <p className="svx-opening">Project coordination, business process improvement and thoughtful AI-enabled automation — focused on problems worth solving, not technology for its own sake.</p>
+    <p className="svx-opening">Whether you work independently or run a small business, I help you organize everyday work, coordinate projects and make technology useful. Choose practical one-to-one guidance or a clearly scoped business project.</p>
     <div className="svx-value-row">
      <span><CheckCircle2 size={17}/> Define the problem</span>
      <span><CheckCircle2 size={17}/> Coordinate delivery</span>
@@ -38,9 +39,10 @@ export default function ServiceExperience(){
     <div className="svx-orbit svx-orbit-two" aria-hidden="true"/>
    </div>
   </section>
+  <CommercialCollaboration/>
   <section className="svx-offers-section">
    <div className="wrap">
-    <div className="svx-section-heading"><div><small className="eyebrow"><i/> HOW I CAN HELP</small><h2>Choose a challenge.<br/><em>Explore an approach.</em></h2></div><p>Five practical starting points for small businesses and lean teams. Select a service to understand the problem, the approach and a possible first deliverable.</p></div>
+    <div className="svx-section-heading"><div><small className="eyebrow"><i/> HOW I CAN HELP</small><h2>Choose a challenge.<br/><em>Explore an approach.</em></h2></div><p>Five practical service areas for small businesses and lean teams. For individual guidance, explore the 1:1 support option above.</p></div>
     <div className="svx-selector" aria-label="Explore services" role="group">{offers.map((item,i)=>{
      const Mark=icons[i];
      return <button type="button" key={item.title} className={i===selected?'active':''} aria-pressed={i===selected} onClick={()=>setSelected(i)}>
